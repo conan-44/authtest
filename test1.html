@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Supabase Working Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { background: #121214; color: #fff; font-family: sans-serif; padding: 20px; max-width: 400px; margin: auto; }
+    input, button { display: block; width: 100%; margin-bottom: 12px; padding: 10px; box-sizing: border-box; border-radius: 4px; border: 1px solid #333; }
+    input { background: #222; color: #fff; }
+    button { background: #3ecf8e; color: #000; font-weight: bold; border: none; cursor: pointer; }
+    .btn-secondary { background: #333; color: #fff; }
+    .box { background: #1e1e22; padding: 16px; border-radius: 8px; margin-bottom: 16px; }
+    #log { font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; color: #a9adc1; }
+    hr { border: 0; border-top: 1px solid #333; margin: 16px 0; }
+  </style>
+</head>
+<body>
+
+  <h2>Game Account Test</h2>
+
+  <!-- SIGNUP & LOGIN FORM -->
+  <div id="authSection" class="box">
+    <h3>Create Account / Login</h3>
+    <input type="email" id="email" placeholder="Email (e.g. test@game.com)" />
+    <input type="password" id="password" placeholder="Password (min 6 chars)" />
+    
+    <!-- Custom Profile Inputs -->
+    <input type="text" id="username" placeholder="Username (e.g. DragonSlayer)" />
+    <input type="text" id="flair" placeholder="Flair (e.g. VIP Member)" />
+
+    <button id="signUpBtn">Sign Up (Auto-Create Profile)</button>
+    <button id="googleSignInBtn" class="btn-secondary" style="background: #4285f4; color: #fff;">Sign In with Google</button>
+    <button id="signInBtn" class="btn-secondary">Log In Existing Account</button>
+  </div>
+
+  <!-- LOGGED IN USER PROFILE SECTION -->
+  <div id="profileSection" class="box" style="display:none;">
+    <h3 style="color:#3ecf8e;">Logged In!</h3>
+    <p><b>Email:</b> <span id="displayEmail"></span></p>
+    <p><b>Current Username:</b> <span id="displayUsername">Loading...</span></p>
+    <p><b>Current Flair:</b> <span id="displayFlair">Loading...</span></p>
+    
+    <hr />
+
+    <!-- EDIT PROFILE FORM -->
+    <h4>Update Profile Info</h4>
+    <input type="text" id="editUsername" placeholder="New Username" />
+    <input type="text" id="editFlair" placeholder="New Flair" />
+    <button id="updateProfileBtn">Save Profile Changes</button>
+
+    <button id="refreshBtn" class="btn-secondary">Reload Profile Data</button>
+    <button id="signOutBtn" style="background:#e03131; color:#fff;">Sign Out</button>
+  </div>
+
+  <!-- STATUS LOG -->
+  <div class="box">
+    <b>Status Log:</b>
+    <div id="log">Initializing...</div>
+  </div>
+
+  <script src="auth.js"></script>
+</body>
+</html>
