@@ -140,3 +140,12 @@
 
   if (error) printLog("❌ Google Auth Error: " + error.message);
 });
+// Call this while the user is actively logged in via Google
+async function setAccountPassword(newPassword) {
+  const { data, error } = await _supabase.auth.updateUser({
+    password: newPassword
+  });
+
+  if (error) console.log("Error setting password:", error.message);
+  else alert("Password set successfully! You can now log in using email/password.");
+}
