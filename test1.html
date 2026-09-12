@@ -45,13 +45,10 @@
     .icon-refresh  { background-position-x: -64px; } 
     .icon-save     { background-position-x: -72px; }
 
-    @keyframes playSprite { from { background-position-y: 0px; } to { background-position-y: -32px; } }
-    button:hover .btn-icon {
-      animation: playSprite 0.5s steps(4);
-    }
-
     .box { background: #eee; padding: 16px; margin-bottom: 16px; }
-    #log { font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; color: #000; }
+
+    @keyframes playSprite { from { background-position-y: 0px; } to { background-position-y: -32px; } }
+    button:hover .btn-icon { animation: playSprite 0.5s steps(4); }
     hr { border: 0; border-top: 1px solid #333; margin: 16px 0; }
   </style>
 </head>
@@ -76,9 +73,7 @@
 
   <!-- LOGGED IN USER PROFILE SECTION -->
 <div id="profileSection" class="box" style="display:none;">
-  <h3 style="color:#3ecf8e;">
-    Logged In! <span id="authBadge" class="btn-icon"></span>
-  </h3>
+  <span id="authBadge" class="btn-icon"></span>
   <p><b>Email:</b> <span id="displayEmail"></span></p>
   <p><b>Current Username:</b> <span id="displayUsername">Loading...</span></p>
   <p><b>Current Flair:</b> <span id="displayFlair">Loading...</span></p>
@@ -103,13 +98,6 @@
     <button id="deleteAccountBtn" class="btn-danger"><span class="btn-icon icon-delete"></span>Delete Account</button>
     <button id="signOutBtn"><span class="btn-icon icon-signout"></span>Sign Out</button>
   </div>
-
-  <!-- STATUS LOG -->
-  <div class="box">
-    <b>Status Log:</b>
-    <div id="log">Initializing...</div>
-  </div>
-
   <script src="auth.js"></script>
 </body>
 </html>

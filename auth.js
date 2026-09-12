@@ -5,8 +5,8 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const logEl = document.getElementById('log');
 function printLog(msg) {
-  logEl.textContent = `[${new Date().toLocaleTimeString()}] ${msg}\n` + logEl.textContent;
-  console.log(msg);
+  let timestamp = `[${new Date().toLocaleTimeString()}] `;
+  console.log(timestamp + msg);
 }
 
 // 2. LISTEN FOR AUTH CHANGES
