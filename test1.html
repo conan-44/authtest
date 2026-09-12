@@ -5,12 +5,13 @@
   <title>Supabase Working Test</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    @font-face { font-family: 'capsmall'; src: url('./assets/capsmall.ttf') format('truetype'); }
-    @font-face { font-family: 'lowbig'; src: url('./assets/lowbig.ttf') format('truetype'); }
-    @font-face { font-family: 'lowsmall'; src: url('./assets/lowsmall.ttf') format('truetype'); }
+    @font-face { font-family: 'capsmall'; src: url('./assets/capsmall.ttf') format('truetype'); font-weight: normal; font-style: normal; }
+    @font-face { font-family: 'lowbig'; src: url('./assets/lowbig.ttf') format('truetype'); font-weight: normal; font-style: normal; }
+    @font-face { font-family: 'lowsmall'; src: url('./assets/lowsmall.otf') format('opentype'); font-weight: normal; font-style: normal; }
     body { background: #fff; color: #000; font-family: sans-serif; padding: 20px; max-width: 400px; margin: auto; }
     input, button { display: block; width: 100%; margin-bottom: 12px; padding: 10px; box-sizing: border-box; border: 4px solid #fff; }
     input { background: #ddd; color: #000; font-family: 'lowsmall'; }
+    input::placeholder { font-family: 'lowsmall'; }
     button {
       display: flex;
       gap: 8px;
