@@ -213,22 +213,19 @@ document.getElementById('deleteAccountBtn').addEventListener('click', async () =
     return;
   }
 
-  printLog("Password verified. Deleting user profile data...");
+  printLog("Password verified. Calling SQL RPC function to delete account...");
 
-  // Delete profile record from SQL database
-  const { error: dbError } = await _supabase
-    .from('profiles')
-    .delete()
-    .eq('id', user.id);
+  // Call the database function to purge the user from auth.users and public.profiles
+  const { error: rpcError } = await _supabase.rpc('delete_user_account');
 
-  if (dbError) {
-    printLog("❌ Error deleting profile: " + dbError.message);
+  if (rpcError) {
+    printLog("❌ Error deleting account: " + rpcError.message);
     return;
   }
 
-  printLog("Profile record deleted. Signing out...");
+  printLog("Account and profile row purged. Signing out...");
   await _supabase.auth.signOut();
-  alert("Your account has been successfully deleted.");
+  alert("Your account has been permanently deleted.");
 });
 
 // 9. OTHER UTILITY LISTENERS
