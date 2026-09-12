@@ -16,7 +16,6 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
   if (session) {
     document.getElementById('authSection').style.display = 'none';
     document.getElementById('profileSection').style.display = 'block';
-    document.getElementById('displayEmail').textContent = session.user.email;
     
     // Evaluate providers & badge state
     updateAuthBadgesAndProviders(session.user);

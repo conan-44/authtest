@@ -5,19 +5,22 @@
   <title>Supabase Working Test</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    @font-face { font-family: 'capsmall'; src: url('./assets/capsmall.ttf') format('truetype'); }
+    @font-face { font-family: 'lowbig'; src: url('./assets/lowbig.ttf') format('truetype'); }
+    @font-face { font-family: 'lowsmall'; src: url('./assets/lowsmall.ttf') format('truetype'); }
     body { background: #fff; color: #000; font-family: sans-serif; padding: 20px; max-width: 400px; margin: auto; }
     input, button { display: block; width: 100%; margin-bottom: 12px; padding: 10px; box-sizing: border-box; border: 4px solid #fff; }
-    input { background: #ddd; color: #000; }
+    input { background: #ddd; color: #000; font-family: 'lowsmall'; }
     button {
       display: flex;
       gap: 8px;
       background: #ccc;
       color: #000;
-      font-weight: bold;
       border: none;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 20px;
       transition: background-color 0.15s ease;
+      font-family: 'capsmall';
     }
     .btn-icon {
       display: inline-block;
@@ -25,40 +28,45 @@
       height: 8px;
       min-width: 8px;
       min-height: 8px;
-      background-image: url('icons.png');
+      background-image: url('./assets/icons.png');
       background-repeat: no-repeat;
       background-position-y: -24px;
-      transform: scale(3);
+      transform: scale(4);
       transform-origin: center;
-      margin: 4px 14px 4px 4px;
+      margin: 8px 14px 4px 8px;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
     }
-    .badge-gmail   { background-position-x: -00px; }
-    .badge-mail    { background-position-x: -08px; }
-    .badge-google  { background-position-x: -16px; }
-    .icon-signup   { background-position-x: -24px; }  
-    .icon-signin   { background-position-x: -32px; }  
-    .icon-google   { background-position-x: -40px; }
-    .icon-signout  { background-position-x: -48px; } 
-    .icon-delete   { background-position-x: -56px; }  
-    .icon-refresh  { background-position-x: -64px; } 
-    .icon-save     { background-position-x: -72px; }
-
+    .badge-gmail  { background-position-x: -00px; }
+    .badge-mail   { background-position-x: -08px; }
+    .badge-google { background-position-x: -16px; }
+    .icon-signup  { background-position-x: -24px; }  
+    .icon-signin  { background-position-x: -32px; }  
+    .icon-google  { background-position-x: -40px; }
+    .icon-signout { background-position-x: -48px; } 
+    .icon-delete  { background-position-x: -56px; }  
+    .icon-refresh { background-position-x: -64px; } 
+    .icon-save    { background-position-x: -72px; }
+    .user-stuffs  { 
+      font-family: 'capsmall';
+      font-size: 18px;
+    }
+    .user-header  {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
     .box { background: #eee; padding: 16px; margin-bottom: 16px; }
-
     @keyframes playSprite { from { background-position-y: 0px; } to { background-position-y: -32px; } }
     button:hover .btn-icon { animation: playSprite 0.5s steps(4); }
     hr { border: 0; border-top: 1px solid #333; margin: 16px 0; }
+    #authSectionHeader { font-family: 'lowbig', sans-serif; text-transform: lowercase; font-size: 32px; text-align: center; }
   </style>
 </head>
 <body>
-
-  <h2>Game Account Test</h2>
-
   <!-- SIGNUP & LOGIN FORM -->
   <div id="authSection" class="box">
-    <h3>Create Account / Login</h3>
+    <h3 id="authSectionHeader">Account Management</h3>
     <input type="email" id="email" placeholder="Email (e.g. test@game.com)" />
     <input type="password" id="password" placeholder="Password (min 6 chars)" />
     
@@ -73,10 +81,11 @@
 
   <!-- LOGGED IN USER PROFILE SECTION -->
 <div id="profileSection" class="box" style="display:none;">
-  <span id="authBadge" class="btn-icon"></span>
-  <p><b>Email:</b> <span id="displayEmail"></span></p>
-  <p><b>Current Username:</b> <span id="displayUsername">Loading...</span></p>
-  <p><b>Current Flair:</b> <span id="displayFlair">Loading...</span></p>
+  <div class="user-header">
+    <span id="authBadge" class="btn-icon"></span>
+    <p><span id="displayUsername" class="user-stuffs">Loading...</span></p>
+  </div>
+  <p><span id="displayFlair" class="user-stuffs">Loading...</span></p>
 
   <!-- ADD PASSWORD FORM (Only visible for Google-only users) -->
   <div id="addPasswordContainer" style="display:none;">
