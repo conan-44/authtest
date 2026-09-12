@@ -39,7 +39,8 @@ function updateAuthBadgesAndProviders(user) {
   const hasEmail = providers.includes('email');
 
   // Reset badge classes
-  badgeEl.className = 'btn-icon';
+  badgeEl.classList.remove('badge-gmail', 'badge-google', 'badge-mail', 'btn-icon');
+  badgeEl.classList.add('btn-icon');
 
   if (hasGoogle && hasEmail) {
     // google + email&pass
