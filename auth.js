@@ -233,3 +233,16 @@ document.getElementById('refreshBtn').addEventListener('click', async () => {
   const { data: { user } } = await _supabase.auth.getUser();
   if (user) await fetchProfile(user.id);
 });
+
+const pressedButtonTimers = new WeakMap();
+document.addEventListener('click', (event) => {
+  const button = event.target.closest('button');
+  if (!button) return;
+
+  clearTimeout(pressedButtonTimers.get(button));
+  button.classList.add('button-pressed');
+  pressedButtonTimers.set(button, setTimeout(() => {
+    button.classList.remove('button-pressed');
+    pressedButtonTimers.delete(button);
+  }, 420));
+});

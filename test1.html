@@ -23,6 +23,7 @@
       transition: background-color 0.15s ease;
       font-family: 'capsmall';
     }
+    button.button-pressed { background: #fff; }
     .btn-icon {
       display: inline-block;
       width: 8px;
@@ -50,13 +51,11 @@
     .icon-save    { background-position-x: -72px; }
     .user-stuffs  { 
       font-family: 'capsmall';
-      font-size: 18px;
+      font-size: 18px;   
     }
-    .user-header  {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
+    #displayUsername { font-family: 'lowsmall'; margin-top: 4px; }
+    .user-header  { display: flex; align-items: center; }
+    .user-header p { margin: 0 0 0 12px; }
     .box { background: #eee; padding: 16px; margin-bottom: 16px; }
     @keyframes playSprite { from { background-position-y: 0px; } to { background-position-y: -32px; } }
     button:hover .btn-icon { animation: playSprite 0.5s steps(4); }
@@ -91,7 +90,6 @@
   <!-- ADD PASSWORD FORM (Only visible for Google-only users) -->
   <div id="addPasswordContainer" style="display:none;">
     <hr />
-    <h4>Set Account Password</h4>
     <input type="password" id="newPasswordInput" placeholder="New Password (min 6 chars)" />
     <button id="addPasswordBtn">
       <span class="btn-icon icon-signup"></span>Add Password to Account
@@ -99,7 +97,6 @@
   </div>
   
   <hr />    <!-- EDIT PROFILE FORM -->
-    <h4>Update Profile Info</h4>
     <input type="text" id="editUsername" placeholder="New Username" />
     <input type="text" id="editFlair" placeholder="New Flair" />
     <button id="updateProfileBtn"><span class="btn-icon icon-save"></span>Save Profile Changes</button>
