@@ -9,6 +9,88 @@ function printLog(msg) {
   console.log(timestamp + msg);
 }
 
+function showPopup(message, type = 'info') {
+  let stack = document.querySelector('.notification-stack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.className = 'notification-stack';
+    document.body.appendChild(stack);
+  }
+
+  const popup = document.createElement('div');
+  popup.className = `notification notification-${type}`;
+  popup.setAttribute('role', 'status');
+
+  const label = document.createElement('span');
+  const labelType = type === 'error' ? 'error' : type === 'success' ? 'success' : 'warn';
+  label.className = `notification-label label-${labelType}`;
+  label.setAttribute('aria-hidden', 'true');
+
+  const text = document.createElement('span');
+  text.textContent = message;
+  popup.append(label, text);
+  stack.appendChild(popup);
+
+  setTimeout(() => {
+    popup.remove();
+    if (!stack.children.length) stack.remove();
+  }, 4000);
+}
+
+function showInputPopup(message, inputType = 'text') {
+  return new Promise((resolve) => {
+    let stack = document.querySelector('.notification-stack');
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.className = 'notification-stack';
+      document.body.appendChild(stack);
+    }
+
+    const popup = document.createElement('div');
+    popup.className = 'notification notification-warning input-popup';
+
+    const notificationLabel = document.createElement('span');
+    notificationLabel.className = 'notification-label label-warn';
+    notificationLabel.setAttribute('aria-hidden', 'true');
+
+    const label = document.createElement('label');
+    label.textContent = message;
+
+    const input = document.createElement('input');
+    input.type = inputType;
+    input.autocomplete = 'current-password';
+
+    const actions = document.createElement('div');
+    actions.className = 'input-popup-actions';
+
+    const cancelButton = document.createElement('button');
+    cancelButton.type = 'button';
+    cancelButton.textContent = 'Cancel';
+
+    const confirmButton = document.createElement('button');
+    confirmButton.type = 'button';
+    confirmButton.textContent = 'Confirm';
+
+    const close = (value) => {
+      popup.remove();
+      if (!stack.children.length) stack.remove();
+      resolve(value);
+    };
+
+    cancelButton.addEventListener('click', () => close(null));
+    confirmButton.addEventListener('click', () => close(input.value));
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') close(input.value);
+      if (event.key === 'Escape') close(null);
+    });
+
+    actions.append(cancelButton, confirmButton);
+    popup.append(notificationLabel, label, input, actions);
+    stack.appendChild(popup);
+    input.focus();
+  });
+}
+
 // 2. LISTEN FOR AUTH CHANGES
 _supabase.auth.onAuthStateChange(async (event, session) => {
   printLog(`Auth Event: ${event}`);
@@ -67,7 +149,7 @@ document.getElementById('signUpBtn').addEventListener('click', async () => {
   const flair = document.getElementById('flair').value || 'Novice';
 
   if (!email || !password) {
-    alert("Please enter an email and password!");
+    showPopup("Please enter an email and password!", 'error');
     return;
   }
 
@@ -93,6 +175,7 @@ document.getElementById('signInBtn').addEventListener('click', async () => {
   const password = document.getElementById('password').value;
 
   printLog("Logging in...");
+  showPopup("Logging in...", 'info');
   const { error } = await _supabase.auth.signInWithPassword({ email, password });
   if (error) printLog("❌ Login Error: " + error.message);
 });
@@ -132,6 +215,7 @@ async function fetchProfile(userId) {
     document.getElementById('editFlair').value = data.flair || '';
     
     printLog("✅ Profile loaded: " + JSON.stringify(data));
+    showPopup("Loaded profile data", 'success');
   }
 }
 
@@ -161,6 +245,7 @@ document.getElementById('updateProfileBtn').addEventListener('click', async () =
     printLog("❌ Update Error: " + error.message);
   } else {
     printLog("✅ Profile updated successfully!");
+    showPopup("Saved profile data", 'success');
     await fetchProfile(user.id);
   }
 });
@@ -170,7 +255,7 @@ document.getElementById('addPasswordBtn')?.addEventListener('click', async () =>
   const newPassword = document.getElementById('newPasswordInput').value;
 
   if (!newPassword || newPassword.length < 6) {
-    alert("Password must be at least 6 characters long.");
+    showPopup("Password must be at least 6 characters long.", 'warning');
     return;
   }
 
@@ -192,7 +277,7 @@ document.getElementById('deleteAccountBtn').addEventListener('click', async () =
   const { data: { user } } = await _supabase.auth.getUser();
   if (!user) return;
 
-  const password = prompt("⚠️ DELETING ACCOUNT: Enter your password to confirm deletion:");
+  const password = await showInputPopup("Enter your password to confirm account deletion:", 'password');
   if (!password) {
     printLog("Account deletion cancelled.");
     return;
@@ -207,7 +292,7 @@ document.getElementById('deleteAccountBtn').addEventListener('click', async () =
   });
 
   if (authError) {
-    alert("Incorrect password! Deletion aborted.");
+    showPopup("Incorrect password! Deletion aborted.", 'error');
     printLog("❌ Account deletion failed: Incorrect password.");
     return;
   }
@@ -224,7 +309,7 @@ document.getElementById('deleteAccountBtn').addEventListener('click', async () =
 
   printLog("Account and profile row purged. Signing out...");
   await _supabase.auth.signOut();
-  alert("Your account has been permanently deleted.");
+  showPopup("Your account has been permanently deleted.", 'success');
 });
 
 // 9. OTHER UTILITY LISTENERS
