@@ -17,21 +17,52 @@ function showPopup(message, type = 'info') {
     document.body.appendChild(stack);
   }
 
+  const existingPopup = [...stack.querySelectorAll('.notification')].find((popup) => (
+    popup.dataset.message === message && popup.dataset.type === type
+  ));
+
+  if (existingPopup) {
+    const count = Math.min(Number(existingPopup.dataset.count || 1) + 1, 9);
+    existingPopup.dataset.count = count;
+
+    const counter = existingPopup.querySelector('.notification-count');
+    counter.textContent = `(${count === 9 ? '9+' : count})`;
+    counter.classList.add('notification-count-visible');
+
+    clearTimeout(existingPopup.dismissTimer);
+    existingPopup.dismissTimer = setTimeout(() => {
+      existingPopup.remove();
+      if (!stack.children.length) stack.remove();
+    }, 4000);
+    return;
+  }
+
   const popup = document.createElement('div');
   popup.className = `notification notification-${type}`;
   popup.setAttribute('role', 'status');
+  popup.dataset.message = message;
+  popup.dataset.type = type;
+  popup.dataset.count = '1';
 
   const label = document.createElement('span');
-  const labelType = type === 'error' ? 'error' : type === 'success' ? 'success' : 'warn';
+  const labelType = ['error', 'success', 'warning', 'info'].includes(type)
+    ? (type === 'warning' ? 'warn' : type)
+    : 'info';
   label.className = `notification-label label-${labelType}`;
   label.setAttribute('aria-hidden', 'true');
 
   const text = document.createElement('span');
+  text.className = 'notification-text';
   text.textContent = message;
-  popup.append(label, text);
+
+  const counter = document.createElement('span');
+  counter.className = 'notification-count';
+  counter.setAttribute('aria-hidden', 'true');
+
+  popup.append(label, text, counter);
   stack.appendChild(popup);
 
-  setTimeout(() => {
+  popup.dismissTimer = setTimeout(() => {
     popup.remove();
     if (!stack.children.length) stack.remove();
   }, 4000);
@@ -55,6 +86,10 @@ function showInputPopup(message, inputType = 'text') {
 
     const label = document.createElement('label');
     label.textContent = message;
+
+    const messageRow = document.createElement('div');
+    messageRow.className = 'input-popup-message';
+    messageRow.append(notificationLabel, label);
 
     const input = document.createElement('input');
     input.type = inputType;
@@ -85,7 +120,7 @@ function showInputPopup(message, inputType = 'text') {
     });
 
     actions.append(cancelButton, confirmButton);
-    popup.append(notificationLabel, label, input, actions);
+    popup.append(messageRow, input, actions);
     stack.appendChild(popup);
     input.focus();
   });
@@ -107,6 +142,7 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
     document.getElementById('authSection').style.display = 'block';
     document.getElementById('profileSection').style.display = 'none';
     printLog("No user logged in (INITIAL_SESSION null). Fill form and click Sign Up.");
+    showPopup("Sign in or create an account to start!", 'info');
   }
 });
 
@@ -164,8 +200,10 @@ document.getElementById('signUpBtn').addEventListener('click', async () => {
 
   if (error) {
     printLog("❌ Signup Error: " + error.message);
+    showPopup("Signup failed ", 'error');
   } else {
     printLog("✅ Signup successful!");
+    showPopup("Created new account!", 'success');
   }
 });
 
@@ -177,12 +215,18 @@ document.getElementById('signInBtn').addEventListener('click', async () => {
   printLog("Logging in...");
   showPopup("Logging in...", 'info');
   const { error } = await _supabase.auth.signInWithPassword({ email, password });
-  if (error) printLog("❌ Login Error: " + error.message);
+  if (error) {
+    printLog("❌ Login Error: " + error.message);
+    showPopup("Login failed ",  'error');
+  } else {
+    showPopup("Logged in successfully!", 'success');
+  }
 });
 
 // GOOGLE SIGN IN
 document.getElementById('googleSignInBtn').addEventListener('click', async () => {
   printLog("Redirecting to Google...");
+  showPopup("Redirecting to Google...", 'info');
   
   const { error } = await _supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -207,6 +251,7 @@ async function fetchProfile(userId) {
     printLog("❌ Database Query Error: " + error.message);
   } else if (!data) {
     printLog("⚠️ Connected, but profile row missing.");
+    showPopup("Could not load some data", 'warning');
   } else {
     document.getElementById('displayUsername').textContent = data.username;
     document.getElementById('displayFlair').textContent = data.flair;
@@ -215,7 +260,7 @@ async function fetchProfile(userId) {
     document.getElementById('editFlair').value = data.flair || '';
     
     printLog("✅ Profile loaded: " + JSON.stringify(data));
-    showPopup("Loaded profile data", 'success');
+    showPopup("All data was loaded successfully", 'success');
   }
 }
 
@@ -225,6 +270,7 @@ document.getElementById('updateProfileBtn').addEventListener('click', async () =
 
   if (!user) {
     printLog("❌ Cannot update: No active user session.");
+    showPopup("Update failed", 'error');
     return;
   }
 
@@ -232,6 +278,7 @@ document.getElementById('updateProfileBtn').addEventListener('click', async () =
   const newFlair = document.getElementById('editFlair').value;
 
   printLog("Updating profile in database...");
+  showPopup("Updating profile...", 'info');
   
   const { error } = await _supabase
     .from('profiles')
@@ -243,6 +290,7 @@ document.getElementById('updateProfileBtn').addEventListener('click', async () =
 
   if (error) {
     printLog("❌ Update Error: " + error.message);
+    showPopup("Update failed", 'error');
   } else {
     printLog("✅ Profile updated successfully!");
     showPopup("Saved profile data", 'success');
@@ -264,8 +312,10 @@ document.getElementById('addPasswordBtn')?.addEventListener('click', async () =>
 
   if (error) {
     printLog("❌ Error adding password: " + error.message);
+    showPopup("Failed to add password", 'error');
   } else {
     printLog("✅ Password attached! Your account can now sign in with Email + Password.");
+    showPopup("Password added successfully", 'success');
     // Refresh user state to upgrade badge from badge-google to badge-gmail
     const { data: { user } } = await _supabase.auth.getUser();
     if (user) updateAuthBadgesAndProviders(user);
@@ -280,6 +330,7 @@ document.getElementById('deleteAccountBtn').addEventListener('click', async () =
   const password = await showInputPopup("Enter your password to confirm account deletion:", 'password');
   if (!password) {
     printLog("Account deletion cancelled.");
+    showPopup("Account deletion cancelled", 'info');
     return;
   }
 
@@ -304,12 +355,14 @@ document.getElementById('deleteAccountBtn').addEventListener('click', async () =
 
   if (rpcError) {
     printLog("❌ Error deleting account: " + rpcError.message);
+    showPopup("Failed to delete account", 'error');
     return;
   }
 
   printLog("Account and profile row purged. Signing out...");
   await _supabase.auth.signOut();
   showPopup("Your account has been permanently deleted.", 'success');
+
 });
 
 // 9. OTHER UTILITY LISTENERS

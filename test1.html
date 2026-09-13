@@ -54,23 +54,37 @@
       background-repeat: no-repeat;
       background-position-y: -24px;
       transform: scale(4);
+      transform-origin: center;
+      margin: 8px 14px 8px 8px;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
       animation: notification-label-play 0.5s steps(4) 1;
     }
+    .notification-count {
+      display: none;
+      margin-left: 4px;
+      font-size: 11px;
+      line-height: 1;
+      vertical-align: super;
+    }
+    .notification-count-visible { display: inline; }
     @keyframes notification-label-play {
       from { background-position-y: 0; }
       to { background-position-y: -32px; }
     }
     .notification-error { background: #ffb3b3; }
     .notification-success { background: #c6f7c6; }
-    .notification-warning {color: #ffbf36; }
+    .notification-warning {background: #ffeb99; }
+    .notification-info { background: #b3d9ff; }
     .input-popup {
       display: grid;
       gap: 10px;
       pointer-events: auto;
     }
-    .input-popup .notification-label { float: left; }
+    .input-popup-message {
+      display: flex;
+      align-items: center;
+    }
     .input-popup label {
       margin-left: 8px;
       font-size: 16px;
@@ -109,19 +123,20 @@
       image-rendering: pixelated;
       image-rendering: crisp-edges;
     }
-    .badge-gmail       { background-position-x: -00px; }
-    .badge-mail          { background-position-x: -08px; }
-    .badge-google  { background-position-x: -16px; }
-     .icon-signup       { background-position-x: -24px; } 
-    .icon-signin          { background-position-x: -32px; }  
-    .icon-google        { background-position-x: -40px; }
-    .icon-signout      { background-position-x: -48px; } 
-    .icon-delete         { background-position-x: -56px; }  
-    .icon-refresh    { background-position-x: -64px; } 
-    .icon-save             { background-position-x: -72px; }
-    .label-error        { background-position-x: -80px; }
-    .label-warn           { background-position-x: -88px; }
-    .label-success  { background-position-x: -96px; }
+    .badge-gmail       { background-position-x: -00px;    }
+    .badge-mail          { background-position-x: -08px;    }
+    .badge-google  { background-position-x: -16px;    }
+     .icon-signup       { background-position-x: -24px;    } 
+    .icon-signin          { background-position-x: -32px;    }  
+    .icon-google        { background-position-x: -40px;    }
+    .icon-signout      { background-position-x: -48px;    } 
+    .icon-delete         { background-position-x: -56px;    }  
+    .icon-refresh    { background-position-x: -64px;    } 
+    .icon-save             { background-position-x: -72px;    }
+    .label-error        { background-position-x: -80px;    }
+    .label-warn           { background-position-x: -88px;    }
+    .label-success  { background-position-x: -96px;    }
+    .label-info              { background-position-x: -104px; }
     .user-stuffs       { 
       font-family: 'capsmall';
       font-size: 18px;   
