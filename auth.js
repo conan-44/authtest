@@ -9,6 +9,21 @@ function printLog(msg) {
   console.log(timestamp + msg);
 }
 
+function dismissPopup(popup) {
+  if (!popup || popup.classList.contains('notification-out')) return;
+  popup.classList.add('notification-out');
+  let removed = false;
+  const onEnd = () => {
+    if (removed) return;
+    removed = true;
+    const stack = popup.parentElement;
+    popup.remove();
+    if (stack && !stack.children.length) stack.remove();
+  };
+  popup.addEventListener('animationend', onEnd, { once: true });
+  setTimeout(onEnd, 400);
+}
+
 function showPopup(message, type = 'info') {
   let stack = document.querySelector('.notification-stack');
   if (!stack) {
@@ -17,7 +32,7 @@ function showPopup(message, type = 'info') {
     document.body.appendChild(stack);
   }
 
-  const existingPopup = [...stack.querySelectorAll('.notification')].find((popup) => (
+  const existingPopup = [...stack.querySelectorAll('.notification:not(.notification-out)')].find((popup) => (
     popup.dataset.message === message && popup.dataset.type === type
   ));
 
@@ -31,8 +46,7 @@ function showPopup(message, type = 'info') {
 
     clearTimeout(existingPopup.dismissTimer);
     existingPopup.dismissTimer = setTimeout(() => {
-      existingPopup.remove();
-      if (!stack.children.length) stack.remove();
+      dismissPopup(existingPopup);
     }, 4000);
     return;
   }
@@ -63,8 +77,7 @@ function showPopup(message, type = 'info') {
   stack.appendChild(popup);
 
   popup.dismissTimer = setTimeout(() => {
-    popup.remove();
-    if (!stack.children.length) stack.remove();
+    dismissPopup(popup);
   }, 4000);
 }
 
@@ -107,8 +120,7 @@ function showInputPopup(message, inputType = 'text') {
     confirmButton.textContent = 'Confirm';
 
     const close = (value) => {
-      popup.remove();
-      if (!stack.children.length) stack.remove();
+      dismissPopup(popup);
       resolve(value);
     };
 

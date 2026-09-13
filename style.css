@@ -19,12 +19,12 @@
     button.button-pressed { background: #fff; }
     .notification-stack {
       position: fixed;
-      top: 16px;
+      top: 20px;
       left: 16px;
       z-index: 1000;
       display: grid;
       gap: 8px;
-      width: min(320px, calc(100vw - 32px));
+      width: min(300px, calc(100vw - 32px));
       pointer-events: none;
     }
     .notification {
@@ -37,7 +37,13 @@
       font-family: 'capsmall', sans-serif;
       font-size: 16px;
       line-height: 1.2;
-      animation: notification-in 0.2s ease-out;
+      box-sizing: border-box;
+      animation: notification-in 0.25s ease-out;
+    }
+    .notification-out {
+      animation: notification-out 0.35s ease-in-out forwards;
+      pointer-events: none;
+      overflow: hidden;
     }
     .notification-label {
       flex: 0 0 8px;
@@ -65,10 +71,10 @@
       from { background-position-y: 0; }
       to { background-position-y: -32px; }
     }
-    .notification-error { background: #ffb3b3; }
-    .notification-success { background: #c6f7c6; }
-    .notification-warning {background: #ffeb99; }
-    .notification-info { background: #b3d9ff; }
+    .notification-error { background: rgba(255, 179, 179, 0.5); }
+    .notification-success { background: rgba(198, 247, 198, 0.5); }
+    .notification-warning {background: rgba(255, 235, 153, 0.5); }
+    .notification-info { background: rgba(179, 217, 255, 0.5); }
     .input-popup {
       display: grid;
       gap: 10px;
@@ -98,8 +104,30 @@
       font-size: 14px;
     }
     @keyframes notification-in {
-      from { opacity: 0; transform: translateX(-12px); }
+      from { opacity: 0; transform: translateX(-16px); }
       to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes notification-out {
+      0% {
+        opacity: 1;
+        transform: translateX(0);
+        max-height: 120px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        margin-bottom: 0;
+      }
+      40% {
+        opacity: 0;
+        transform: translateX(-24px);
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(-24px);
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        margin-bottom: -8px;
+      }
     }
     .btn-icon {
       display: inline-block;
