@@ -1,0 +1,10 @@
+# various milestones for achievements here
+# these will be based on points
+# format: <points required>: <milestone name>
+# ------------>8--------------#
+
+100: Silver
+250: Gold
+500: Diamond
+1000: Platinum
+2000: Mythical

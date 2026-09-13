@@ -1,0 +1,13 @@
+# skvw cfgml for yaml based config
+# ------------>8--------------#
+
+# basic points config
+common: 10
+rare: 25
+epic: 50
+legendary: 80
+secret_default: 100
+
+# secret overrides
+# use namespace:filename
+main:rebirth: 128

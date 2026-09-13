@@ -9,6 +9,29 @@ function printLog(msg) {
   console.log(timestamp + msg);
 }
 
+const AUTH_ASSET_ROOT = new URL('../assets/', document.currentScript?.src || window.location.href);
+const NOTIFICATION_SOUNDS = {
+  error: new URL('error.wav', AUTH_ASSET_ROOT).href,
+  success: new URL('success.wav', AUTH_ASSET_ROOT).href,
+  warning: new URL('warn.wav', AUTH_ASSET_ROOT).href,
+  warn: new URL('warn.wav', AUTH_ASSET_ROOT).href,
+  info: new URL('info.wav', AUTH_ASSET_ROOT).href
+};
+
+function playNotificationSound(type, isStacked = false) {
+  const soundPath = NOTIFICATION_SOUNDS[type] || NOTIFICATION_SOUNDS.info;
+  const play = () => {
+    const audio = new Audio(soundPath);
+    audio.play().catch(() => {});
+  };
+
+  if (isStacked) {
+    setTimeout(play, 200);
+  } else {
+    play();
+  }
+}
+
 function dismissPopup(popup) {
   if (!popup || popup.classList.contains('notification-out')) return;
   popup.classList.add('notification-out');
@@ -21,7 +44,7 @@ function dismissPopup(popup) {
     if (stack && !stack.children.length) stack.remove();
   };
   popup.addEventListener('animationend', onEnd, { once: true });
-  setTimeout(onEnd, 400);
+  setTimeout(onEnd, 320);
 }
 
 function showPopup(message, type = 'info') {
@@ -36,6 +59,8 @@ function showPopup(message, type = 'info') {
     popup.dataset.message === message && popup.dataset.type === type
   ));
 
+  const hasExistingPopups = stack.querySelectorAll('.notification:not(.notification-out)').length > 0;
+
   if (existingPopup) {
     const count = Math.min(Number(existingPopup.dataset.count || 1) + 1, 9);
     existingPopup.dataset.count = count;
@@ -43,6 +68,8 @@ function showPopup(message, type = 'info') {
     const counter = existingPopup.querySelector('.notification-count');
     counter.textContent = `(${count === 9 ? '9+' : count})`;
     counter.classList.add('notification-count-visible');
+
+    playNotificationSound(type, true);
 
     clearTimeout(existingPopup.dismissTimer);
     existingPopup.dismissTimer = setTimeout(() => {
@@ -76,6 +103,8 @@ function showPopup(message, type = 'info') {
   popup.append(label, text, counter);
   stack.appendChild(popup);
 
+  playNotificationSound(type, hasExistingPopups);
+
   popup.dismissTimer = setTimeout(() => {
     dismissPopup(popup);
   }, 4000);
@@ -89,6 +118,9 @@ function showInputPopup(message, inputType = 'text') {
       stack.className = 'notification-stack';
       document.body.appendChild(stack);
     }
+
+    const hasExistingPopups = stack.querySelectorAll('.notification:not(.notification-out)').length > 0;
+    playNotificationSound('warning', hasExistingPopups);
 
     const popup = document.createElement('div');
     popup.className = 'notification notification-warning input-popup';

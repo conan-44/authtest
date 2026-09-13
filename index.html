@@ -1,54 +1,77 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Supabase Working Test</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
- <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>achievements</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <!-- SIGNUP & LOGIN FORM -->
-  <div id="authSection" class="box">
-    <h3 id="authSectionHeader">Account Management</h3>
-    <input type="email" id="email" placeholder="Email (e.g. test@game.com)" />
-    <input type="password" id="password" placeholder="Password (min 6 chars)" />
-    
-    <!-- Custom Profile Inputs -->
-    <input type="text" id="username" placeholder="Username (e.g. DragonSlayer)" />
-    <input type="text" id="flair" placeholder="Flair (e.g. VIP Member)" />
+    <main class="page">
+        <section class="panel" aria-labelledby="achievements-heading">
+            <div class="panel-header">
+                <h1 id="achievements-heading">Achievements</h1>
+                <div id="scoreTracker" class="score-tracker">Points: 0 / 0</div>
+            </div>
+            <div class="panel-body">
+                <div id="achievementsGrid" class="achievements-grid" aria-live="polite"></div>
+            </div>
+        </section>
+        <section class="panel" aria-labelledby="milestones-heading">
+            <div class="panel-header">
+                <h1 id="milestones-heading">Milestones</h1>
+            </div>
+            <div class="panel-body">
+                <div id="milestonesGrid" class="milestones-grid" aria-live="polite"></div>
+            </div>
+        </section>
+    </main> 
+    <aside id="accountManagement" aria-label="Account Management">
+        <div id="authSection" class="box">
+            <h3 id="authSectionHeader">Account Management</h3>
+            <input type="email" id="email" placeholder="Email (e.g. test@game.com)" />
+            <input type="password" id="password" placeholder="Password (min 6 chars)" />
+            <input type="text" id="username" placeholder="Username (e.g. DragonSlayer)" />
+            <input type="text" id="flair" placeholder="Flair (e.g. VIP Member)" />
+            <button id="signUpBtn"><span class="btn-icon icon-signup"></span>Create Account</button>
+            <button id="signInBtn" class="btn-secondary"><span class="btn-icon icon-signin"></span>Sign In with Email</button>
+            <button id="googleSignInBtn" class="btn-secondary"><span class="btn-icon icon-google"></span>Sign In with Google</button>
+        </div>
 
-    <button id="signUpBtn"><span class="btn-icon icon-signup"></span>Create Account</button>
-    <button id="signInBtn" class="btn-secondary"><span class="btn-icon icon-signin"></span>Sign In with Email</button>
-    <button id="googleSignInBtn" class="btn-secondary"><span class="btn-icon icon-google"></span>Sign In with Google</button>
-  </div>
-
-  <!-- LOGGED IN USER PROFILE SECTION -->
-<div id="profileSection" class="box" style="display:none;">
-  <div class="user-header">
-    <span id="authBadge" class="btn-icon"></span>
-    <p><span id="displayUsername" class="user-stuffs">Loading...</span></p>
-  </div>
-  <p><span id="displayFlair" class="user-stuffs">Loading...</span></p>
-
-  <!-- ADD PASSWORD FORM (Only visible for Google-only users) -->
-  <div id="addPasswordContainer" style="display:none;">
-    <hr />
-    <input type="password" id="newPasswordInput" placeholder="New Password (min 6 chars)" />
-    <button id="addPasswordBtn">
-      <span class="btn-icon icon-signup"></span>Add Password to Account
-    </button>
-  </div>
-  
-  <hr />    <!-- EDIT PROFILE FORM -->
-    <input type="text" id="editUsername" placeholder="New Username" />
-    <input type="text" id="editFlair" placeholder="New Flair" />
-    <button id="updateProfileBtn"><span class="btn-icon icon-save"></span>Save Profile Changes</button>
-
-    <button id="refreshBtn" class="btn-secondary"><span class="btn-icon icon-refresh"></span>Reload Profile Data</button>
-    <button id="deleteAccountBtn" class="btn-danger"><span class="btn-icon icon-delete"></span>Delete Account</button>
-    <button id="signOutBtn"><span class="btn-icon icon-signout"></span>Sign Out</button>
-  </div>
-  <p style="font-family: 'lowsmall', sans-serif;">m09.2k build 1.8</p>
-  <script src="auth.js"></script>
+        <div id="profileSection" class="box" style="display:none;">
+            <div class="user-header">
+                <span id="authBadge" class="btn-icon"></span>
+                <p><span id="displayUsername" class="user-stuffs">Loading...</span></p>
+            </div>
+            <p><span id="displayFlair" class="user-stuffs">Loading...</span></p>
+            <div id="addPasswordContainer" style="display:none;">
+                <hr />
+                <input type="password" id="newPasswordInput" placeholder="New Password (min 6 chars)" />
+                <button id="addPasswordBtn"><span class="btn-icon icon-signup"></span>Add Password to Account</button>
+            </div>
+            <hr />
+            <input type="text" id="editUsername" placeholder="New Username" />
+            <input type="text" id="editFlair" placeholder="New Flair" />
+            <button id="updateProfileBtn"><span class="btn-icon icon-save"></span>Save Profile Changes</button>
+            <button id="refreshBtn" class="btn-secondary"><span class="btn-icon icon-refresh"></span>Reload Profile Data</button>
+            <button id="deleteAccountBtn" class="btn-danger"><span class="btn-icon icon-delete"></span>Delete Account</button>
+            <button id="signOutBtn"><span class="btn-icon icon-signout"></span>Sign Out</button>
+        </div>
+    </aside>
+    <div id="popupStack" class="popup-stack" aria-live="assertive" aria-atomic="false"></div>
+    <p class="build-indicator" aria-label="Build information">
+        <span>programmed by conan</span>
+        <span id="versionIndicator">build unknown</span>
+    </p>
+    <!-- data parsers here -->
+    <script src="./parsers/metajson.js"></script>
+    <script src="./parsers/config.js"></script>
+    <script src="./js/loaders.js"></script>
+    <!-- core scripts + utils here -->
+    <script src="./js/utils.js"></script>
+    <script src="./js/renderers.js"></script>
+    <script src="./js/achievements.js"></script>
+    <script src="./js/auth.js"></script>
 </body>
 </html>

@@ -1,0 +1,55 @@
+# format:
+# m{month}{monthly drop #}{version}-{subversion}
+# e.g m01a0.1-x
+# subversion may be either:
+# -x: initial creation or major change
+# -1, -2, ...: minor updates
+# exp: experimental changes
+# ex1, ex2, ...: more experiments
+# pre: pre-release changes
+# pr1, pr2, ...: more pre-releases
+
+[[[alpha]]]
+#---->8------v0.1-x → v0.9-x [ACHIEVING UPDATE]----#
+m08a0.1-x: initial creation
+m08b0.1-1: added initial achievement tracking system
+m08c0.2-x: added RARE, EPIC, and LEGENDARY rarities
+m08d0.2-1: new colors per rarity
+m08e0.3-x: added achievement description
+m08f0.4-x: achievements now pull from data/index.json
+m08g0.5-x: added SECRET rarity
+m08h0.5-1: SECRET rarity has hidden descriptions
+m08i0.5-2: SECRET rarity has darkened cards and rainbow outline
+m08j0.6pre: added achievements/ folder in data/ with index.json
+m08k0.6-x: achievements now load dynamically from individual json files
+m08l0.6-1: removed index.json file as loaded achievements use arrays
+m08m0.6-2: changed index path to data/achievements/index.skvwmeta
+m08n0.6-3: removed redundant id field from achievements
+m08o0.7exp: tested icon spritesheets and rarity icons
+m08p0.7-x: added banners for achievement rarities
+m08q0.7-1: fixed banner display and removed old indicator
+m08r0.7-2: SECRET rarity cards no longer have rainbow outlines
+m08s0.7-3: improved display for different screen resolutions and tests on mobile
+m09a0.7-4: further improvements to mobile display including dynamic width
+m09b0.8-x: added a console command { achieve("namespace:id.unlock") } for simpler debugging
+m09c0.8-1: added a console command { achieve("namespace:id.revoke") } instead of clearing cache
+m09d0.9-x: added achievements/ folder and split js files into parsers, utils, loaders etc
+m09e1.0exp: tested points system for achievements; each rarity now has associated points
+#---->8------v1.0ex2 → v1.3-1 [MILESTONES UPDATE]----#
+m09f1.0ex2: tested milestones system and added SILVER, GOLD, and DIAMOND milestones; points now unlock certain milestones
+m09g1.0pre: added config/ folder under data/achievements/, added milestones.skvwcfgml and points.cfgml
+m09h1.0-x: finalized points and milestones system which can be used without experiments
+m09i1.0-1: added config.js under parsers/ folder with parsers for skvwcfgml files
+m09j1.0-2: added PLATINUM milestone requiring 1000 points
+m09k1.1exp: tested console commands { points(add()) } and { points(remove()) } for manipulating points
+m09l1.1pre: added console commands { points(reach() } and { points(calc()) } for manipulating milestones
+m09m1.1-x: console command { points() } can be used without experiments
+m09n1.1-1: updated console command { points(calc()) } such that it prints output insteadof returning an object
+m09o1.2-x: added lock/unlock icons and medals for each milestone
+m09p1.2-1: changed layout for icons and medals on milestone chips
+m09q1.2-1: added MYTHICAL milestone; currently, it does not have a medal
+m09r1.3-x: changed fonts and added more css variables
+m09s1.3-1: made some fonts more readable on mobile
+#---->8------v1.4-x → v1.4-1 [TABS UPDATE]----#
+9w2a1.4-x: added tab navigation for achievements and milestones
+
