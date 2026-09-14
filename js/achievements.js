@@ -187,8 +187,7 @@ const history_file = "./history/achievements.skvwhist";
         async function syncUnlockToSupabase(achievementId) {
             if (typeof _supabase === "undefined") return;
             const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) return; // Guest mode / not logged in
-
+            if (!user) return; 
             if (typeof printLog === "function") printLog(`Unlocking achievement: ${achievementId}...`);
 
             const stats = await getUserStats(user.id);

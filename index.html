@@ -14,7 +14,7 @@
                 <h1 id="achievements-heading">Achievements</h1>
                 <div class="panel-header-actions">
                     <div id="scoreTracker" class="score-tracker">Points: 0 / 0</div>
-                    <button id="toggleChatBtn" class="btn-secondary">Chat</button>
+                    <button id="toggleChatBtn" class="btn-secondary chat-toggle-btn"><span class="btn-icon label-chat"></span>Chat: OFF</button>
                 </div>
             </div>
             <div class="panel-body">
@@ -23,14 +23,14 @@
         </section>
         <section class="panel is-hidden" id="chatPanel" aria-labelledby="chat-heading">
             <div class="panel-header">
-                <h1 id="chat-heading">Chat</h1>
-                <button id="toggleAchievementsBtn" class="btn-secondary">Achievements</button>
+                <h1 id="chat-heading">Global Chat</h1>
+                <button id="toggleAchievementsBtn" class="btn-secondary chat-toggle-btn"><span class="btn-icon label-chat"></span>Chat: ON</button>
             </div>
             <div class="panel-body chat-panel-body">
                 <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
                 <div class="chat-input-row">
                     <input type="text" id="chatInput" placeholder="Type a message..." />
-                    <button id="sendChatBtn">Send</button>
+                    <button id="sendChatBtn"><span class="btn-icon icon-send"></span>Send</button>
                 </div>
             </div>
         </section>

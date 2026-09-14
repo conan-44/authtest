@@ -1,12 +1,13 @@
 // REALTIME CHAT MODULE (Add to existing JS)
 
 let realtimeChannel = null;
+let currentChatUserId = null;
 
 // 1. CHAT HISTORY
 async function fetchChatHistory() {
   const { data, error } = await _supabase
     .from('messages')
-    .select(`id, content, created_at, profiles(username, flair)`)
+    .select(`id, content, created_at, user_id, profiles(username, flair)`)
     .order('created_at', { ascending: true })
     .limit(50);
 
@@ -45,6 +46,8 @@ async function sendMessage() {
   const content = input.value.trim();
   if (!content) return;
 
+  playSendIconAnimation();
+
   const { data: { user } } = await _supabase.auth.getUser();
   if (!user) return;
 
@@ -53,11 +56,20 @@ async function sendMessage() {
   if (error) console.error("Error sending message:", error.message);
 }
 
+function playSendIconAnimation() {
+  const icon = document.querySelector('#sendChatBtn .icon-send');
+  if (!icon) return;
+  icon.classList.remove('is-sending');
+  void icon.offsetWidth; // restart the animation from scratch
+  icon.classList.add('is-sending');
+}
+
 // 4. UI HELPERS
 function appendMessageUI(msg) {
   const container = document.getElementById('chatMessages');
   const div = document.createElement('div');
-  div.className = 'chat-msg';
+  const isOwn = msg.user_id && msg.user_id === currentChatUserId;
+  div.className = `chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}`;
 
   const username = escapeHTML(msg.profiles?.username || 'Player');
   const flair = msg.profiles?.flair ? `<span class="chat-flair">${escapeHTML(msg.profiles.flair)}</span>` : '';
@@ -86,6 +98,8 @@ async function openChatPanel() {
   chatPanel.classList.remove('is-hidden');
   if (!chatInitialized) {
     chatInitialized = true;
+    const { data: { user } } = await _supabase.auth.getUser();
+    currentChatUserId = user?.id || null;
     await fetchChatHistory();
     initRealtimeChat();
   }
