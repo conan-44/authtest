@@ -15,7 +15,8 @@ const history_file = "./history/achievements.skvwhist";
             bonusPoints: 0,
             pointsConfig: { common: 10, rare: 25, epic: 50, legendary: 80, secret_default: 100 },
             milestones: [],
-            lastMilestonePoints: 0
+            lastMilestonePoints: 0,
+            profile: null
         };
 
         const config = {
@@ -43,12 +44,48 @@ const history_file = "./history/achievements.skvwhist";
 
         async function loadAllFromDirectoryIndex() {
             const list = await loaders.loadAllFromDirectoryIndex();
+            await loadUserProfile();
             // Baseline so existing progress doesn't retrigger popups on page load.
             state.lastMilestonePoints = getSummary(state).unlockedPoints;
             renderers.renderAll();
             renderers.renderMilestones();
             if (onRender) onRender(getSummary(state));
             return list;
+        }
+
+        async function loadUserProfile(userId) {
+            if (typeof _supabase === "undefined") return null;
+
+            if (!userId) {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (!user) return null; // Guest mode / not logged in
+                userId = user.id;
+            }
+
+            const { data: profile } = await _supabase
+                .from('profiles')
+                .select('username, flair')
+                .eq('id', userId)
+                .maybeSingle();
+            state.profile = profile || null;
+
+            const { data: achievements, error } = await _supabase
+                .from('user_achievements')
+                .select('achievement_id, unlocked_at')
+                .eq('user_id', userId);
+
+            if (error) {
+                console.error("Error loading achievements:", error.message);
+                return state.profile;
+            }
+
+            (achievements || []).forEach(({ achievement_id, unlocked_at }) => {
+                if (!state.completionMap[achievement_id]) {
+                    state.completionMap[achievement_id] = { unlockedAt: new Date(unlocked_at).getTime() };
+                }
+            });
+            loaders.saveState();
+            return state.profile;
         }
 
         function executeCodeCommand(commandString) {
@@ -123,7 +160,7 @@ const history_file = "./history/achievements.skvwhist";
             return getSummary(state).unlockedPoints;
         }
 
-        function unlock(id) {
+        async function unlock(id) {
             const achievement = state.achievementsMap.get(id);
             if (!achievement || state.completionMap[id]) return false;
             state.completionMap[id] = { unlockedAt: Date.now() };
@@ -131,7 +168,26 @@ const history_file = "./history/achievements.skvwhist";
             checkMilestones();
             if (onRender) onRender(getSummary(state));
             console.log(`[Achievement] Unlocked: ${id} (+${achievement.points} pts)`);
+            await syncUnlockToSupabase(id);
             return true;
+        }
+
+        async function syncUnlockToSupabase(achievementId) {
+            if (typeof _supabase === "undefined") return;
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) return; // Guest mode / not logged in
+
+            if (typeof printLog === "function") printLog(`Unlocking achievement: ${achievementId}...`);
+
+            const { error } = await _supabase
+                .from('user_achievements')
+                .insert([
+                    {
+                        user_id: user.id,
+                        achievement_id: achievementId
+                    }
+                ]);
+            if (error) console.error(`[Achievement] Failed to sync unlock to Supabase: ${achievementId}`, error);
         }
 
         function revoke(id) {
@@ -166,6 +222,7 @@ const history_file = "./history/achievements.skvwhist";
         return {
             loadAllFromDirectoryIndex,
             loadAchievement: loaders.loadAchievement,
+            loadUserProfile,
             executeCodeCommand,
             points: command => {
                 if (command && typeof command === "object") return executePointsCommand(command.action, command.value);
@@ -177,9 +234,9 @@ const history_file = "./history/achievements.skvwhist";
             isCompleted: id => isCompleted(state, id),
             getSummary: () => getSummary(state),
             getAchievements: () => Array.from(state.achievementsMap.values()),
-            getMilestones: () => state.milestones.slice()
-        };
-    }
+            getMilestones: () => state.milestones.slice(),
+            getProfile: () => state.profile
+        };    }
 
     window.AchievementModule = { create: createAchievementModule };
 
