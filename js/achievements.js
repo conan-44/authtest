@@ -69,19 +69,23 @@ const history_file = "./history/achievements.skvwhist";
                 .maybeSingle();
             state.profile = profile || null;
 
-            const { data: achievements, error } = await _supabase
-                .from('user_achievements')
-                .select('achievement_id, unlocked_at')
-                .eq('user_id', userId);
+            const { data, error } = await _supabase
+                .from('user_stats')
+                .select('points, achievements')
+                .eq('user_id', userId)
+                .single();
 
             if (error) {
-                console.error("Error loading achievements:", error.message);
+                console.error("Error fetching stats:", error.message);
                 return state.profile;
             }
 
-            (achievements || []).forEach(({ achievement_id, unlocked_at }) => {
-                if (!state.completionMap[achievement_id]) {
-                    state.completionMap[achievement_id] = { unlockedAt: new Date(unlocked_at).getTime() };
+            console.log("Current Points:", data.points);
+            console.log("Unlocked Achievements Array:", data.achievements);
+
+            (data.achievements || []).forEach(achievementId => {
+                if (!state.completionMap[achievementId]) {
+                    state.completionMap[achievementId] = { unlockedAt: Date.now() };
                 }
             });
             loaders.saveState();
@@ -135,7 +139,7 @@ const history_file = "./history/achievements.skvwhist";
                 .map(([rarity, points]) => [rarity, Math.ceil(pointsNeeded / points)]));
         }
 
-        function executePointsCommand(action, value) {
+        async function executePointsCommand(action, value) {
             if (action === "calc") {
                 const pointsNeeded = getPointsNeeded(value);
                 if (pointsNeeded === null) return false;
@@ -144,6 +148,7 @@ const history_file = "./history/achievements.skvwhist";
                 console.log(`Achievements: ${Object.entries(rarities).map(([rarity, count]) => `${rarity}: ${count}`).join(" | ")}`);
                 return { pointsNeeded, rarities };
             }
+            const previousBonus = state.bonusPoints;
             if (action === "reach") {
                 const pointsNeeded = getPointsNeeded(value);
                 if (pointsNeeded === null) return false;
@@ -157,6 +162,8 @@ const history_file = "./history/achievements.skvwhist";
             renderers.renderAll();
             checkMilestones();
             if (onRender) onRender(getSummary(state));
+            const delta = state.bonusPoints - previousBonus;
+            if (delta !== 0) await syncPointsToSupabase(delta);
             return getSummary(state).unlockedPoints;
         }
 
@@ -172,6 +179,21 @@ const history_file = "./history/achievements.skvwhist";
             return true;
         }
 
+        async function getUserStats(userId) {
+            if (typeof _supabase === "undefined") return null;
+            const { data, error } = await _supabase
+                .from('user_stats')
+                .select('points, achievements')
+                .eq('user_id', userId)
+                .single();
+
+            if (error) {
+                console.error("Error fetching stats:", error.message);
+                return null;
+            }
+            return data;
+        }
+
         async function syncUnlockToSupabase(achievementId) {
             if (typeof _supabase === "undefined") return;
             const { data: { user } } = await _supabase.auth.getUser();
@@ -179,15 +201,36 @@ const history_file = "./history/achievements.skvwhist";
 
             if (typeof printLog === "function") printLog(`Unlocking achievement: ${achievementId}...`);
 
+            const stats = await getUserStats(user.id);
+            const currentList = stats?.achievements || [];
+            if (currentList.includes(achievementId)) {
+                console.log(`Achievement '${achievementId}' already unlocked.`);
+                return;
+            }
+            const updatedList = [...currentList, achievementId];
+
             const { error } = await _supabase
-                .from('user_achievements')
-                .insert([
-                    {
-                        user_id: user.id,
-                        achievement_id: achievementId
-                    }
-                ]);
-            if (error) console.error(`[Achievement] Failed to sync unlock to Supabase: ${achievementId}`, error);
+                .from('user_stats')
+                .update({ achievements: updatedList })
+                .eq('user_id', user.id);
+            if (error) console.error("Error unlocking achievement:", error.message);
+            else console.log(`\uD83C\uDFC6 Unlocked: ${achievementId}`);
+        }
+
+        async function syncPointsToSupabase(amount) {
+            if (typeof _supabase === "undefined") return;
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) return; // Guest mode / not logged in
+
+            const stats = await getUserStats(user.id);
+            const newTotal = (stats?.points || 0) + amount;
+
+            const { error } = await _supabase
+                .from('user_stats')
+                .update({ points: newTotal })
+                .eq('user_id', user.id);
+            if (error) console.error("Error updating points:", error.message);
+            else console.log(`Added ${amount} points! New total: ${newTotal}`);
         }
 
         function revoke(id) {
