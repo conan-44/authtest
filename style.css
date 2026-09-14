@@ -668,7 +668,7 @@ body {
 .label-success { background-position-x: -96px; }
 .label-info    { background-position-x: -104px; }
 .label-achievement { background-position-x: -168px; }
-.label-chat    { background-position-x: -168px; }
+.label-chat    { background-position-x: -160px; }
 
 @keyframes notification-label-play {
     from { background-position-y: 0; }
