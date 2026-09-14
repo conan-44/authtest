@@ -83,6 +83,8 @@ const history_file = "./history/achievements.skvwhist";
             console.log("Current Points:", data.points);
             console.log("Unlocked Achievements Array:", data.achievements);
 
+            if (Number.isFinite(data.points)) state.bonusPoints = data.points;
+
             (data.achievements || []).forEach(achievementId => {
                 if (!state.completionMap[achievementId]) {
                     state.completionMap[achievementId] = { unlockedAt: Date.now() };
