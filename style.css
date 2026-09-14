@@ -232,6 +232,8 @@
     --notification-success: rgba(198, 247, 198, 0.8);
     --notification-warning: rgba(255, 235, 153, 0.8);
     --notification-info: rgba(179, 217, 255, 0.8);
+    --notification-achievement: rgba(249, 179, 255, 0.8);
+    --notification-chat: rgba(199, 189, 255, 0.8);
     --mobile-page-padding: 8px;
     --mobile-panel-header-padding: 9px 10px;
     --mobile-panel-header-gap: 6px;
@@ -451,6 +453,22 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-white) var(--color-panel-body-surface);
+}
+.chat-messages::-webkit-scrollbar {
+    width: 10px;
+}
+.chat-messages::-webkit-scrollbar-track {
+    background: var(--color-panel-body-surface);
+}
+.chat-messages::-webkit-scrollbar-thumb {
+    background: var(--color-white);
+    border-radius: var(--card-radius);
+    border: 2px solid var(--color-panel-body-surface);
+}
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: var(--color-points);
 }
 .chat-msg {
     border: var(--achievement-border-width) solid var(--color-white);
@@ -593,6 +611,8 @@ body {
 .notification-success { background: var(--notification-success); }
 .notification-warning { background: var(--notification-warning); }
 .notification-info { background: var(--notification-info); }
+.notification-achievement { background: var(--notification-achievement); }
+.notification-chat { background: var(--notification-chat); }
 
 .notification-out {
     animation: notification-out 0.35s ease-in-out forwards;
@@ -647,6 +667,8 @@ body {
 .label-warn    { background-position-x: -88px; }
 .label-success { background-position-x: -96px; }
 .label-info    { background-position-x: -104px; }
+.label-achievement { background-position-x: -168px; }
+.label-chat    { background-position-x: -168px; }
 
 @keyframes notification-label-play {
     from { background-position-y: 0; }

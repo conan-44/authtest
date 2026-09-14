@@ -86,7 +86,7 @@ function showPopup(message, type = 'info') {
   popup.dataset.count = '1';
 
   const label = document.createElement('span');
-  const labelType = ['error', 'success', 'warning', 'info'].includes(type)
+  const labelType = ['error', 'success', 'warning', 'info', 'achievement', 'chat'].includes(type)
     ? (type === 'warning' ? 'warn' : type)
     : 'info';
   label.className = `notification-label label-${labelType}`;

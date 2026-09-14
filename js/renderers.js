@@ -87,17 +87,17 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
         });
     }
 
-    function showPopup(titleText, subtitleText) {
+    function showPopup(titleText, subtitleText, type = "achievement") {
         if (!elements.popupContainer) return;
         const stack = elements.popupContainer;
         const hasExisting = stack.querySelectorAll(".notification:not(.notification-out)").length > 0;
 
         const popup = document.createElement("div");
-        popup.className = "notification notification-info unlock-notification";
+        popup.className = `notification notification-${type} unlock-notification`;
         popup.setAttribute("role", "status");
 
         const icon = document.createElement("span");
-        icon.className = "notification-label label-info";
+        icon.className = `notification-label label-${type}`;
         icon.setAttribute("aria-hidden", "true");
 
         const content = document.createElement("div");

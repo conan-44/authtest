@@ -1,32 +1,8 @@
 window.AchievementLib = window.AchievementLib || {};
 
-// Builds the fetch/localStorage functions bound to one module instance's state and file paths.
+// Builds the fetch functions bound to one module instance's state and file paths.
 window.AchievementLib.createLoaders = function createLoaders(state, config) {
     const { parseJsonWithComments, parseYamlSimple, parseMilestonesConfig, sanitizeRarity } = window.AchievementLib;
-
-    function loadState() {
-        try {
-            const raw = localStorage.getItem(config.storageKey);
-            const parsed = raw ? JSON.parse(raw) : {};
-            if (parsed && typeof parsed === "object" && parsed.completionMap) {
-                return {
-                    completionMap: parsed.completionMap,
-                    bonusPoints: Number.isFinite(parsed.bonusPoints) ? parsed.bonusPoints : 0
-                };
-            }
-            return { completionMap: typeof parsed === "object" && parsed !== null ? parsed : {}, bonusPoints: 0 };
-        } catch (error) {
-            console.warn("Achievement state reset due to invalid localStorage data.", error);
-            return { completionMap: {}, bonusPoints: 0 };
-        }
-    }
-
-    function saveState() {
-        localStorage.setItem(config.storageKey, JSON.stringify({
-            completionMap: state.completionMap,
-            bonusPoints: state.bonusPoints
-        }));
-    }
 
     async function loadPointsConfig() {
         try {
@@ -90,5 +66,5 @@ window.AchievementLib.createLoaders = function createLoaders(state, config) {
         return Array.from(state.achievementsMap.values());
     }
 
-    return { loadState, saveState, loadPointsConfig, loadMilestonesConfig, getAchievementPoints, loadAchievement, loadAllFromDirectoryIndex };
+    return { loadPointsConfig, loadMilestonesConfig, getAchievementPoints, loadAchievement, loadAllFromDirectoryIndex };
 };

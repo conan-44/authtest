@@ -5,7 +5,6 @@ const indexmeta_file = "./data/achievements/index.skvwmeta";
 const history_file = "./history/achievements.skvwhist";
 
 (() => {
-    const SECRET_KEY = "demo_game_achievements";
     const { getSummary, isCompleted } = window.AchievementLib;
 
     function createAchievementModule(options = {}) {
@@ -20,7 +19,6 @@ const history_file = "./history/achievements.skvwhist";
         };
 
         const config = {
-            storageKey: options.storageKey || SECRET_KEY,
             indexUrl: options.indexUrl || indexmeta_file,
             pointsConfigUrl: options.pointsConfigUrl || pointscfg_file,
             milestonesConfigUrl: options.milestonesConfigUrl || milestonescfg_file
@@ -37,10 +35,6 @@ const history_file = "./history/achievements.skvwhist";
 
         const loaders = window.AchievementLib.createLoaders(state, config);
         const renderers = window.AchievementLib.createRenderers(state, elements);
-
-        const savedState = loaders.loadState();
-        state.completionMap = savedState.completionMap;
-        state.bonusPoints = savedState.bonusPoints;
 
         async function loadAllFromDirectoryIndex() {
             const list = await loaders.loadAllFromDirectoryIndex();
@@ -87,7 +81,6 @@ const history_file = "./history/achievements.skvwhist";
                     state.completionMap[achievementId] = { unlockedAt: Date.now() };
                 }
             });
-            loaders.saveState();
             return state.profile;
         }
 
@@ -157,7 +150,6 @@ const history_file = "./history/achievements.skvwhist";
                 if (!Number.isFinite(amount) || amount < 0) return false;
                 state.bonusPoints = action === "add" ? state.bonusPoints + amount : Math.max(state.bonusPoints - amount, 0);
             }
-            loaders.saveState();
             renderers.renderAll();
             checkMilestones();
             if (onRender) onRender(getSummary(state));
@@ -170,7 +162,7 @@ const history_file = "./history/achievements.skvwhist";
             const achievement = state.achievementsMap.get(id);
             if (!achievement || state.completionMap[id]) return false;
             state.completionMap[id] = { unlockedAt: Date.now() };
-            loaders.saveState(); renderers.renderAll(); renderers.showUnlockPopup(achievement);
+            renderers.renderAll(); renderers.showUnlockPopup(achievement);
             checkMilestones();
             if (onRender) onRender(getSummary(state));
             console.log(`[Achievement] Unlocked: ${id} (+${achievement.points} pts)`);
@@ -187,7 +179,6 @@ const history_file = "./history/achievements.skvwhist";
                 .single();
 
             if (error) {
-                console.error("Error fetching stats:", error.message);
                 return null;
             }
             return data;
@@ -234,7 +225,7 @@ const history_file = "./history/achievements.skvwhist";
 
         function revoke(id) {
             if (!state.achievementsMap.has(id) || !state.completionMap[id]) return false;
-            delete state.completionMap[id]; loaders.saveState(); renderers.renderAll();
+            delete state.completionMap[id]; renderers.renderAll();
             state.lastMilestonePoints = Math.min(state.lastMilestonePoints, getSummary(state).unlockedPoints);
             renderers.renderMilestones();
             if (onRender) onRender(getSummary(state));
@@ -253,7 +244,6 @@ const history_file = "./history/achievements.skvwhist";
         function reset() {
             state.completionMap = {};
             state.bonusPoints = 0;
-            loaders.saveState();
             state.lastMilestonePoints = 0;
             renderers.renderAll();
             renderers.renderMilestones();
@@ -317,7 +307,6 @@ const history_file = "./history/achievements.skvwhist";
     }
 
     const achievements = window.AchievementModule.create({
-        storageKey: "sample_game_achievements",
         indexUrl: indexmeta_file,
         pointsConfigUrl: pointscfg_file,
         milestonesConfigUrl: milestonescfg_file,
