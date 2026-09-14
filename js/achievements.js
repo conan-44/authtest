@@ -71,7 +71,7 @@ const history_file = "./history/achievements.skvwhist";
 
             const { data, error } = await _supabase
                 .from('user_stats')
-                .select('points, achievements')
+                .select('achievements')
                 .eq('user_id', userId)
                 .single();
 
@@ -80,10 +80,7 @@ const history_file = "./history/achievements.skvwhist";
                 return state.profile;
             }
 
-            console.log("Current Points:", data.points);
             console.log("Unlocked Achievements Array:", data.achievements);
-
-            if (Number.isFinite(data.points)) state.bonusPoints = data.points;
 
             (data.achievements || []).forEach(achievementId => {
                 if (!state.completionMap[achievementId]) {
