@@ -187,6 +187,10 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
     document.getElementById('profileSection').style.display = 'none';
     printLog("No user logged in (INITIAL_SESSION null). Fill form and click Sign Up.");
     showPopup("Sign in or create an account to start!", 'info');
+    if (typeof realtimeChannel !== 'undefined' && realtimeChannel) {
+      _supabase.removeChannel(realtimeChannel);
+      realtimeChannel = null;
+    }
   }
 });
 

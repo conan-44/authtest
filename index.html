@@ -9,13 +9,29 @@
 </head>
 <body>
     <main class="page">
-        <section class="panel" aria-labelledby="achievements-heading">
+        <section class="panel" id="achievementsPanel" aria-labelledby="achievements-heading">
             <div class="panel-header">
                 <h1 id="achievements-heading">Achievements</h1>
-                <div id="scoreTracker" class="score-tracker">Points: 0 / 0</div>
+                <div class="panel-header-actions">
+                    <div id="scoreTracker" class="score-tracker">Points: 0 / 0</div>
+                    <button id="toggleChatBtn" class="btn-secondary">Chat</button>
+                </div>
             </div>
             <div class="panel-body">
                 <div id="achievementsGrid" class="achievements-grid" aria-live="polite"></div>
+            </div>
+        </section>
+        <section class="panel is-hidden" id="chatPanel" aria-labelledby="chat-heading">
+            <div class="panel-header">
+                <h1 id="chat-heading">Chat</h1>
+                <button id="toggleAchievementsBtn" class="btn-secondary">Achievements</button>
+            </div>
+            <div class="panel-body chat-panel-body">
+                <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+                <div class="chat-input-row">
+                    <input type="text" id="chatInput" placeholder="Type a message..." />
+                    <button id="sendChatBtn">Send</button>
+                </div>
             </div>
         </section>
         <section class="panel" aria-labelledby="milestones-heading">
@@ -73,5 +89,6 @@
     <script src="./js/renderers.js"></script>
     <script src="./js/achievements.js"></script>
     <script src="./js/auth.js"></script>
+    <script src="./js/chat.js"></script>
 </body>
 </html>
