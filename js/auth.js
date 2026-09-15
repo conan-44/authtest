@@ -182,11 +182,13 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
     updateAuthBadgesAndProviders(session.user);
 
     await fetchProfile(session.user.id);
+    if (typeof window.setTabsGuestMode === "function") window.setTabsGuestMode(false);
   } else {
     document.getElementById('authSection').style.display = 'block';
     document.getElementById('profileSection').style.display = 'none';
     printLog("No user logged in (INITIAL_SESSION null). Fill form and click Sign Up.");
     showPopup("Sign in or create an account to start!", 'info');
+    if (typeof window.setTabsGuestMode === "function") window.setTabsGuestMode(true);
     if (typeof realtimeChannel !== 'undefined' && realtimeChannel) {
       _supabase.removeChannel(realtimeChannel);
       realtimeChannel = null;

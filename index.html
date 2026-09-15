@@ -9,22 +9,35 @@
 </head>
 <body>
     <main class="page">
-        <section class="panel" id="achievementsPanel" aria-labelledby="achievements-heading">
+        <nav class="tab-bar" aria-label="Main navigation">
+            <button class="tab-btn is-active" data-tab="home"><span class="btn-icon tabcon-home"></span>Home</button>
+            <button class="tab-btn" data-tab="achievements"><span class="btn-icon tabcon-achievements"></span>Achievements</button>
+            <button class="tab-btn" data-tab="chat"><span class="btn-icon tabcon-chat"></span>Chat</button>
+            <button class="tab-btn" data-tab="settings"><span class="btn-icon tabcon-settings"></span>Settings</button>
+            <button class="tab-btn" data-tab="games"><span class="btn-icon tabcon-games"></span>Games</button>
+        </nav>
+        <section class="panel tab-panel" id="mainMenuPanel" aria-labelledby="mainmenu-heading">
+            <div class="panel-header">
+                <h1 id="mainmenu-heading">Main Menu</h1>
+            </div>
+            <div class="panel-body">
+                <p class="main-menu-welcome">Welcome! If you are new, start by creating an account! To sign back in, use the login form to the right.</p>
+            </div>
+        </section>
+        <section class="panel tab-panel is-hidden" id="achievementsPanel" aria-labelledby="achievements-heading">
             <div class="panel-header">
                 <h1 id="achievements-heading">Achievements</h1>
                 <div class="panel-header-actions">
                     <div id="scoreTracker" class="score-tracker">Points: 0 / 0</div>
-                    <button id="toggleChatBtn" class="btn-secondary chat-toggle-btn"><span class="btn-icon label-chat"></span>Chat: OFF</button>
                 </div>
             </div>
             <div class="panel-body">
                 <div id="achievementsGrid" class="achievements-grid" aria-live="polite"></div>
             </div>
         </section>
-        <section class="panel is-hidden" id="chatPanel" aria-labelledby="chat-heading">
+        <section class="panel tab-panel is-hidden" id="chatPanel" aria-labelledby="chat-heading">
             <div class="panel-header">
                 <h1 id="chat-heading">Global Chat</h1>
-                <button id="toggleAchievementsBtn" class="btn-secondary chat-toggle-btn"><span class="btn-icon label-chat"></span>Chat: ON</button>
             </div>
             <div class="panel-body chat-panel-body">
                 <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
@@ -32,6 +45,22 @@
                     <input type="text" id="chatInput" placeholder="Type a message..." />
                     <button id="sendChatBtn"><span class="btn-icon icon-send"></span>Send</button>
                 </div>
+            </div>
+        </section>
+        <section class="panel tab-panel is-hidden" id="settingsPanel" aria-labelledby="settings-heading">
+            <div class="panel-header">
+                <h1 id="settings-heading">Settings</h1>
+            </div>
+            <div class="panel-body">
+                <p class="main-menu-welcome">Settings are not available yet. Check back later!</p>
+            </div>
+        </section>
+        <section class="panel tab-panel is-hidden" id="gamesPanel" aria-labelledby="games-heading">
+            <div class="panel-header">
+                <h1 id="games-heading">Games</h1>
+            </div>
+            <div class="panel-body">
+                <p class="main-menu-welcome">No games are available yet. Check back later!</p>
             </div>
         </section>
         <section class="panel" aria-labelledby="milestones-heading">
@@ -90,5 +119,6 @@
     <script src="./js/achievements.js"></script>
     <script src="./js/auth.js"></script>
     <script src="./js/chat.js"></script>
+    <script src="./js/tabs.js"></script>
 </body>
 </html>

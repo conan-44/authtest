@@ -88,29 +88,18 @@ function escapeHTML(str) {
   return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
 }
 
-// 5. PANEL TOGGLE (swaps achievements panel for chat panel)
+// 5. LAZY INIT (called by tabs.js the first time the chat tab is opened)
 let chatInitialized = false;
-const achievementsPanel = document.getElementById('achievementsPanel');
 const chatPanel = document.getElementById('chatPanel');
 
-async function openChatPanel() {
-  achievementsPanel.classList.add('is-hidden');
-  chatPanel.classList.remove('is-hidden');
-  if (!chatInitialized) {
-    chatInitialized = true;
-    const { data: { user } } = await _supabase.auth.getUser();
-    currentChatUserId = user?.id || null;
-    await fetchChatHistory();
-    initRealtimeChat();
-  }
-}
+window.initChatTab = async function initChatTab() {
+  if (chatInitialized) return;
+  chatInitialized = true;
+  const { data: { user } } = await _supabase.auth.getUser();
+  currentChatUserId = user?.id || null;
+  await fetchChatHistory();
+  initRealtimeChat();
+};
 
-function closeChatPanel() {
-  chatPanel.classList.add('is-hidden');
-  achievementsPanel.classList.remove('is-hidden');
-}
-
-document.getElementById('toggleChatBtn').addEventListener('click', openChatPanel);
-document.getElementById('toggleAchievementsBtn').addEventListener('click', closeChatPanel);
 document.getElementById('sendChatBtn').addEventListener('click', sendMessage);
 document.getElementById('chatInput').addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });

@@ -278,7 +278,7 @@ body {
     margin: 0;
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
+    grid-template-rows: auto 1fr auto;
     gap: var(--page-gap);
     grid-column: 1;
     grid-row: 1;
@@ -294,7 +294,9 @@ body {
     overflow: hidden;
     box-sizing: border-box;
 }
-.page > .panel:first-child {
+.tab-panel {
+    grid-column: 1;
+    grid-row: 2;
     width: 100%;
     justify-self: stretch;
     align-self: stretch;
@@ -302,26 +304,58 @@ body {
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
 }
-.page > .panel:first-child > .panel-body {
+.tab-panel > .panel-body {
     min-height: 0;
     overflow-y: auto;
 }
-#chatPanel {
-    grid-column: 1;
-    grid-row: 1;
-    width: 100%;
-    justify-self: stretch;
-    align-self: stretch;
-    min-height: 0;
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-}
-#chatPanel > .panel-body {
-    min-height: 0;
-    overflow: hidden;
-}
 .is-hidden {
     display: none !important;
+}
+.tab-bar {
+    grid-column: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--panel-header-gap);
+    background: var(--color-panel-header-surface);
+    border: var(--panel-divider-width) solid var(--color-white);
+    padding: 6px 8px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+.tab-btn {
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    max-width: 220px;
+    margin: 0;
+    padding: 6px 12px;
+    font-size: 14px;
+    white-space: nowrap;
+    background: var(--color-card-surface);
+    overflow: hidden;
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity 0.35s ease, transform 0.35s ease, max-width 0.35s ease, padding 0.35s ease, margin 0.35s ease;
+}
+.tab-btn .btn-icon {
+    margin: 0 8px 0 0;
+}
+.tab-btn.is-active {
+    background: var(--color-control-pressed);;
+}
+.tab-bar.is-guest .tab-btn:not([data-tab="home"]) {
+    opacity: 0;
+    transform: translateX(-16px);
+    max-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: calc(var(--panel-header-gap) * -1);
+    pointer-events: none;
+}
+.main-menu-welcome {
+    font-family: 'lowsmall', sans-serif;
+    color: var(--color-muted);
+    line-height: 1.4;
 }
 .page > .panel:last-of-type {
   min-height: 0;
@@ -402,7 +436,7 @@ body {
     box-sizing: border-box;
 }
 .panel h1 {
-    margin: 0;
+    margin-bottom: 2px;
     letter-spacing: 0.08em;
     font-family: var(--title-font), sans-serif;
     font-size: var(--panel-title-size);
@@ -441,18 +475,6 @@ body {
     display: flex;
     align-items: center;
     gap: var(--panel-header-gap);
-}
-.chat-toggle-btn {
-    display: inline-flex;
-    align-items: center;
-    width: auto;
-    margin: 0;
-    padding: 6px 10px;
-    font-size: 14px;
-    white-space: nowrap;
-}
-.chat-toggle-btn .btn-icon {
-    margin: 0 6px 0 0;
 }
 .chat-panel-body {
     display: flex;
@@ -526,6 +548,10 @@ body {
 }
 .chat-input-row input {
     flex: 1 1 auto;
+    padding: var(--control-padding);
+}
+.chat-input-row button {
+    width: 150px;;
     padding: var(--control-padding);
 }
 .achievements-grid { display: grid; grid-template-columns: repeat(var(--achievement-columns), minmax(0, 1fr)); gap: var(--card-gap); }
@@ -694,6 +720,12 @@ body {
 .label-achievement { background-position-x: -168px; }
 .label-chat    { background-position-x: -160px; }
 
+.tabcon-chat { background-position-x: -184px; }
+.tabcon-achievements { background-position-x: -192px; }
+.tabcon-settings { background-position-x: -200px; }
+.tabcon-games { background-position-x: -208px; }
+.tabcon-home { background-position-x: -216px; }
+
 @keyframes notification-label-play {
     from { background-position-y: 0; }
     to { background-position-y: -32px; }
@@ -737,10 +769,10 @@ body {
   .page {
     height: calc(100vh - (var(--mobile-page-padding) * 2));
     min-height: 0;
-    grid-template-rows: minmax(var(--mobile-achievement-panel-min-height), 1fr) var(--mobile-milestone-panel-height);
+    grid-template-rows: auto minmax(var(--mobile-achievement-panel-min-height), 1fr) var(--mobile-milestone-panel-height);
     gap: var(--page-gap);
   }
-  .page > .panel:first-child { min-height: var(--mobile-achievement-panel-min-height); }
+  .tab-panel { min-height: var(--mobile-achievement-panel-min-height); }
   .page > .panel:last-of-type { height: var(--mobile-milestone-panel-height); }
     #accountManagement { margin-top: var(--mobile-page-padding); }
     .build-indicator { right: var(--mobile-page-padding); top: var(--mobile-page-padding); }
