@@ -88,6 +88,14 @@ function escapeHTML(str) {
   return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
 }
 
+function censorSwearWords(str) {
+  const badWords = ['fuck', 'bitch', 'shit', 'ass'];
+  const pattern = new RegExp(`\\b(${badWords.join('\\w*|')}\\w*)\\b`, 'gi');
+
+  return str.replace(pattern, (match) => {
+    return match[0] + '*'.repeat(match.length - 1);
+  });
+}
 // 5. LAZY INIT (called by tabs.js the first time the chat tab is opened)
 let chatInitialized = false;
 const chatPanel = document.getElementById('chatPanel');

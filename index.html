@@ -52,7 +52,29 @@
                 <h1 id="settings-heading">Settings</h1>
             </div>
             <div class="panel-body">
-                <p class="main-menu-welcome">Settings are not available yet. Check back later!</p>
+                <div class="settings-list">
+                    <label class="settings-toggle">
+                        <input type="checkbox" class="settings-checkbox" checked>
+                        <span class="settings-toggle-icon" aria-hidden="true"></span>
+                        <span class="settings-toggle-label">-  Sound Effects</span>
+                    </label>
+                    <label class="settings-toggle">
+                        <input type="checkbox" class="settings-checkbox" checked>
+                        <span class="settings-toggle-icon" aria-hidden="true"></span>
+                        <span class="settings-toggle-label">-  Chat Notifications</span>
+                    </label>
+                    <label class="settings-toggle">
+                        <input type="checkbox" class="settings-checkbox">
+                        <span class="settings-toggle-icon" aria-hidden="true"></span>
+                        <span class="settings-toggle-label">-  Reduced Motion</span>
+                    </label>
+                    <label class="settings-toggle">
+                        <input type="checkbox" class="settings-checkbox">
+                        <span class="settings-toggle-icon" aria-hidden="true"></span>
+                        <span class="settings-toggle-label">-  Censoring</span>
+                    </label>
+                </div>
+                <p class="main-menu-welcome">More settings are coming soon!</p>
             </div>
         </section>
         <section class="panel tab-panel is-hidden" id="gamesPanel" aria-labelledby="games-heading">
@@ -60,7 +82,21 @@
                 <h1 id="games-heading">Games</h1>
             </div>
             <div class="panel-body">
-                <p class="main-menu-welcome">No games are available yet. Check back later!</p>
+                <div id="gamesGrid" class="achievements-grid">
+                    <article class="achievement-card rarity-common game-card" data-game="mastermind" data-src="./minigames/mastermind/game.html" tabindex="0" role="button" aria-label="Play Bulls & Cows">
+                        <div class="achievement-card-inner">
+                            <div class="achievement-icon">🎯</div>
+                            <div>
+                                <h3 class="achievement-title rarity-common">Bulls & Cows</h3>
+                                <p class="achievement-description">Crack the secret 4-digit code in this classic logic game.</p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                <div id="gamePlayer" class="game-player is-hidden">
+                    <button id="backToGamesBtn" class="game-back-btn"><span class="btn-icon icon-signout"></span>Back to Games</button>
+                    <iframe id="gameFrame" class="game-frame" title="Game"></iframe>
+                </div>
             </div>
         </section>
         <section class="panel" aria-labelledby="milestones-heading">
@@ -120,5 +156,6 @@
     <script src="./js/auth.js"></script>
     <script src="./js/chat.js"></script>
     <script src="./js/tabs.js"></script>
+    <script src="./js/games.js"></script>
 </body>
 </html>
