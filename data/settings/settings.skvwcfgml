@@ -1,0 +1,9 @@
+# data driven settings
+[audio]
+sound effects: true
+music: true
+[popups]
+popups: true
+chat popups: true
+[chat]
+censoring: true

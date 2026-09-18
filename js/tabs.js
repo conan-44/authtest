@@ -42,17 +42,6 @@
         btn.addEventListener('click', () => activateTab(btn.dataset.tab));
     });
 
-    // Replay the checkmark/x flipbook animation whenever a settings toggle changes.
-    document.querySelectorAll('.settings-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            const icon = checkbox.nextElementSibling;
-            if (!icon) return;
-            icon.classList.remove('is-playing');
-            void icon.offsetWidth;
-            icon.classList.add('is-playing');
-        });
-    });
-
     window.activateTab = activateTab;
     window.setTabsGuestMode = setTabsGuestMode;
 

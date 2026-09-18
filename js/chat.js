@@ -123,7 +123,8 @@ function escapeHTML(str) {
 function censorSwearWords(str) {
   const badWords = [
     "fuck", "shit", "bitch", "asshole", "dick",
-    "pussy", "cunt", "cock", "suck", "nigga", "nigger", "fag"
+    "pussy", "cunt", "cock", "suck", "nigga", "nigger", "fag",
+    "andrew chiu", "andrewchiu", "chiu, andrew"
   ];
 
   const charMap = {

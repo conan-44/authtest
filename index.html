@@ -53,28 +53,7 @@
                 <h1 id="settings-heading">Settings</h1>
             </div>
             <div class="panel-body">
-                <div class="settings-list">
-                    <label class="settings-toggle">
-                        <input type="checkbox" class="settings-checkbox" checked id="soundEffectsCheck">
-                        <span class="settings-toggle-icon" aria-hidden="true"></span>
-                        <span class="settings-toggle-label">-  Sound Effects</span>
-                    </label>
-                    <label class="settings-toggle">
-                        <input type="checkbox" class="settings-checkbox" checked id="chatNotificationsCheck">
-                        <span class="settings-toggle-icon" aria-hidden="true"></span>
-                        <span class="settings-toggle-label">-  Chat Notifications</span>
-                    </label>
-                    <label class="settings-toggle">
-                        <input type="checkbox" class="settings-checkbox" id="reducedMotionCheck">
-                        <span class="settings-toggle-icon" aria-hidden="true"></span>
-                        <span class="settings-toggle-label">-  Reduced Motion</span>
-                    </label>
-                    <label class="settings-toggle">
-                        <input type="checkbox" class="settings-checkbox"checked  id="censoringCheck">
-                        <span class="settings-toggle-icon" aria-hidden="true"></span>
-                        <span class="settings-toggle-label">-  Censoring</span>
-                    </label>
-                </div>
+                <div id="settingsList" class="settings-list" aria-live="polite"></div>
                 <p class="main-menu-welcome">More settings are coming soon!</p>
             </div>
         </section>
@@ -164,6 +143,7 @@
     <script src="./js/auth.js"></script>
     <script src="./js/chat.js"></script>
     <script src="./js/tabs.js"></script>
+    <script src="./js/settings.js"></script>
     <script src="./js/games.js"></script>
 </body>
 </html>
