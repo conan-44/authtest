@@ -2,16 +2,27 @@
 
 let realtimeChannel = null;
 let currentChatUserId = null;
-let chatMessagesData = []; // Store raw messages locally for quick re-rendering
-
 const censoringCheck = document.getElementById('censoringCheck');
 let censoring = censoringCheck.checked;
 
-// Re-render UI when censoring toggle changes
+// Toggle censoring directly on existing DOM elements
 censoringCheck.addEventListener('change', () => {
   censoring = censoringCheck.checked;
-  renderAllMessages();
+  updateExistingMessagesCensoring();
 });
+
+function updateExistingMessagesCensoring() {
+  const messageElements = document.querySelectorAll('#chatMessages .chat-msg');
+  messageElements.forEach(div => {
+    const contentDiv = div.querySelector('.chat-body');
+    if (!contentDiv) return;
+    
+    const rawContent = contentDiv.getAttribute('data-raw');
+    if (rawContent !== null) {
+      contentDiv.textContent = censoring ? censorSwearWords(rawContent) : rawContent;
+    }
+  });
+}
 
 // 1. CHAT HISTORY
 async function fetchChatHistory() {
@@ -23,15 +34,9 @@ async function fetchChatHistory() {
 
   if (error) return console.error("Error loading chat:", error.message);
 
-  chatMessagesData = data || [];
-  renderAllMessages();
-}
-
-// Re-renders the entire message container using stored message data
-function renderAllMessages() {
   const container = document.getElementById('chatMessages');
   container.innerHTML = '';
-  chatMessagesData.forEach(msg => appendMessageUI(msg));
+  data.forEach(msg => appendMessageUI(msg));
   scrollToBottom();
 }
 
@@ -46,9 +51,7 @@ function initRealtimeChat() {
         .eq('id', payload.new.user_id)
         .single();
 
-      const newMsg = { ...payload.new, profiles: profile };
-      chatMessagesData.push(newMsg);
-      appendMessageUI(newMsg);
+      appendMessageUI({ ...payload.new, profiles: profile });
       scrollToBottom();
 
       if (chatPanel.classList.contains('is-hidden') && typeof showPopup === "function") {
@@ -88,8 +91,9 @@ function appendMessageUI(msg) {
   const container = document.getElementById('chatMessages');
   const div = document.createElement('div');
   
-  // Apply censoring on a copy of the content so raw data stays intact
-  const displayContent = censoring ? censorSwearWords(msg.content) : msg.content;
+  const rawContent = msg.content || '';
+  const displayContent = censoring ? censorSwearWords(rawContent) : rawContent;
+  
   const isOwn = msg.user_id && msg.user_id === currentChatUserId;
   div.className = `chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}`;
 
@@ -97,7 +101,13 @@ function appendMessageUI(msg) {
   const flair = msg.profiles?.flair ? `<span class="chat-flair">${escapeHTML(msg.profiles.flair)}</span>` : '';
   const timestamp = msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-  div.innerHTML = `<div class="chat-header">${username}${flair}<span class="chat-timestamp">${timestamp}</span></div><div>${escapeHTML(displayContent)}</div>`;
+  // Use a dedicated .chat-body wrapper with data-raw storing unescaped/uncensored raw text
+  div.innerHTML = `<div class="chat-header">${username}${flair}<span class="chat-timestamp">${timestamp}</span></div><div class="chat-body"></div>`;
+  
+  const bodyDiv = div.querySelector('.chat-body');
+  bodyDiv.setAttribute('data-raw', rawContent);
+  bodyDiv.textContent = displayContent; // textContent handles escaping automatically
+
   container.appendChild(div);
 }
 
@@ -160,7 +170,7 @@ function censorSwearWords(str) {
   const pattern = new RegExp(`(?<=[\\s^>]|^)(${wordPatterns.join('|')})(?=[\\s$.!?]|$)`, 'gi');
 
   return str.replace(pattern, (match) => {
-    return match[0] + '*'.repeat(match.length - 1);
+    return match[0] + 'x'.repeat(match.length - 1);
   });
 }
 
