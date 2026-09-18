@@ -33,7 +33,7 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
         });
     }
 
-    function createMusicControls(heading) {
+    function createMusicControls() {
         const controls = document.createElement("span");
         controls.className = "music-controls";
         controls.innerHTML = `
@@ -41,11 +41,38 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
             <span class="music-track-name">No music loaded</span>
             <button type="button" class="music-cycle-btn" data-direction="next" aria-label="Next song">&gt;</button>
         `;
-        heading.appendChild(controls);
         return controls;
     }
 
-    async function bindMusicControls(controls) {
+    function createMusicVolumeControl() {
+        const volume = document.createElement("label");
+        volume.className = "music-volume";
+        volume.title = "Music volume";
+        volume.innerHTML = `
+            <span class="music-volume-label">Volume</span>
+            <input class="music-volume-input" type="range" min="0" max="1" step="0.01" value="0.3" aria-label="Music volume">
+        `;
+        return volume;
+    }
+
+    function parseMusicTrack(track) {
+        const [file, ...creditParts] = track.split("+");
+        return {
+            source: file.trim(),
+            credit: creditParts.join("+").trim()
+        };
+    }
+
+    function getTrackDisplayName(source) {
+        return source.split("/").pop().split(".")[0];
+    }
+
+    function updateMusicCredit(creditElement, track) {
+        creditElement.textContent = track.credit ? `${track.credit}` : "";
+        creditElement.hidden = !track.credit;
+    }
+
+    async function bindMusicControls(controls, creditElement, volumeInput) {
         let tracks = [];
         let currentTrack = -1;
         const player = new Audio();
@@ -60,7 +87,16 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
             tracks = [];
         }
 
-        tracks = tracks.filter(track => typeof track === "string" && track.trim());
+        tracks = tracks
+            .filter(track => typeof track === "string" && track.trim())
+            .map(parseMusicTrack)
+            .filter(track => track.source);
+        creditElement.textContent = "";
+        creditElement.hidden = true;
+        player.volume = Number(volumeInput.value);
+        volumeInput.addEventListener("input", () => {
+            player.volume = Number(volumeInput.value);
+        });
         const updateMusicAvailability = () => {
             const enabled = window.getAppSetting ? window.getAppSetting("audio", "music", true) : true;
             if (!enabled) player.pause();
@@ -74,10 +110,11 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
             musicAutoplayRequested = true;
             if (!window.getAppSetting("audio", "music", true) || !tracks.length) return;
             if (currentTrack < 0) currentTrack = 0;
-            const source = tracks[currentTrack];
-            player.src = source.startsWith("./") ? source : `./assets/audio/music/${source}`;
+            const track = tracks[currentTrack];
+            player.src = track.source.startsWith("./") ? track.source : `./assets/audio/music/${track.source}`;
             player.play().then(() => {
-                trackName.textContent = source.split("/").pop();
+                trackName.textContent = getTrackDisplayName(track.source);
+                updateMusicCredit(creditElement, track);
             }).catch(() => {});
         };
         const retryAutoplay = () => {
@@ -90,22 +127,23 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
         buttons.forEach(button => {
             button.addEventListener("click", () => {
                 if (!window.getAppSetting("audio", "music", true)) {
-                    if (typeof showPopup === "function") showPopup("Music is disabled in settings.", "info");
+                    if (typeof showPopup === "function") showPopup("Music is disabled in settings.", "error");
                     return;
                 }
                 if (!tracks.length) {
-                    if (typeof showPopup === "function") showPopup("No music tracks are available yet.", "info");
+                    if (typeof showPopup === "function") showPopup("No music tracks are available yet.", "error");
                     return;
                 }
                 const direction = button.dataset.direction === "previous" ? -1 : 1;
                 currentTrack = (currentTrack + direction + tracks.length) % tracks.length;
-                const source = tracks[currentTrack];
-                player.src = source.startsWith("./") ? source : `./assets/audio/music/${source}`;
+                const track = tracks[currentTrack];
+                player.src = track.source.startsWith("./") ? track.source : `./assets/audio/music/${track.source}`;
                 player.play().then(() => {
-                    trackName.textContent = source.split("/").pop();
-                    if (typeof showPopup === "function") showPopup(`Music playing: ${trackName.textContent}`, "info");
+                    trackName.textContent = getTrackDisplayName(track.source);
+                    updateMusicCredit(creditElement, track);
+                    if (typeof showPopup === "function") showPopup(`Music playing: ${trackName.textContent}`, "music");
                 }).catch(() => {
-                    trackName.textContent = source.split("/").pop();
+                    trackName.textContent = getTrackDisplayName(track.source);
                 });
             });
         });
@@ -122,8 +160,22 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
             heading.className = "settings-section-heading";
             heading.textContent = section.replace(/\b\w/g, character => character.toUpperCase());
             settingsList.appendChild(heading);
-            const musicControls = section.toLowerCase() === "audio" ? createMusicControls(heading) : null;
-            if (musicControls) bindMusicControls(musicControls);
+            const isAudioSection = section.toLowerCase() === "audio";
+            const audioLayout = isAudioSection ? document.createElement("div") : null;
+            const audioTopRow = isAudioSection ? document.createElement("div") : null;
+            const musicCredit = isAudioSection ? document.createElement("p") : null;
+            const musicVolume = isAudioSection ? createMusicVolumeControl() : null;
+            const musicMeta = isAudioSection ? document.createElement("div") : null;
+            if (audioLayout) {
+                audioLayout.className = "settings-audio-layout";
+                audioTopRow.className = "settings-audio-top-row";
+                musicCredit.className = "music-credit";
+                musicMeta.className = "music-meta";
+                musicMeta.append(musicCredit, musicVolume);
+                audioTopRow.append(musicMeta);
+                audioLayout.append(audioTopRow);
+                settingsList.appendChild(audioLayout);
+            }
 
             Object.entries(values).forEach(([key, enabled]) => {
                 const label = document.createElement("label");
@@ -146,7 +198,18 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
                 text.textContent = `-  ${formatSettingName(key)}`;
 
                 label.append(checkbox, icon, text);
-                settingsList.appendChild(label);
+                if (isAudioSection && key.toLowerCase() === "sound effects") {
+                    audioTopRow.prepend(label);
+                } else if (isAudioSection && key.toLowerCase() === "music") {
+                    const musicControls = createMusicControls();
+                    const audioRow = document.createElement("div");
+                    audioRow.className = "settings-audio-row";
+                    audioRow.append(label, musicControls);
+                    audioLayout.append(audioRow);
+                    bindMusicControls(musicControls, musicCredit, musicVolume.querySelector(".music-volume-input"));
+                } else {
+                    settingsList.appendChild(label);
+                }
             });
         });
         bindSettingAnimations();

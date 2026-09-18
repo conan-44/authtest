@@ -377,22 +377,68 @@ body {
     margin-top: 0;
 }
 .music-controls {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 6px;
-    color: var(--color-muted);
+    flex: 1 1 0;
+    min-width: 0;
+    gap: 12px;
+    min-height: 40px;
+    background-color: var(--color-card-surface);
     font-family: 'lowsmall', sans-serif;
-    font-size: 0.8rem;
+    font-size: 1rem;
     font-weight: normal;
 }
+.settings-audio-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+.settings-audio-layout {
+    display: grid;
+    width: 100%;
+}
+.settings-audio-top-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+.settings-audio-top-row > .settings-toggle {
+    grid-column: 1;
+    justify-self: start;
+}
+.music-meta {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    min-width: 0;
+    padding: 2px 8px 0;
+    background: var(--color-card-surface);
+}
+.music-meta .music-credit {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 0;
+}
+.music-meta .music-volume {
+    flex: 0 0 auto;
+}
+.settings-audio-row .music-controls {
+    margin: 0 10px 0 0;
+}
 .music-cycle-btn {
-    width: auto;
-    min-width: 28px;
+    flex: 0 0 48px;
+    width: 48px;
+    min-width: 48px;
+    height: 40px;
     margin: 0;
     padding: 3px 8px;
-    border: 2px solid var(--color-white);
     font-family: 'capsmall', sans-serif;
-    font-size: 14px;
+    font-size: 24px;
     line-height: 1;
 }
 .music-cycle-btn:disabled {
@@ -400,19 +446,43 @@ body {
     opacity: 0.45;
 }
 .music-track-name {
-    min-width: 96px;
+    flex: 1 1 auto;
+    min-width: 0;
     text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.music-volume {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 132px;
+    font-family: 'lowsmall', sans-serif;
+    font-size: 12px;
+}
+.music-volume-label {
+    white-space: nowrap;
+}
+.music-volume-input {
+    width: 84px;
+    accent-color: var(--color-heading);
+    cursor: pointer;
+}
+.music-credit {
+    margin: 0;
+    color: var(--color-muted);
+    font-family: 'lowsmall', sans-serif;
+    font-size: 13px;
 }
 .settings-toggle {
     display: flex;
     align-items: center;
     gap: 10px;
     width: fit-content;
-    padding: 10px 12px;
+    padding: 12px 16px;
     margin: 0;
     background: var(--color-card-surface);
-    border: var(--achievement-border-width) solid var(--color-white);
-    box-shadow: inset 0 0 0 2px var(--color-inset);
     cursor: pointer;
     font-family: 'lowsmall', sans-serif;
     font-size: 15px;
@@ -788,6 +858,7 @@ body {
 .notification-info { background: var(--notification-info); }
 .notification-achievement { background: var(--notification-achievement); }
 .notification-chat { background: var(--notification-chat); }
+.notification-music { background: var(--notification-info); }
 
 .notification-out {
     animation: notification-out 0.35s ease-in-out forwards;
@@ -844,6 +915,7 @@ body {
 .label-info    { background-position-x: -104px; }
 .label-achievement { background-position-x: -168px; }
 .label-chat    { background-position-x: -160px; }
+.label-music { background-position-x: -248px; }
 
 .tabcon-chat { background-position-x: -184px; }
 .tabcon-achievements { background-position-x: -192px; }
