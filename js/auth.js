@@ -19,6 +19,11 @@ const NOTIFICATION_SOUNDS = {
 };
 
 function playNotificationSound(type, isStacked = false) {
+const soundEffectsCheck = document.getElementById('soundEffectsCheck');
+let soundEffects = soundEffectsCheck.checked;
+soundEffectsCheck.addEventListener('change', () => {
+  soundEffects = soundEffectsCheck.checked;
+});
   const soundPath = NOTIFICATION_SOUNDS[type] || NOTIFICATION_SOUNDS.info;
   const play = () => {
     const audio = new Audio(soundPath);

@@ -39,7 +39,8 @@ function initRealtimeChat() {
       scrollToBottom();
 
       if (chatPanel.classList.contains('is-hidden') && typeof showPopup === "function") {
-        showPopup(`${profile?.username || 'Player'}: ${payload.new.content}`, 'chat');
+        const chatNotificationsCheck = document.getElementById('chatNotificationsCheck');
+        if (chatNotificationsCheck.checked) showPopup(`${profile?.username || 'Player'}: ${payload.new.content}`, 'chat');
       }
     })
     .subscribe();
