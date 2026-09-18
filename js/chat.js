@@ -97,24 +97,52 @@ function escapeHTML(str) {
 
 function censorSwearWords(str) {
   const badWords = [
-  "fuck", "fck", "fxck", "fuk", "fuxk", "fucking", "fckin", "fcking", "fucker", "fckr",
-  "shit", "sh1t", "sht", "shiting", "shitting", "shitter", "bullshit",
-  "bitch", "btch", "b1tch", "bitching", "bitchy",
-  "ass", "asshole", "a$$hole", "a$$", "ashole", "asshat", "asswipe",
-  "bastard", "bstrd",
-  "dick", "d1ck", "dik", "dickhead", "dck",
-  "pussy", "pussies", "pussycat",
-  "cock", "c0ck", "cocksucker",
-  "cunt", "c*nt", "cnt",
-  "prick", "twat", "wanker", "bollocks", "bugger",
-  "stfu", "gtfo", "ffs", "omfg",
-  "kms", "kys", "kyself",
-  "retard", "tard", "rtard", "retarded",
-  "fag", "faggot", "fgt", "f4g",
-  "nigger", "nigga", "n1gger", "n1gga", "nigg3r", "necro",
-  "chink", "spic", "kike", "cunt", "tranny", "dyke"
-];
-  const pattern = new RegExp(`\\b(${badWords.join('\\w*|')}\\w*)\\b`, 'gi');
+    "fuck",
+    "shit",
+    "bitch",
+    "asshole",
+    "dick",
+    "pussy",
+    "cunt",
+    "cock",
+    "suck",
+    "nigga",
+    "nigger",
+    "fag",
+    "andrew chiu",
+    "chiu, andrew",
+    "a. chiu",
+    "chiu, a."
+  ];
+
+  // Map standard letters to common leetspeak substitutions and wildcards
+  const charMap = {
+    'a': '[aA@4$]',
+    'b': '[bB8]',
+    'c': '[cC(<{]',
+    'e': '[eE3]',
+    'i': '[iI1!|]',
+    'l': '[lL1!|]',
+    'o': '[oO0]',
+    's': '[sS5$]',
+    't': '[tT7+]',
+    'u': '[uUvV]'
+  };
+
+  // Convert each base word into an evasion-resistant regex pattern
+  const wordPatterns = badWords.map(word => {
+    return word
+      .split('')
+      .map(char => {
+        const pattern = charMap[char.toLowerCase()] || char;
+        // Allow optional filler symbols (*, #, x, !, $, etc.) between characters
+        return `${pattern}[*#x!_\\-$%^&]*`;
+      })
+      .join('');
+  });
+
+  // Combine patterns into a single regular expression matching whole words/evasions
+  const pattern = new RegExp(`\\b(${wordPatterns.join('|')})\\b`, 'gi');
 
   return str.replace(pattern, (match) => {
     return match[0] + '*'.repeat(match.length - 1);
