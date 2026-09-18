@@ -9,7 +9,7 @@ function printLog(msg) {
   console.log(timestamp + msg);
 }
 
-const AUTH_ASSET_ROOT = new URL('../assets/audio', document.currentScript?.src || window.location.href);
+const AUTH_ASSET_ROOT = new URL('../assets/audio/', document.currentScript?.src || window.location.href);
 const NOTIFICATION_SOUNDS = {
   error: new URL('error.wav', AUTH_ASSET_ROOT).href,
   success: new URL('success.wav', AUTH_ASSET_ROOT).href,
@@ -17,12 +17,36 @@ const NOTIFICATION_SOUNDS = {
   warn: new URL('warn.wav', AUTH_ASSET_ROOT).href,
   info: new URL('info.wav', AUTH_ASSET_ROOT).href
 };
+const notificationAudio = new Map();
+let notificationAudioUnlocked = false;
+
+function unlockNotificationAudio() {
+  if (notificationAudioUnlocked) return;
+  notificationAudioUnlocked = true;
+  Object.values(NOTIFICATION_SOUNDS).forEach(soundPath => {
+    if (notificationAudio.has(soundPath)) return;
+    const audio = new Audio(soundPath);
+    audio.muted = true;
+    audio.load();
+    audio.play().then(() => {
+      audio.pause();
+      audio.currentTime = 0;
+    }).catch(() => {});
+    notificationAudio.set(soundPath, audio);
+  });
+}
+
+document.addEventListener('pointerdown', unlockNotificationAudio, { once: true, capture: true });
+document.addEventListener('keydown', unlockNotificationAudio, { once: true, capture: true });
 
 function playNotificationSound(type, isStacked = false) {
   if (window.getAppSetting && !window.getAppSetting('audio', 'sound effects', true)) return;
   const soundPath = NOTIFICATION_SOUNDS[type] || NOTIFICATION_SOUNDS.info;
   const play = () => {
-    const audio = new Audio(soundPath);
+    const audio = notificationAudio.get(soundPath) || new Audio(soundPath);
+    notificationAudio.set(soundPath, audio);
+    audio.muted = false;
+    audio.currentTime = 0;
     audio.play().catch(() => {});
   };
 

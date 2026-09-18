@@ -4,15 +4,39 @@ window.AchievementLib = window.AchievementLib || {};
 window.AchievementLib.createRenderers = function createRenderers(state, elements) {
     const { isCompleted, getSummary } = window.AchievementLib;
 
+    const POPUP_AUDIO_ROOT = new URL("../assets/audio/", document.currentScript?.src || window.location.href);
     const POPUP_SOUNDS = {
-        info: "./assets/audio/info.wav",
-        error: "./assets/audio/error.wav"
+        info: new URL("info.wav", POPUP_AUDIO_ROOT).href,
+        error: new URL("error.wav", POPUP_AUDIO_ROOT).href
     };
+    const popupAudio = new Map();
+    let popupAudioUnlocked = false;
+
+    function unlockPopupAudio() {
+        if (popupAudioUnlocked) return;
+        popupAudioUnlocked = true;
+        Object.values(POPUP_SOUNDS).forEach(soundPath => {
+            const audio = new Audio(soundPath);
+            audio.muted = true;
+            audio.load();
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }).catch(() => {});
+            popupAudio.set(soundPath, audio);
+        });
+    }
+
+    document.addEventListener("pointerdown", unlockPopupAudio, { once: true, capture: true });
+    document.addEventListener("keydown", unlockPopupAudio, { once: true, capture: true });
 
     function playNotificationSound(type, isStacked = false) {
         const soundPath = POPUP_SOUNDS[type] || POPUP_SOUNDS.info;
         const play = () => {
-            const audio = new Audio(soundPath);
+            const audio = popupAudio.get(soundPath) || new Audio(soundPath);
+            popupAudio.set(soundPath, audio);
+            audio.muted = false;
+            audio.currentTime = 0;
             audio.play().catch(() => {});
         };
 
