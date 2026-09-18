@@ -1,7 +1,7 @@
 # data driven settings
 [audio]
 sound effects: true
-music: true
+music: false
 [popups]
 popups: true
 chat popups: true
