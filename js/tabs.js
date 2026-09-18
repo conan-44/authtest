@@ -22,6 +22,10 @@
         });
 
         if (tabName === 'chat' && typeof window.initChatTab === 'function') window.initChatTab();
+        if (tabName === 'experimental') {
+            showPopup("Redirecting to Experiments...", "info")
+            window.location.href = "https://skybase-cookie.duckdns.org";
+        }
     }
 
     // Called by auth.js on sign in/out: non-home tabs slide/fade in or out.

@@ -384,7 +384,7 @@ body {
     gap: 12px;
     min-height: 40px;
     background-color: var(--color-card-surface);
-    font-family: 'lowsmall', sans-serif;
+    font-family: 'capsmall', sans-serif;
     font-size: 1rem;
     font-weight: normal;
 }
