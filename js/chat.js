@@ -102,7 +102,6 @@ function censorSwearWords(str) {
   "bitch", "btch", "b1tch", "bitching", "bitchy",
   "ass", "asshole", "a$$hole", "a$$", "ashole", "asshat", "asswipe",
   "bastard", "bstrd",
-  "crap", "damn", "goddamn", "goddammit",
   "dick", "d1ck", "dik", "dickhead", "dck",
   "pussy", "pussies", "pussycat",
   "cock", "c0ck", "cocksucker",
