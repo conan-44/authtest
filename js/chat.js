@@ -114,7 +114,7 @@ function censorSwearWords(str) {
     "chiu, a."
   ];
 
-  // Map standard letters to common leetspeak substitutions and wildcards
+  // Map letters to their common leetspeak lookalikes
   const charMap = {
     'a': '[aA@4$]',
     'b': '[bB8]',
@@ -130,17 +130,19 @@ function censorSwearWords(str) {
 
   // Convert each base word into an evasion-resistant regex pattern
   const wordPatterns = badWords.map(word => {
-    return word
-      .split('')
-      .map(char => {
-        const pattern = charMap[char.toLowerCase()] || char;
-        // Allow optional filler symbols (*, #, x, !, $, etc.) between characters
-        return `${pattern}[*#x!_\\-$%^&]*`;
+    const chars = word.split('');
+    return chars
+      .map((char, index) => {
+        const mapped = charMap[char.toLowerCase()] || char;
+        // Apply character mapping
+        // Only allow filler symbols (*, x, #, !, etc.) BETWEEN letters, NOT after the last letter
+        const isLast = index === chars.length - 1;
+        return isLast ? mapped : `${mapped}[*#x!_\\-$%^&]*`;
       })
       .join('');
   });
 
-  // Combine patterns into a single regular expression matching whole words/evasions
+  // Match the generated patterns using word boundaries
   const pattern = new RegExp(`\\b(${wordPatterns.join('|')})\\b`, 'gi');
 
   return str.replace(pattern, (match) => {
