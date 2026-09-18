@@ -96,7 +96,25 @@ function escapeHTML(str) {
 }
 
 function censorSwearWords(str) {
-  const badWords = ['fuck', 'bitch', 'shit', 'ass'];
+  const badWords = [
+  "fuck", "fck", "fxck", "fuk", "fuxk", "fucking", "fckin", "fcking", "fucker", "fckr",
+  "shit", "sh1t", "sht", "shiting", "shitting", "shitter", "bullshit",
+  "bitch", "btch", "b1tch", "bitching", "bitchy",
+  "ass", "asshole", "a$$hole", "a$$", "ashole", "asshat", "asswipe",
+  "bastard", "bstrd",
+  "crap", "damn", "goddamn", "goddammit",
+  "dick", "d1ck", "dik", "dickhead", "dck",
+  "pussy", "pussies", "pussycat",
+  "cock", "c0ck", "cocksucker",
+  "cunt", "c*nt", "cnt",
+  "prick", "twat", "wanker", "bollocks", "bugger",
+  "stfu", "gtfo", "ffs", "omfg",
+  "kms", "kys", "kyself",
+  "retard", "tard", "rtard", "retarded",
+  "fag", "faggot", "fgt", "f4g",
+  "nigger", "nigga", "n1gger", "n1gga", "nigg3r", "necro",
+  "chink", "spic", "kike", "cunt", "tranny", "dyke"
+];
   const pattern = new RegExp(`\\b(${badWords.join('\\w*|')}\\w*)\\b`, 'gi');
 
   return str.replace(pattern, (match) => {

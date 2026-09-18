@@ -328,7 +328,7 @@ body {
     width: auto;
     max-width: 220px;
     margin: 0;
-    padding: 6px 12px;
+    padding: 10px 16px;
     font-size: 14px;
     white-space: nowrap;
     background: var(--color-card-surface);
@@ -809,6 +809,7 @@ body {
 .tabcon-settings { background-position-x: -200px; }
 .tabcon-games { background-position-x: -208px; }
 .tabcon-home { background-position-x: -216px; }
+.tabcon-experimental { background-position-x: -232px; }
 
 @keyframes notification-label-play {
     from { background-position-y: 0; }
