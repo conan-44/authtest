@@ -5,8 +5,8 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
     const { isCompleted, getSummary } = window.AchievementLib;
 
     const POPUP_SOUNDS = {
-        info: "../assets/info.wav",
-        error: "../assets/error.wav"
+        info: "./assets/audio/info.wav",
+        error: "./assets/audio/error.wav"
     };
 
     function playNotificationSound(type, isStacked = false) {
