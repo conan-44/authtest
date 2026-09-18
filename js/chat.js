@@ -97,7 +97,7 @@ function escapeHTML(str) {
 
 function censorSwearWords(str) {
   const badWords = [
-  "fuck", "fck", "fxck", "fuk", "fuxk", "fucking", "fckin", "fcking", "fucker", "fckr",
+  "fck", "fxck", "fuk", "fuxk", "fucking", "fckin", "fcking", "fucker", "fckr",
   "shit", "sh1t", "sht", "shiting", "shitting", "shitter", "bullshit",
   "bitch", "btch", "b1tch", "bitching", "bitchy",
   "ass", "asshole", "a$$hole", "a$$", "ashole", "asshat", "asswipe",
