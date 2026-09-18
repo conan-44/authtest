@@ -3,6 +3,8 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
 
 (() => {
     const settingsList = document.getElementById("settingsList");
+    let musicController = null;
+    let musicAutoplayRequested = false;
 
     window.getAppSetting = function getAppSetting(section, key, fallback = false) {
         const checkbox = settingsList?.querySelector(
@@ -47,6 +49,7 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
         let tracks = [];
         let currentTrack = -1;
         const player = new Audio();
+        musicController = player;
         const trackName = controls.querySelector(".music-track-name");
         const buttons = controls.querySelectorAll(".music-cycle-btn");
 
@@ -60,12 +63,30 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
         tracks = tracks.filter(track => typeof track === "string" && track.trim());
         const updateMusicAvailability = () => {
             const enabled = window.getAppSetting ? window.getAppSetting("audio", "music", true) : true;
+            if (!enabled) player.pause();
             buttons.forEach(button => {
                 button.disabled = !enabled;
                 button.title = enabled ? "Cycle music" : "Music is disabled";
             });
         };
         updateMusicAvailability();
+        window.playMusicOnLogin = function playMusicOnLogin() {
+            musicAutoplayRequested = true;
+            if (!window.getAppSetting("audio", "music", true) || !tracks.length) return;
+            if (currentTrack < 0) currentTrack = 0;
+            const source = tracks[currentTrack];
+            player.src = source.startsWith("./") ? source : `./assets/audio/music/${source}`;
+            player.play().then(() => {
+                trackName.textContent = source.split("/").pop();
+            }).catch(() => {});
+        };
+        const retryAutoplay = () => {
+            if (musicAutoplayRequested && window.getAppSetting("audio", "music", true) && player.paused) {
+                window.playMusicOnLogin();
+            }
+        };
+        document.addEventListener("pointerdown", retryAutoplay);
+        document.addEventListener("keydown", retryAutoplay);
         buttons.forEach(button => {
             button.addEventListener("click", () => {
                 if (!window.getAppSetting("audio", "music", true)) {
@@ -88,7 +109,10 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
                 });
             });
         });
-        settingsList.querySelector('[data-section="audio"][data-setting="music"]')?.addEventListener("change", updateMusicAvailability);
+        settingsList.querySelector('[data-section="audio"][data-setting="music"]')?.addEventListener("change", () => {
+            updateMusicAvailability();
+            if (window.getAppSetting("audio", "music", true) && musicAutoplayRequested) window.playMusicOnLogin();
+        });
     }
 
     function renderSettings(settings) {
@@ -140,6 +164,10 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
             const response = await fetch(settingsConfigFile, { cache: "no-store" });
             if (!response.ok) throw new Error(`Failed to read ${settingsConfigFile}`);
             renderSettings(window.AchievementLib.parseSettingsConfig(await response.text()));
+            if (typeof _supabase !== "undefined") {
+                const { data: { session } } = await _supabase.auth.getSession();
+                if (session && typeof window.playMusicOnLogin === "function") window.playMusicOnLogin();
+            }
         } catch (error) {
             console.error("Could not load settings.", error);
             settingsList.textContent = "Could not load settings.";

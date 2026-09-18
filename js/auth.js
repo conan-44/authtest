@@ -183,6 +183,7 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
     updateAuthBadgesAndProviders(session.user);
 
     await fetchProfile(session.user.id);
+    if (typeof window.playMusicOnLogin === "function") window.playMusicOnLogin();
     if (typeof window.setTabsGuestMode === "function") window.setTabsGuestMode(false);
   } else {
     document.getElementById('authSection').style.display = 'block';
