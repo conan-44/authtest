@@ -5,8 +5,7 @@
         achievements: document.getElementById('achievementsPanel'),
         chat: document.getElementById('chatPanel'),
         settings: document.getElementById('settingsPanel'),
-        games: document.getElementById('gamesPanel'),
-        experimental: document.getElementById('experimentalPanel')
+        games: document.getElementById('gamesPanel')
     };
     const tabBar = document.querySelector('.tab-bar');
 
@@ -15,7 +14,7 @@
         if (!panel) return;
 
         Object.entries(TAB_PANELS).forEach(([name, el]) => {
-            el.classList.toggle('is-hidden', name !== tabName);
+            if (el) el.classList.toggle('is-hidden', name !== tabName);
         });
 
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -23,10 +22,6 @@
         });
 
         if (tabName === 'chat' && typeof window.initChatTab === 'function') window.initChatTab();
-        if (tabName === 'experimental') {
-            showPopup("Redirecting to Experiments...", "info")
-            window.location.href = "https://skybase-cookie.duckdns.org";
-        }
     }
 
     // Called by auth.js on sign in/out: non-home tabs slide/fade in or out.

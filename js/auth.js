@@ -9,7 +9,7 @@ function printLog(msg) {
   console.log(timestamp + msg);
 }
 
-const AUTH_ASSET_ROOT = new URL('../assets/', document.currentScript?.src || window.location.href);
+const AUTH_ASSET_ROOT = new URL('../assets/audio', document.currentScript?.src || window.location.href);
 const NOTIFICATION_SOUNDS = {
   error: new URL('error.wav', AUTH_ASSET_ROOT).href,
   success: new URL('success.wav', AUTH_ASSET_ROOT).href,
@@ -19,11 +19,7 @@ const NOTIFICATION_SOUNDS = {
 };
 
 function playNotificationSound(type, isStacked = false) {
-const soundEffectsCheck = document.getElementById('soundEffectsCheck');
-let soundEffects = soundEffectsCheck.checked;
-soundEffectsCheck.addEventListener('change', () => {
-  soundEffects = soundEffectsCheck.checked;
-});
+  if (window.getAppSetting && !window.getAppSetting('audio', 'sound effects', true)) return;
   const soundPath = NOTIFICATION_SOUNDS[type] || NOTIFICATION_SOUNDS.info;
   const play = () => {
     const audio = new Audio(soundPath);

@@ -2,12 +2,10 @@
 
 let realtimeChannel = null;
 let currentChatUserId = null;
-const censoringCheck = document.getElementById('censoringCheck');
-let censoring = censoringCheck.checked;
+let censoring = true;
 
-// Toggle censoring directly on existing DOM elements
-censoringCheck.addEventListener('change', () => {
-  censoring = censoringCheck.checked;
+window.addEventListener('censoring-setting-changed', () => {
+  censoring = window.getAppSetting ? window.getAppSetting('chat', 'censoring', true) : true;
   updateExistingMessagesCensoring();
 });
 
@@ -55,8 +53,9 @@ function initRealtimeChat() {
       scrollToBottom();
 
       if (chatPanel.classList.contains('is-hidden') && typeof showPopup === "function") {
-        const chatNotificationsCheck = document.getElementById('chatNotificationsCheck');
-        if (chatNotificationsCheck.checked) showPopup(`${profile?.username || 'Player'}: ${payload.new.content}`, 'chat');
+        if (!window.getAppSetting || window.getAppSetting('popups', 'chat popups', true)) {
+          showPopup(`${profile?.username || 'Player'}: ${payload.new.content}`, 'chat');
+        }
       }
     })
     .subscribe();
@@ -90,6 +89,8 @@ function playSendIconAnimation() {
 function appendMessageUI(msg) {
   const container = document.getElementById('chatMessages');
   const div = document.createElement('div');
+
+  censoring = window.getAppSetting ? window.getAppSetting('chat', 'censoring', censoring) : censoring;
   
   const rawContent = msg.content || '';
   const displayContent = censoring ? censorSwearWords(rawContent) : rawContent;
@@ -165,8 +166,7 @@ function censorSwearWords(str) {
         return isLast ? charPattern : `${charPattern}${delimiter}`;
       })
       .join('');
-    const suffixPattern = `(?:[\\s*#x!_\\-$%^&]*[a-zA-Z0-9]+)*`;
-    return `${corePattern}${suffixPattern}`;
+    return corePattern;
   });
   const pattern = new RegExp(`(?<=[\\s^>]|^)(${wordPatterns.join('|')})(?=[\\s$.!?]|$)`, 'gi');
 
