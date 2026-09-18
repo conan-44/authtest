@@ -2,10 +2,15 @@
 
 let realtimeChannel = null;
 let currentChatUserId = null;
+let chatMessagesData = []; // Store raw messages locally for quick re-rendering
+
 const censoringCheck = document.getElementById('censoringCheck');
 let censoring = censoringCheck.checked;
+
+// Re-render UI when censoring toggle changes
 censoringCheck.addEventListener('change', () => {
   censoring = censoringCheck.checked;
+  renderAllMessages();
 });
 
 // 1. CHAT HISTORY
@@ -18,9 +23,15 @@ async function fetchChatHistory() {
 
   if (error) return console.error("Error loading chat:", error.message);
 
+  chatMessagesData = data || [];
+  renderAllMessages();
+}
+
+// Re-renders the entire message container using stored message data
+function renderAllMessages() {
   const container = document.getElementById('chatMessages');
   container.innerHTML = '';
-  data.forEach(msg => appendMessageUI(msg));
+  chatMessagesData.forEach(msg => appendMessageUI(msg));
   scrollToBottom();
 }
 
@@ -35,7 +46,9 @@ function initRealtimeChat() {
         .eq('id', payload.new.user_id)
         .single();
 
-      appendMessageUI({ ...payload.new, profiles: profile });
+      const newMsg = { ...payload.new, profiles: profile };
+      chatMessagesData.push(newMsg);
+      appendMessageUI(newMsg);
       scrollToBottom();
 
       if (chatPanel.classList.contains('is-hidden') && typeof showPopup === "function") {
@@ -74,7 +87,9 @@ function playSendIconAnimation() {
 function appendMessageUI(msg) {
   const container = document.getElementById('chatMessages');
   const div = document.createElement('div');
-  if (censoring) msg.content = censorSwearWords(msg.content);
+  
+  // Apply censoring on a copy of the content so raw data stays intact
+  const displayContent = censoring ? censorSwearWords(msg.content) : msg.content;
   const isOwn = msg.user_id && msg.user_id === currentChatUserId;
   div.className = `chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}`;
 
@@ -82,7 +97,7 @@ function appendMessageUI(msg) {
   const flair = msg.profiles?.flair ? `<span class="chat-flair">${escapeHTML(msg.profiles.flair)}</span>` : '';
   const timestamp = msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-  div.innerHTML = `<div class="chat-header">${username}${flair}<span class="chat-timestamp">${timestamp}</span></div><div>${escapeHTML(msg.content)}</div>`;
+  div.innerHTML = `<div class="chat-header">${username}${flair}<span class="chat-timestamp">${timestamp}</span></div><div>${escapeHTML(displayContent)}</div>`;
   container.appendChild(div);
 }
 
@@ -94,62 +109,62 @@ function scrollToBottom() {
 function escapeHTML(str) {
   return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
 }
+
 function censorSwearWords(str) {
   const badWords = [
-    "fuck",
-    "shit",
-    "bitch",
-    "asshole",
-    "dick",
-    "pussy",
-    "cunt",
-    "cock",
-    "suck",
-    "nigga",
-    "nigger",
-    "fag",
-    "andrew chiu",
-    "chiu, andrew",
-    "a. chiu",
-    "chiu, a."
+    "fuck", "shit", "bitch", "asshole", "dick",
+    "pussy", "cunt", "cock", "suck", "nigga", "nigger", "fag"
   ];
 
-  // Map letters to their common leetspeak lookalikes
   const charMap = {
-    'a': '[aA@4$]',
-    'b': '[bB8]',
-    'c': '[cC(<{]',
-    'e': '[eE3]',
-    'i': '[iI1!|]',
-    'l': '[lL1!|]',
-    'o': '[oO0]',
-    's': '[sS5$]',
-    't': '[tT7+]',
-    'u': '[uUvV]'
+    'a': '[aA@4$!@#$%^&*()x]',
+    'b': '[bB8!@#$%^&*()x]',
+    'c': '[cC(<{!@#$%^&*()x]',
+    'd': '[dD!@#$%^&*()x]',
+    'e': '[eE3!@#$%^&*()x]',
+    'f': '[fF!@#$%^&*()x]',
+    'g': '[gG69!@#$%^&*()x]',
+    'h': '[hH!@#$%^&*()x]',
+    'i': '[iI1!|!@#$%^&*()x]',
+    'k': '[kK!@#$%^&*()x]',
+    'l': '[lL1!|!@#$%^&*()x]',
+    'n': '[nN!@#$%^&*()x]',
+    'o': '[oO0!@#$%^&*()x]',
+    'p': '[pP!@#$%^&*()x]',
+    'r': '[rR!@#$%^&*()x]',
+    's': '[sS5$!@#$%^&*()x]',
+    't': '[tT7+!@#$%^&*()x]',
+    'u': '[uUvV!@#$%^&*()x]',
+    'y': '[yY!@#$%^&*()x]'
   };
 
-  // Convert each base word into an evasion-resistant regex pattern
+  const vowels = new Set(['a', 'e', 'i', 'o', 'u']);
+
   const wordPatterns = badWords.map(word => {
     const chars = word.split('');
-    return chars
+    const corePattern = chars
       .map((char, index) => {
-        const mapped = charMap[char.toLowerCase()] || char;
-        // Apply character mapping
-        // Only allow filler symbols (*, x, #, !, etc.) BETWEEN letters, NOT after the last letter
+        const lowerChar = char.toLowerCase();
+        const mapped = charMap[lowerChar] || lowerChar;
+        const isVowel = vowels.has(lowerChar);
         const isLast = index === chars.length - 1;
-        return isLast ? mapped : `${mapped}[*#x!_\\-$%^&]*`;
+        const charPattern = isVowel ? `${mapped}*` : `${mapped}+`;
+        const delimiter = `[\\s*#x!_\\-$%^&]*`;
+
+        return isLast ? charPattern : `${charPattern}${delimiter}`;
       })
       .join('');
+    const suffixPattern = `(?:[\\s*#x!_\\-$%^&]*[a-zA-Z0-9]+)*`;
+    return `${corePattern}${suffixPattern}`;
   });
-
-  // Match the generated patterns using word boundaries
-  const pattern = new RegExp(`\\b(${wordPatterns.join('|')})\\b`, 'gi');
+  const pattern = new RegExp(`(?<=[\\s^>]|^)(${wordPatterns.join('|')})(?=[\\s$.!?]|$)`, 'gi');
 
   return str.replace(pattern, (match) => {
     return match[0] + '*'.repeat(match.length - 1);
   });
 }
-// 5. LAZY INIT (called by tabs.js the first time the chat tab is opened)
+
+// 5. LAZY INIT
 let chatInitialized = false;
 const chatPanel = document.getElementById('chatPanel');
 
