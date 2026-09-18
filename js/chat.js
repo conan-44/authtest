@@ -94,7 +94,6 @@ function scrollToBottom() {
 function escapeHTML(str) {
   return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
 }
-
 function censorSwearWords(str) {
   const badWords = [
     "fuck",
