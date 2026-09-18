@@ -5,5 +5,7 @@
   "main:beginning",
   "main:suit-up",
   "main:team-fort",
-  "main:codebreaker"
+  "main:codebreaker",
+  "mastermind:beginner",
+  "mastermind:master"
 ]

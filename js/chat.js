@@ -2,6 +2,11 @@
 
 let realtimeChannel = null;
 let currentChatUserId = null;
+const censoringCheck = document.getElementById('censoringCheck');
+let censoring = censoringCheck.checked;
+censoringCheck.addEventListener('change', () => {
+  censoring = censoringCheck.checked;
+});
 
 // 1. CHAT HISTORY
 async function fetchChatHistory() {
@@ -68,6 +73,7 @@ function playSendIconAnimation() {
 function appendMessageUI(msg) {
   const container = document.getElementById('chatMessages');
   const div = document.createElement('div');
+  if (censoring) msg.content = censorSwearWords(msg.content);
   const isOwn = msg.user_id && msg.user_id === currentChatUserId;
   div.className = `chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}`;
 
