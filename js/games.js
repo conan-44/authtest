@@ -1,5 +1,9 @@
 // GAMES TAB (loads the actual game in place of the game list, same panel slot as achievements)
 (() => {
+    // Change this to adjust the embedded game frame size (any CSS size, e.g. '100%', '900px')
+    const GAME_FRAME_WIDTH = '100%';
+    const GAME_FRAME_HEIGHT = '100%';
+
     const gamesGrid = document.getElementById('gamesGrid');
     const gamePlayer = document.getElementById('gamePlayer');
     const gameFrame = document.getElementById('gameFrame');
@@ -7,8 +11,10 @@
 
     function loadGame(card) {
         const src = card.dataset.src;
-        if (!src) return;
+        if (!src || src === 'link here') return;
         gameFrame.src = src;
+        gameFrame.width = GAME_FRAME_WIDTH;
+        gameFrame.height = GAME_FRAME_HEIGHT;
         gamesGrid.classList.add('is-hidden');
         gamePlayer.classList.remove('is-hidden');
     }
