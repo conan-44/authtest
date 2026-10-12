@@ -150,7 +150,7 @@ function appendMessageUI(msg) {
   const timestamp = msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
   // Use a dedicated .chat-body wrapper with data-raw storing unescaped/uncensored raw text
-  div.innerHTML = `<div class="chat-header">${username}${flair}<span class="chat-timestamp">${timestamp}</span><button type="button" class="chat-reply-button" data-message-action="reply">Reply</button>${isOwn ? '<button type="button" class="chat-actions-toggle" data-message-action="toggle-actions" aria-label="Show message actions" aria-expanded="false">...</button>' : ''}</div><div class="chat-reply-preview is-hidden"></div><div class="chat-body"></div>`;
+  div.innerHTML = `<div class="chat-header">${username}${flair}<span class="chat-timestamp">${timestamp}</span><button type="button" class="chat-reply-button" data-message-action="reply" aria-label="Reply"><span class="btn-icon icon-reply" aria-hidden="true"></span></button>${isOwn ? '<button type="button" class="chat-actions-toggle" data-message-action="toggle-actions" aria-label="Show message actions" aria-expanded="false">...</button>' : ''}</div><div class="chat-reply-preview is-hidden"></div><div class="chat-body"></div>`;
   
   const bodyDiv = div.querySelector('.chat-body');
   bodyDiv.setAttribute('data-raw', rawContent);
@@ -162,8 +162,8 @@ function appendMessageUI(msg) {
     const actions = document.createElement("div");
     actions.className = "chat-message-actions";
     actions.innerHTML = `
-      <button type="button" data-message-action="edit">Edit</button>
-      <button type="button" data-message-action="delete">Delete</button>
+      <button type="button" data-message-action="edit" aria-label="Edit"><span class="btn-icon icon-edit" aria-hidden="true"></span></button>
+      <button type="button" data-message-action="delete" aria-label="Delete"><span class="btn-icon icon-trash" aria-hidden="true"></span></button>
     `;
     div.appendChild(actions);
   }

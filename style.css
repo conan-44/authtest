@@ -100,7 +100,10 @@
     .icon-delete         { background-position-x: -56px;    }  
     .icon-refresh    { background-position-x: -64px;    } 
     .icon-save             { background-position-x: -72px;    }
+    .icon-reply            { background-position-x: -272px;    }
     .icon-send             { background-position-x: -176px;    }
+    .icon-trash            { background-position-x: -256px;    }
+    .icon-edit             { background-position-x: -264px;    }
     .icon-send.is-sending { animation: playSprite 0.5s steps(4); }
     .label-error        { background-position-x: -80px;    }
     .label-warn           { background-position-x: -88px;    }
@@ -779,6 +782,16 @@ body {
     padding: 4px 8px;
     font-family: 'lowsmall', sans-serif;
     font-size: 12px;
+}
+.chat-reply-button,
+.chat-message-actions button[data-message-action="edit"],
+.chat-message-actions button[data-message-action="delete"] {
+    display: grid;
+    place-items: center;
+}
+.chat-reply-button .btn-icon,
+.chat-message-actions .btn-icon {
+    margin: 0;
 }
 .chat-reply-preview {
     margin: 0 0 6px;
