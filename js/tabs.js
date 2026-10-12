@@ -5,8 +5,11 @@
         achievements: document.getElementById('achievementsPanel'),
         chat: document.getElementById('chatPanel'),
         settings: document.getElementById('settingsPanel'),
-        games: document.getElementById('gamesPanel')
+        games: document.getElementById('gamesPanel'),
+        blog: document.getElementById('blogPanel')
     };
+    const milestonesPanel = document.getElementById('milestonesPanel');
+    const chatOptionsPanel = document.getElementById('chatOptionsPanel');
     const tabBar = document.querySelector('.tab-bar');
 
     function activateTab(tabName) {
@@ -17,11 +20,15 @@
             if (el) el.classList.toggle('is-hidden', name !== tabName);
         });
 
+        milestonesPanel?.classList.toggle('is-hidden', tabName === 'chat');
+        chatOptionsPanel?.classList.toggle('is-hidden', tabName !== 'chat');
+
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.toggle('is-active', btn.dataset.tab === tabName);
         });
 
         if (tabName === 'chat' && typeof window.initChatTab === 'function') window.initChatTab();
+        if (tabName === 'blog' && typeof window.initBlogTab === 'function') window.initBlogTab();
         if (tabName === 'experimental') {
             showPopup("Redirecting to Experiments...", "info");
             window.location.href = "https://skybase-cookie.duckdns.org";
@@ -33,7 +40,7 @@
         tabBar.classList.toggle('is-guest', isGuest);
         if (isGuest) {
             const activeBtn = document.querySelector('.tab-btn.is-active');
-            if (activeBtn && activeBtn.dataset.tab !== 'home') activateTab('home');
+            if (activeBtn && !['home', 'blog'].includes(activeBtn.dataset.tab)) activateTab('home');
         }
     }
 

@@ -15,6 +15,7 @@
             <button class="tab-btn" data-tab="chat"><span class="btn-icon tabcon-chat"></span>Chat</button>
             <button class="tab-btn" data-tab="settings"><span class="btn-icon tabcon-settings"></span>Settings</button>
             <button class="tab-btn" data-tab="games"><span class="btn-icon tabcon-games"></span>Games</button>
+            <button class="tab-btn" data-tab="blog"><span class="btn-icon tabcon-blog"></span>Blog</button>
             <button class="tab-btn" data-tab="experimental"><span class="btn-icon tabcon-experimental"></span>Experimental</button>
         </nav>
         <section class="panel tab-panel" id="mainMenuPanel" aria-labelledby="mainmenu-heading">
@@ -42,6 +43,10 @@
             </div>
             <div class="panel-body chat-panel-body">
                 <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+                <div id="chatReplyContext" class="chat-reply-context is-hidden">
+                    <span id="chatReplyText"></span>
+                    <button type="button" id="cancelChatReplyBtn" aria-label="Cancel reply">Cancel</button>
+                </div>
                 <div class="chat-input-row">
                     <input type="text" id="chatInput" placeholder="Type a message..." />
                     <button id="sendChatBtn"><span class="btn-icon icon-send"></span>Send</button>
@@ -88,6 +93,16 @@
                 </div>
             </div>
         </section>
+        <section class="panel tab-panel is-hidden" id="blogPanel" aria-labelledby="blog-heading">
+            <div class="panel-header">
+                <h1 id="blog-heading">Blog</h1>
+            </div>
+            <div class="panel-body">
+                <div id="blogPosts" class="blog-posts" aria-live="polite">
+                    <p class="blog-status">Loading blog posts...</p>
+                </div>
+            </div>
+        </section>
          <section class="panel tab-panel is-hidden" id="experimentalPanel" aria-labelledby="experimental-heading">
             <div class="panel-header">
                 <h1 id="experimental-heading">Experimental Features</h1>
@@ -95,12 +110,30 @@
                 <p class="main-menu-welcome">You are being redirected; please wait...<br>Explore experimental features that are still in development. Use with caution!</p>
             </div>
         </section>
-        <section class="panel" aria-labelledby="milestones-heading">
+        <section class="panel" id="milestonesPanel" aria-labelledby="milestones-heading">
             <div class="panel-header">
                 <h1 id="milestones-heading">Milestones</h1>
             </div>
             <div class="panel-body">
                 <div id="milestonesGrid" class="milestones-grid" aria-live="polite"></div>
+            </div>
+        </section>
+        <section class="panel is-hidden" id="chatOptionsPanel" aria-labelledby="chat-options-heading">
+            <div class="panel-header">
+                <h1 id="chat-options-heading">Chat Options</h1>
+                <div class="panel-header-actions">
+                    <button type="button" id="toggleGifPickerBtn" aria-expanded="true" aria-controls="chatOptionsBody">Minimize GIF picker</button>
+                </div>
+            </div>
+            <div class="panel-body chat-options-body" id="chatOptionsBody">
+                <form id="gifSearchForm" class="gif-search-form">
+                    <label for="gifSearchInput">Search GIPHY</label>
+                    <input type="search" id="gifSearchInput" placeholder="Search GIFs..." autocomplete="off">
+                    <button type="submit" id="gifSearchButton">Search</button>
+                </form>
+                <p id="gifSearchStatus" class="gif-search-status" aria-live="polite">Search for a GIF to send it to chat.</p>
+                <div id="gifSearchResults" class="gif-search-results" aria-label="GIF search results"></div>
+                <a class="giphy-attribution" href="https://giphy.com/" target="_blank" rel="noopener noreferrer">Powered by GIPHY</a>
             </div>
         </section>
     </main> 
@@ -150,6 +183,8 @@
     <script src="./js/renderers.js"></script>
     <script src="./js/achievements.js"></script>
     <script src="./js/auth.js"></script>
+    <script src="./js/giphy-config.js"></script>
+    <script src="./js/blog.js"></script>
     <script src="./js/chat.js"></script>
     <script src="./js/tabs.js"></script>
     <script src="./js/settings.js"></script>

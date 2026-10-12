@@ -1,6 +1,5 @@
 window.AchievementLib = window.AchievementLib || {};
 
-// Builds the DOM-rendering functions bound to one module instance's state and elements.
 window.AchievementLib.createRenderers = function createRenderers(state, elements) {
     const { isCompleted, getSummary } = window.AchievementLib;
 

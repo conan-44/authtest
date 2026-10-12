@@ -218,6 +218,9 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
                 if (checkbox.dataset.section === "chat" && checkbox.dataset.setting === "censoring") {
                     window.dispatchEvent(new Event("censoring-setting-changed"));
                 }
+                if (checkbox.dataset.section === "chat" && checkbox.dataset.setting === "hide gifs") {
+                    window.dispatchEvent(new Event("chat-gifs-setting-changed"));
+                }
             });
         });
     }

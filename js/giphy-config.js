@@ -1,0 +1,2 @@
+
+window.GIPHY_API_KEY = "EJLJbEFKXTeFKMoXN3nyQ8k3ne9zLwY6";
