@@ -10,9 +10,14 @@ const gifSearchForm = document.getElementById("gifSearchForm");
 const gifSearchInput = document.getElementById("gifSearchInput");
 const gifSearchButton = document.getElementById("gifSearchButton");
 const gifSearchResults = document.getElementById("gifSearchResults");
+const gifSearchPagination = document.getElementById("gifSearchPagination");
 const gifSearchStatus = document.getElementById("gifSearchStatus");
 const gifSearchResultById = new Map();
+const GIF_SEARCH_PAGE_SIZE = 12;
 let gifSearchRequestId = 0;
+let gifSearchQuery = "";
+let gifSearchPage = 1;
+let gifSearchPageCount = 0;
 let blankMessageCleanupInterval = null;
 const GIF_PICKER_COLLAPSED_KEY = "chat-gif-picker-collapsed";
 const toggleGifPickerBtn = document.getElementById("toggleGifPickerBtn");
@@ -491,6 +496,50 @@ function renderGifSearchResults(gifs) {
   });
 }
 
+function renderGifSearchPagination() {
+  gifSearchPagination.replaceChildren();
+  gifSearchPagination.hidden = gifSearchPageCount <= 1;
+  if (gifSearchPagination.hidden) return;
+
+  const addPageButton = page => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "gif-search-page";
+    button.dataset.page = String(page);
+    button.textContent = String(page);
+    if (page === gifSearchPage) {
+      button.disabled = true;
+      button.setAttribute("aria-current", "page");
+    } else {
+      button.setAttribute("aria-label", `Go to GIF results page ${page}`);
+    }
+    gifSearchPagination.appendChild(button);
+  };
+  const addEllipsis = () => {
+    const ellipsis = document.createElement("span");
+    ellipsis.className = "gif-search-page-ellipsis";
+    ellipsis.textContent = "\u2026";
+    gifSearchPagination.appendChild(ellipsis);
+  };
+
+  addPageButton(1);
+  const startPage = gifSearchPage <= 2
+    ? 2
+    : gifSearchPage >= gifSearchPageCount - 1
+      ? gifSearchPageCount - 2
+      : gifSearchPage - 1;
+  const endPage = gifSearchPage <= 2
+    ? Math.min(gifSearchPageCount - 1, 3)
+    : gifSearchPage >= gifSearchPageCount - 1
+      ? gifSearchPageCount - 1
+      : gifSearchPage + 1;
+
+  if (startPage > 2) addEllipsis();
+  for (let page = startPage; page <= endPage; page++) addPageButton(page);
+  if (endPage < gifSearchPageCount - 1) addEllipsis();
+  if (gifSearchPageCount > 1) addPageButton(gifSearchPageCount);
+}
+
 async function searchGiphyGifs(event) {
   event.preventDefault();
   const query = gifSearchInput.value.trim();
@@ -499,22 +548,33 @@ async function searchGiphyGifs(event) {
     return;
   }
 
+  gifSearchQuery = query;
+  gifSearchPage = 1;
+  await loadGiphyPage(gifSearchPage);
+}
+
+async function loadGiphyPage(page) {
   const apiKey = window.GIPHY_API_KEY;
   if (!apiKey || apiKey === "YOUR_GIPHY_API_KEY") {
     setGifSearchStatus("Add your GIPHY API key in js/giphy-config.js to enable search.");
     return;
   }
 
+  if (!gifSearchQuery || !Number.isInteger(page) || page < 1) return;
   const requestId = ++gifSearchRequestId;
   gifSearchButton.disabled = true;
+  gifSearchPagination.querySelectorAll("button").forEach(button => {
+    button.disabled = true;
+  });
   setGifSearchStatus("Searching GIPHY...");
   renderGifSearchResults([]);
 
   try {
     const params = new URLSearchParams({
       api_key: apiKey,
-      q: query,
-      limit: "12",
+      q: gifSearchQuery,
+      limit: String(GIF_SEARCH_PAGE_SIZE),
+      offset: String((page - 1) * GIF_SEARCH_PAGE_SIZE),
       rating: "g",
       bundle: "messaging_non_clips"
     });
@@ -523,6 +583,11 @@ async function searchGiphyGifs(event) {
 
     const result = await response.json();
     if (requestId !== gifSearchRequestId) return;
+    const totalCount = Number(result.pagination?.total_count);
+    gifSearchPageCount = Number.isFinite(totalCount) && totalCount > 0
+      ? Math.ceil(totalCount / GIF_SEARCH_PAGE_SIZE)
+      : 0;
+    gifSearchPage = Math.min(page, Math.max(1, gifSearchPageCount));
 
     const gifs = (Array.isArray(result.data) ? result.data : []).flatMap(item => {
       const id = typeof item.id === "string" ? item.id : "";
@@ -541,14 +606,22 @@ async function searchGiphyGifs(event) {
       }];
     });
     renderGifSearchResults(gifs);
-    setGifSearchStatus(gifs.length ? `Found ${gifs.length} GIFs. Select one to send it.` : "No GIFs found.");
+    renderGifSearchPagination();
+    setGifSearchStatus(gifSearchPageCount
+      ? `Page ${gifSearchPage} of ${gifSearchPageCount} \u00b7 ${totalCount} GIFs found. Select one to send it.`
+      : "No GIFs found.");
   } catch (error) {
     if (requestId === gifSearchRequestId) {
       console.error("GIPHY search failed.", error);
       setGifSearchStatus(error.message || "GIPHY search failed. Please try again.");
     }
   } finally {
-    if (requestId === gifSearchRequestId) gifSearchButton.disabled = false;
+    if (requestId === gifSearchRequestId) {
+      gifSearchButton.disabled = false;
+      gifSearchPagination.querySelectorAll("button[data-page]").forEach(button => {
+        button.disabled = button.dataset.page === String(gifSearchPage);
+      });
+    }
   }
 }
 
@@ -667,6 +740,11 @@ toggleGifPickerBtn.addEventListener("click", () => {
   toggleGifPickerBtn.textContent = isExpanded ? "Show GIF picker" : "Minimize GIF picker";
 });
 gifSearchForm.addEventListener("submit", searchGiphyGifs);
+gifSearchPagination.addEventListener("click", event => {
+  const button = event.target.closest("button[data-page]");
+  if (!button || button.disabled) return;
+  loadGiphyPage(Number(button.dataset.page));
+});
 gifSearchResults.addEventListener("click", event => {
   const button = event.target.closest("button[data-gif-id]");
   const gif = button ? gifSearchResultById.get(button.dataset.gifId) : null;

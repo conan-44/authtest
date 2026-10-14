@@ -753,11 +753,11 @@ body {
     background: var(--color-points);
 }
 .chat-msg {
-    border: 16px solid transparent;
+    border: 28px solid transparent;
     border-right-width: 20px;
     border-image-source: url("./assets/chat_9x.png");
     border-image-slice: 8 10 8 8 fill;
-    border-image-width: 16px 20px 16px 16px;
+    border-image-width: 24px 30px 24px 24px;
     border-image-repeat: stretch repeat;
     image-rendering: pixelated;
     padding: 0 4px;
@@ -772,6 +772,7 @@ body {
 }
 .chat-msg-own {
     align-self: flex-end;
+    margin-right: 12px;
 }
 .chat-msg-other {
     align-self: flex-start;
@@ -828,7 +829,7 @@ body {
     right: calc(100% + 8px);
     justify-content: flex-end;
     gap: 6px;
-    margin-top: 0;
+    margin-top: -6px;
     opacity: 0;
     pointer-events: none;
     transform: translate(8px, -50%);
@@ -914,6 +915,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: var(--card-gap);
+    min-height: 0;
+    overflow: hidden;
 }
 .chat-options-body[hidden] {
     display: none !important;
@@ -943,7 +946,50 @@ body {
 .gif-search-results {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 240px;
     gap: var(--card-gap);
+    align-content: start;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-white) var(--color-panel-body-surface);
+}
+.gif-search-results::-webkit-scrollbar {
+    width: 10px;
+}
+.gif-search-results::-webkit-scrollbar-track {
+    background: var(--color-panel-body-surface);
+}
+.gif-search-results::-webkit-scrollbar-thumb {
+    background: var(--color-white);
+    border: 2px solid var(--color-panel-body-surface);
+}
+.gif-search-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.gif-search-pagination[hidden] {
+    display: none !important;
+}
+.gif-search-pagination .gif-search-page {
+    width: auto;
+    min-width: 32px;
+    margin: 0;
+    padding: 4px 8px;
+    justify-content: center;
+    font-size: 14px;
+}
+.gif-search-pagination .gif-search-page[aria-current="page"] {
+    background: var(--color-control-pressed);
+    outline: 2px solid var(--color-heading);
+}
+.gif-search-page-ellipsis {
+    padding: 0 2px;
+    font-family: 'lowsmall', sans-serif;
 }
 .gif-search-result {
     min-width: 0;
