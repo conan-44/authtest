@@ -146,15 +146,44 @@
         const title = post.title || (headingIndex >= 0 ? lines[headingIndex].replace(/^#\s+/, "").trim() : post.id.replace(/[-_]+/g, " "));
         if (headingIndex >= 0) lines.splice(headingIndex, 1);
 
+        const metadata = [];
+        while (lines.length) {
+            if (!lines[0].trim()) {
+                lines.shift();
+                continue;
+            }
+            const metadataHeading = lines[0].match(/^#{1,6}\s+\+\+\s*([^:]+):\s*(.*)$/);
+            if (!metadataHeading) break;
+            metadata.push({
+                label: metadataHeading[1].trim(),
+                value: metadataHeading[2].trim()
+            });
+            lines.shift();
+        }
+
         const header = document.createElement("header");
         const heading = document.createElement("h2");
         heading.textContent = title;
         header.appendChild(heading);
-        if (post.date) {
+        const metadataRow = document.createElement("div");
+        metadataRow.className = "blog-post-meta";
+        const dateMetadata = metadata.find(item => item.label.toLowerCase() === "date");
+        if (post.date || dateMetadata) {
             const date = document.createElement("time");
-            date.dateTime = post.date;
-            date.textContent = post.date;
-            header.appendChild(date);
+            const dateValue = dateMetadata?.value || post.date;
+            date.dateTime = dateValue;
+            date.textContent = `Date: ${dateValue}`;
+            metadataRow.appendChild(date);
+        }
+        metadata
+            .filter(item => item.label.toLowerCase() !== "date")
+            .forEach(item => {
+                const detail = document.createElement("span");
+                detail.textContent = `${item.label}: ${item.value}`;
+                metadataRow.appendChild(detail);
+            });
+        if (metadataRow.childElementCount) {
+            header.appendChild(metadataRow);
         }
         const content = document.createElement("div");
         content.className = "blog-prose";
