@@ -1,0 +1,13 @@
+# Cloak.JS update
+### ++ DATE: 15-10-2026
+### ++ UPDATE: build 3.4pre
+This update is partially anticipated by a certain SOME people who can't even write their full name.
+### Stuff I added
+You can disguise (cloak) this website in Settings.
+It may become:
+ - ManageBac
+ - Google Drive
+ - VSA Portal
+### Stuff I used
+cloak.js API repository: https://github.com/thedogecraft/cloak
+favicon getter thing: https://a.favicon.im/portal.vsa.edu.hk

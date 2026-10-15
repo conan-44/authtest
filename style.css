@@ -399,7 +399,6 @@ body {
 .blog-prose .blog-highlight-heading {
     color: var(--color-points);
 }
-.blog-post time,
 .blog-status {
     color: var(--color-muted);
     font-family: 'lowsmall', sans-serif;
@@ -408,7 +407,7 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 4px 12px;
-    color: var(--color-muted);
+    color: var(--color-points);
     font-family: 'lowsmall', sans-serif;
     font-size: 0.9em;
 }

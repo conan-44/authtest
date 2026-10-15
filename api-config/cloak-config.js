@@ -33,13 +33,21 @@
         if (state.appliedConfig === config) return;
 
         switch (config) {
-            case "managebac":
+            case "managebac": {
                 cloakApi.setCloak("ManageBac | My Workspace", "./assets/cloak/managebac.png");
                 state.appliedConfig = config;
-                break;
-            default:
+                break; }
+            case "drive": {
+                cloakApi.setCloak("Home - Google Drive", "./assets/cloak/drive.png");
+                state.appliedConfig = config; 
+                break; }
+            case "portal": {
+                cloakApi.setCloak("VSA - Announcements", "./assets/cloak/vsa.png");
+                state.appliedConfig = config; 
+                break; }
+            default: {
                 console.error(`Cloak option "${config}" is not configured.`);
-                break;
+                break; }
         }
     }
 
