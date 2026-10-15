@@ -7,10 +7,12 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
     let musicAutoplayRequested = false;
 
     window.getAppSetting = function getAppSetting(section, key, fallback = false) {
-        const checkbox = settingsList?.querySelector(
+        const control = settingsList?.querySelector(
             `.settings-checkbox[data-section="${CSS.escape(section)}"][data-setting="${CSS.escape(key)}"]`
+            + `, .settings-select[data-section="${CSS.escape(section)}"][data-setting="${CSS.escape(key)}"]`
         );
-        return checkbox ? checkbox.checked : fallback;
+        if (!control) return fallback;
+        return control instanceof HTMLInputElement ? control.checked : control.value;
     };
 
     function settingId(section, key) {
@@ -19,6 +21,32 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
 
     function formatSettingName(key) {
         return key.replace(/\b\w/g, character => character.toUpperCase());
+    }
+
+    function createDropdownSetting(section, key, options) {
+        const label = document.createElement("label");
+        label.className = "settings-select-label";
+        label.htmlFor = settingId(section, key);
+
+        const text = document.createElement("span");
+        text.className = "settings-toggle-label";
+        text.textContent = `-  ${formatSettingName(key)}`;
+
+        const select = document.createElement("select");
+        select.className = "settings-select";
+        select.id = settingId(section, key);
+        select.dataset.section = section;
+        select.dataset.setting = key;
+
+        options.forEach(optionName => {
+            const option = document.createElement("option");
+            option.value = optionName;
+            option.textContent = formatSettingName(optionName);
+            select.appendChild(option);
+        });
+
+        label.append(text, select);
+        return label;
     }
 
     function bindSettingAnimations() {
@@ -178,6 +206,10 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
             }
 
             Object.entries(values).forEach(([key, enabled]) => {
+                if (enabled && typeof enabled === "object" && enabled.type === "dropdown" && Array.isArray(enabled.options)) {
+                    settingsList.appendChild(createDropdownSetting(section, key, enabled.options));
+                    return;
+                }
                 const label = document.createElement("label");
                 label.className = "settings-toggle";
 
@@ -240,5 +272,5 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
         }
     }
 
-    loadSettings();
+    window.settingsReady = loadSettings();
 })();

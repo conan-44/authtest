@@ -32,13 +32,27 @@ window.AchievementLib.parseMilestonesConfig = function parseMilestonesConfig(tex
 window.AchievementLib.parseSettingsConfig = function parseSettingsConfig(text) {
     const settings = {};
     let section = "general";
-    for (let line of text.split(/\r?\n/)) {
-        line = line.trim();
+    const lines = text.split(/\r?\n/);
+    for (let index = 0; index < lines.length; index++) {
+        const line = lines[index].trim();
         if (!line || line.startsWith("#")) continue;
         const sectionMatch = line.match(/^\[([^\]]+)\]$/);
         if (sectionMatch) {
             section = sectionMatch[1].trim();
             settings[section] = settings[section] || {};
+            continue;
+        }
+        const dropdownMatch = line.match(/^\+([^:]+):\s*$/);
+        if (dropdownMatch) {
+            const options = [];
+            while (index + 1 < lines.length && lines[index + 1].trim().startsWith("#")) {
+                const option = lines[++index].trim().slice(1).trim();
+                if (option) options.push(option);
+            }
+            if (options.length) {
+                settings[section] = settings[section] || {};
+                settings[section][dropdownMatch[1].trim()] = { type: "dropdown", options };
+            }
             continue;
         }
         const separatorIndex = line.indexOf(":");

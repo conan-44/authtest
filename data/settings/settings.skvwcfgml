@@ -8,3 +8,9 @@ chat popups: true
 [chat]
 censoring: true
 hide GIFs: false
+[cloak]
+enabled: false
++cloak:
+# managebac
+# drive
+# portal
