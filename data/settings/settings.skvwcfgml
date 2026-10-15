@@ -14,3 +14,9 @@ enabled: false
 # managebac
 # drive
 # portal
+[tips]
+enabled: true
+-delay: 1000
+# min [4000]
+# default [15000]
+# max [40000]

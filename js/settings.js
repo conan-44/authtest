@@ -10,9 +10,13 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
         const control = settingsList?.querySelector(
             `.settings-checkbox[data-section="${CSS.escape(section)}"][data-setting="${CSS.escape(key)}"]`
             + `, .settings-select[data-section="${CSS.escape(section)}"][data-setting="${CSS.escape(key)}"]`
+            + `, .settings-slider[data-section="${CSS.escape(section)}"][data-setting="${CSS.escape(key)}"]`
         );
         if (!control) return fallback;
-        return control instanceof HTMLInputElement ? control.checked : control.value;
+        if (!(control instanceof HTMLInputElement)) return control.value;
+        if (control.type === "checkbox") return control.checked;
+        if (control.type === "range") return control.valueAsNumber;
+        return fallback;
     };
 
     function settingId(section, key) {
@@ -46,6 +50,104 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
         });
 
         label.append(text, select);
+        return label;
+    }
+
+    function createSliderSetting(section, key, slider) {
+        const label = document.createElement("label");
+        label.className = "settings-slider-setting";
+
+        const text = document.createElement("span");
+        text.className = "settings-toggle-label";
+        text.textContent = `-  ${formatSettingName(key)}`;
+
+        const control = document.createElement("div");
+        control.className = "settings-slider-control";
+
+        const track = document.createElement("div");
+        track.className = "settings-slider-track";
+
+        const input = document.createElement("input");
+        input.type = "range";
+        input.className = "settings-slider";
+        input.id = settingId(section, key);
+        input.min = String(slider.min);
+        input.max = String(slider.max);
+        input.step = String(slider.step);
+        input.dataset.section = section;
+        input.dataset.setting = key;
+
+        const value = document.createElement("output");
+        value.className = "settings-slider-value";
+        value.htmlFor = input.id;
+        value.setAttribute("aria-live", "polite");
+
+        const stops = document.createElement("span");
+        stops.className = "settings-slider-stops";
+        stops.setAttribute("aria-hidden", "true");
+
+        slider.stops.forEach(stop => {
+            const marker = document.createElement("span");
+            marker.className = "settings-slider-stop";
+            marker.textContent = formatSettingName(stop.name);
+            marker.style.left = `${((stop.value - slider.min) / (slider.max - slider.min)) * 100}%`;
+            stops.appendChild(marker);
+        });
+
+        const snapDistance = (slider.max - slider.min) * 0.05;
+        let skipMagneticSnap = false;
+        const nearestStop = currentValue => slider.stops.reduce((nearest, stop) => (
+            Math.abs(stop.value - currentValue) < Math.abs(nearest.value - currentValue) ? stop : nearest
+        ), slider.stops[0]);
+        const updateValue = () => {
+            const steppedValue = slider.min
+                + Math.round((input.valueAsNumber - slider.min) / slider.step) * slider.step;
+            input.value = String(Math.max(slider.min, Math.min(slider.max, steppedValue)));
+            const currentValue = input.valueAsNumber;
+            const stop = nearestStop(currentValue);
+            if (!skipMagneticSnap && Math.abs(stop.value - currentValue) <= snapDistance) {
+                input.value = String(stop.value);
+                value.value = formatSettingName(stop.name);
+                value.textContent = formatSettingName(stop.name);
+                input.setAttribute("aria-valuetext", formatSettingName(stop.name));
+            } else {
+                const formattedValue = currentValue.toLocaleString();
+                value.value = formattedValue;
+                value.textContent = formattedValue;
+                input.setAttribute("aria-valuetext", formattedValue);
+            }
+        };
+
+        input.value = String(slider.value);
+        input.addEventListener("input", updateValue);
+        input.addEventListener("keydown", event => {
+            const arrowStep = slider.step;
+            const pageStep = slider.step * 10;
+            let nextValue;
+            if (event.key === "ArrowRight" || event.key === "ArrowUp") nextValue = input.valueAsNumber + arrowStep;
+            else if (event.key === "ArrowLeft" || event.key === "ArrowDown") nextValue = input.valueAsNumber - arrowStep;
+            else if (event.key === "PageUp") nextValue = input.valueAsNumber + pageStep;
+            else if (event.key === "PageDown") nextValue = input.valueAsNumber - pageStep;
+            else if (event.key === "Home") nextValue = slider.min;
+            else if (event.key === "End") nextValue = slider.max;
+            else return;
+            event.preventDefault();
+            input.value = String(Math.max(slider.min, Math.min(slider.max, nextValue)));
+            skipMagneticSnap = true;
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            skipMagneticSnap = false;
+            input.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        input.addEventListener("change", () => {
+            window.dispatchEvent(new CustomEvent("app-setting-changed", {
+                detail: { section, key, value: input.valueAsNumber }
+            }));
+        });
+        updateValue();
+
+        track.append(input, stops);
+        control.append(track, value);
+        label.append(text, control);
         return label;
     }
 
@@ -206,6 +308,11 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
             }
 
             Object.entries(values).forEach(([key, enabled]) => {
+                if (enabled && typeof enabled === "object" && enabled.type === "slider"
+                    && Array.isArray(enabled.stops) && enabled.stops.length) {
+                    settingsList.appendChild(createSliderSetting(section, key, enabled));
+                    return;
+                }
                 if (enabled && typeof enabled === "object" && enabled.type === "dropdown" && Array.isArray(enabled.options)) {
                     settingsList.appendChild(createDropdownSetting(section, key, enabled.options));
                     return;

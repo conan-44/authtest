@@ -35,7 +35,7 @@ window.AchievementLib.parseSettingsConfig = function parseSettingsConfig(text) {
     const lines = text.split(/\r?\n/);
     for (let index = 0; index < lines.length; index++) {
         const line = lines[index].trim();
-        if (!line || line.startsWith("#")) continue;
+        if (!line) continue;
         const sectionMatch = line.match(/^\[([^\]]+)\]$/);
         if (sectionMatch) {
             section = sectionMatch[1].trim();
@@ -55,6 +55,47 @@ window.AchievementLib.parseSettingsConfig = function parseSettingsConfig(text) {
             }
             continue;
         }
+        const sliderMatch = line.match(/^-\s*([^:]+):\s*(-?\d+(?:\.\d+)?)\s*$/);
+        if (sliderMatch) {
+            const key = sliderMatch[1].trim();
+            const slider = {
+                type: "slider",
+                step: Number(sliderMatch[2]),
+                value: null,
+                min: null,
+                default: null,
+                max: null,
+                stops: []
+            };
+            while (index + 1 < lines.length && lines[index + 1].trim().startsWith("#")) {
+                const stopLine = lines[++index].trim().slice(1).trim();
+                const stopMatch = stopLine.match(/^(.+?)\s*\[\s*(-?\d+(?:\.\d+)?)\s*\]$/);
+                if (!stopMatch) continue;
+
+                const name = stopMatch[1].trim();
+                const value = Number(stopMatch[2]);
+                if (!name || !Number.isFinite(value)) continue;
+
+                const directive = name.toLowerCase();
+                if (directive === "min" || directive === "default" || directive === "max") {
+                    slider[directive] = value;
+                }
+                slider.stops.push({ name, value });
+            }
+            if (slider.min !== null && slider.default !== null && slider.max !== null
+                && slider.min < slider.max
+                && slider.default >= slider.min && slider.default <= slider.max) {
+                slider.value = slider.default;
+                slider.stops = slider.stops
+                    .filter(stop => stop.value >= slider.min && stop.value <= slider.max)
+                    .sort((a, b) => a.value - b.value);
+                if (!Number.isFinite(slider.step) || slider.step <= 0) continue;
+                settings[section] = settings[section] || {};
+                settings[section][key] = slider;
+            }
+            continue;
+        }
+        if (line.startsWith("#")) continue;
         const separatorIndex = line.indexOf(":");
         if (separatorIndex <= 0) continue;
         const key = line.slice(0, separatorIndex).trim();

@@ -592,6 +592,65 @@ body {
     outline: 2px solid var(--color-points);
     outline-offset: 2px;
 }
+.settings-slider-setting {
+    display: grid;
+    gap: 10px;
+    width: min(520px, 100%);
+    padding: 12px 16px;
+    background: var(--color-card-surface);
+    font-family: 'lowsmall', sans-serif;
+    font-size: 15px;
+}
+.settings-slider-control {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 12px;
+}
+.settings-slider-track {
+    position: relative;
+    min-width: 0;
+    padding-bottom: 20px;
+}
+.settings-slider {
+    width: 100%;
+    height: 24px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    accent-color: var(--color-heading);
+    cursor: pointer;
+}
+.settings-slider:focus-visible {
+    outline: 2px solid var(--color-points);
+    outline-offset: 2px;
+}
+.settings-slider-value {
+    min-width: 72px;
+    color: var(--color-heading);
+    text-align: right;
+}
+.settings-slider-stops {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 20px;
+}
+.settings-slider-stop {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    color: var(--color-muted);
+    font-size: 11px;
+    white-space: nowrap;
+}
+.settings-slider-stop:first-child {
+    transform: translateX(0);
+}
+.settings-slider-stop:last-child {
+    transform: translateX(-100%);
+}
 .settings-checkbox {
     position: absolute;
     width: 1px;
@@ -779,10 +838,11 @@ body {
 }
 .chat-msg {
     border: 28px solid transparent;
+    border-bottom-width: 27px;
     border-right-width: 20px;
     border-image-source: url("./assets/chat_9x.png");
     border-image-slice: 8 10 8 8 fill;
-    border-image-width: 24px 30px 24px 24px;
+    border-image-width: 24px 30px 23px 24px;
     border-image-repeat: stretch repeat;
     image-rendering: pixelated;
     padding: 0 4px;
@@ -1246,6 +1306,62 @@ body {
     image-rendering: pixelated;
     image-rendering: crisp-edges;
     animation: notification-label-play 0.5s steps(4) 1;
+}
+
+.tip-toast {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 1100;
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    max-width: min(300px, calc(100vw - 32px));
+    opacity: 0;
+    transform: translateX(calc(100% + 24px));
+    pointer-events: none;
+    transition: opacity 280ms ease, transform 280ms ease;
+}
+.tip-toast.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+.tip-toast-bubble {
+    max-width: 240px;
+    padding: 0 2px 16px;
+    border: 16px solid transparent;
+    border-right-width: 20px;
+    border-image-source: url("./assets/chat_9x.png");
+    border-image-slice: 8 10 8 8 fill;
+    border-image-width: 24px 30px 24px 24px;
+    border-image-repeat: stretch repeat;
+    background: var(--color-white);
+    color: var(--color-text);
+    font-family: 'lowsmall', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    overflow-wrap: anywhere;
+    image-rendering: pixelated;
+}
+.tip-toast-icon {
+    flex: 0 0 8px;
+    width: 8px;
+    height: 8px;
+    margin: 0 12px 12px 0;
+    background-image: url("./assets/icons.png");
+    background-repeat: no-repeat;
+    background-position: -280px 0;
+    transform: scale(4);
+    transform-origin: center;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+.tip-toast-icon.is-animating {
+    animation: tip-icon-play 0.5s steps(4) 1;
+}
+@keyframes tip-icon-play {
+    from { background-position-y: 0; }
+    to { background-position-y: -32px; }
 }
 
 .label-error   { background-position-x: -80px; }
