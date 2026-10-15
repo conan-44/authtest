@@ -42,7 +42,16 @@
         </section>
         <section class="panel tab-panel is-hidden" id="chatPanel" aria-labelledby="chat-heading">
             <div class="panel-header">
-                <h1 id="chat-heading">Global Chat</h1>
+                <h1 id="chat-heading">Chat</h1>
+                <nav id="chatChannelTabs" class="chat-channel-tabs" role="tablist" aria-label="Chat channels"></nav>
+                <div class="chat-channel-actions">
+                    <select id="openChatChannelSelect" class="chat-channel-open" aria-label="Open a joined channel" hidden>
+                        <option value="">Open channel...</option>
+                    </select>
+                    <button type="button" id="createChatChannelBtn">Create channel</button>
+                    <button type="button" id="joinChatChannelBtn">Join with code</button>
+                    <button type="button" id="inviteChatChannelBtn" hidden>Invite</button>
+                </div>
             </div>
             <div class="panel-body chat-panel-body">
                 <div id="chatMessages" class="chat-messages" aria-live="polite"></div>

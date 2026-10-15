@@ -812,6 +812,69 @@ body {
     gap: var(--card-gap);
     height: 100%;
 }
+#chatPanel > .panel-header {
+    flex-wrap: wrap;
+}
+.chat-channel-tabs {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    gap: 4px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+.chat-channel-tab {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: stretch;
+    background: var(--color-card-surface);
+}
+.chat-channel-tab-button,
+.chat-channel-close,
+.chat-channel-actions button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+.chat-channel-tab-button.is-active {
+    background: var(--color-white);
+    color: var(--color-heading);
+}
+.chat-channel-close {
+    padding: 4px 8px;
+    background: transparent;
+    font-family: 'lowsmall', sans-serif;
+    font-size: 18px;
+}
+.chat-channel-actions {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    gap: 6px;
+}
+.chat-channel-open {
+    width: auto;
+    max-width: 150px;
+    min-width: 0;
+    margin: 0;
+    padding: 6px;
+    border: 2px solid var(--color-white);
+    background: var(--color-control-surface);
+    color: var(--color-text);
+    font-family: 'lowsmall', sans-serif;
+    font-size: 12px;
+}
+#openChatChannelSelect[hidden],
+#inviteChatChannelBtn[hidden] {
+    display: none !important;
+}
 .chat-messages {
     flex: 1 1 auto;
     min-height: 0;

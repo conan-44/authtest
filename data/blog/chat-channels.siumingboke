@@ -1,0 +1,8 @@
+# CHAT CHANNELS update
+### ++ DATE: 16-10-2026
+### ++ UPDATE: build 3.6
+Chat rooms / channels have been added
+### Stuff
+Use a join code to join a room
+### Supabase
+Added 3 new tables to manage channel rooms, members, and invites

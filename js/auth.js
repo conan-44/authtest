@@ -219,6 +219,10 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
       realtimeChannel = null;
     }
   }
+
+  window.dispatchEvent(new CustomEvent("app-auth-state-changed", {
+    detail: { userId: session?.user?.id || null }
+  }));
 });
 
 // Helper: Detect Provider Badges & Password Capability
