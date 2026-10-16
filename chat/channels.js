@@ -9,6 +9,17 @@ const joinChatChannelBtn = document.getElementById("joinChatChannelBtn");
 const inviteChatChannelBtn = document.getElementById("inviteChatChannelBtn");
 let chatInviteWordsPromise = null;
 
+function recordMainChatAchievement(eventName) {
+  const recorder = window.achievements?.recordGameEvent;
+  if (typeof recorder !== "function") {
+    console.error("Game achievement tracker is unavailable for chat channel progress.");
+    return;
+  }
+  recorder("main", eventName).catch(error => {
+    console.error("Could not record chat channel achievement.", error);
+  });
+}
+
 async function createRandomChatInviteCode() {
   try {
     chatInviteWordsPromise ??= fetch("./data/chat/list.txt")
@@ -121,6 +132,7 @@ async function activateChatChannel(channelId) {
   renderChatChannelTabs();
   clearReplyTarget();
   await fetchChatHistory(activeChatChannelId);
+  await recordChatRoomFirstJoin(activeChatChannelId);
 }
 
 async function loadJoinedChatChannels() {
@@ -213,6 +225,7 @@ async function createChatChannel() {
   await loadJoinedChatChannels();
   openChatChannelIds.add(created.channel_id);
   await activateChatChannel(created.channel_id);
+  recordMainChatAchievement("channel-created");
   window.prompt("created channel, share this invite code (one-time):", inviteCode);
 }
 
@@ -229,6 +242,7 @@ async function joinChatChannel() {
   await loadJoinedChatChannels();
   openChatChannelIds.add(joined.channel_id);
   await activateChatChannel(joined.channel_id);
+  recordMainChatAchievement("channel-joined");
 }
 
 async function createChatChannelInvite() {

@@ -1,0 +1,733 @@
+:root {
+    color-scheme: light;
+    font-family: "lowsmall", sans-serif;
+    background: #ffffff;
+    color: #000000;
+    font-synthesis: none;
+    --surface: #e9ebed;
+    --surface-raised: #cfcfcf;
+    --border: #ffffff;
+    --muted: #444444;
+    --accent: #2a4d67;
+    --light-square: #e9ebed;
+    --dark-square: #77889a;
+    --highlight: #e9d46a;
+}
+
+@font-face {
+    font-family: "capsmall";
+    src: url("../../assets/font/capsmall.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "lowbig";
+    src: url("../../assets/font/lowbig.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "lowsmall";
+    src: url("../../assets/font/lowsmall.otf") format("opentype");
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    padding: clamp(12px, 3vw, 28px);
+    background: #ffffff;
+    color: #000000;
+}
+
+button {
+    color: inherit;
+    font: inherit;
+}
+
+.chess-app {
+    width: min(100%, 1040px);
+    margin: 0 auto;
+}
+
+.topbar,
+.topbar-actions,
+.board-footer,
+.board-footer-actions,
+.move-heading,
+.analysis-heading,
+.evaluation-row,
+.captured-row,
+.turn-card {
+    display: flex;
+    align-items: center;
+}
+
+.topbar {
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.eyebrow {
+    margin: 0 0 3px;
+    color: var(--color-heading, #2a4d67);
+    font-size: 0.68rem;
+    font-family: "capsmall", sans-serif;
+    letter-spacing: 0.16em;
+}
+
+h1 {
+    margin: 0;
+    color: #2a4d67;
+    font-family: "lowbig", sans-serif;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: normal;
+    text-shadow: 4px 4px 0 rgb(26 37 49 / 18%);
+}
+
+.topbar-actions {
+    gap: 8px;
+}
+
+.primary-button,
+.quiet-button,
+.text-button {
+    min-height: 40px;
+    border: 4px solid var(--border);
+    border-radius: 0;
+    padding: 0 10px;
+    background: var(--surface-raised);
+    cursor: pointer;
+    font-family: "capsmall", sans-serif;
+}
+
+.primary-button {
+    background: #cfcfcf;
+    color: #000000;
+}
+
+.quiet-button:hover,
+.text-button:hover:not(:disabled) {
+    background: #ffffff;
+}
+
+button:focus-visible {
+    outline: 3px solid #2a4d67;
+    outline-offset: 2px;
+}
+
+.game-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(230px, 300px);
+    align-items: start;
+    gap: clamp(16px, 3vw, 28px);
+}
+
+.board-column {
+    min-width: 0;
+}
+
+.turn-card,
+.sidebar-card {
+    border: 4px solid #ffffff;
+    border-radius: 0;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 2px rgb(0 0 0 / 8%);
+}
+
+.turn-card {
+    min-height: 66px;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 10px 15px;
+}
+
+.turn-piece {
+    width: 15px;
+    height: 30px;
+    flex: 0 0 auto;
+    background-image: url("../../assets/minigames/chess/pieces.png");
+    background-repeat: no-repeat;
+    background-size: 600% 200%;
+    image-rendering: pixelated;
+}
+
+.game-status,
+.game-hint {
+    margin: 0;
+}
+
+.game-status {
+    font-family: "capsmall", sans-serif;
+}
+
+.game-hint {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
+.board-frame {
+    width: min(100%, calc(100vh - 185px), 680px);
+    margin: 0 auto;
+    overflow: hidden;
+    border: 6px solid #ffffff;
+    border-radius: 0;
+    background: #cfcfcf;
+    box-shadow: inset 0 0 0 2px rgb(0 0 0 / 15%);
+}
+
+.chess-board {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    overflow: hidden;
+    border-radius: 0;
+}
+
+.square {
+    position: relative;
+    display: grid;
+    aspect-ratio: 1;
+    place-items: center;
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.square.light {
+    background: var(--light-square);
+}
+
+.square.dark {
+    background: var(--dark-square);
+}
+
+.square.last-move {
+    background-image: linear-gradient(rgb(233 205 91 / 52%), rgb(233 205 91 / 52%));
+}
+
+.square.selected {
+    background-image: linear-gradient(rgb(238 208 91 / 78%), rgb(238 208 91 / 78%));
+}
+
+.square.in-check {
+    background-image: linear-gradient(rgb(213 83 68 / 75%), rgb(213 83 68 / 75%));
+}
+
+.square:focus-visible {
+    z-index: 2;
+    outline: 3px solid #2a4d67;
+    outline-offset: -4px;
+}
+
+.piece {
+    z-index: 1;
+    width: 50%;
+    height: 100%;
+    background-image: url("../../assets/minigames/chess/pieces.png");
+    background-repeat: no-repeat;
+    background-size: 600% 200%;
+    pointer-events: none;
+    image-rendering: pixelated;
+}
+
+.legal-target::after {
+    position: absolute;
+    width: 25%;
+    aspect-ratio: 1;
+    border-radius: 0;
+    background: rgb(0 0 0 / 38%);
+    content: "";
+}
+
+.legal-capture::after {
+    width: 82%;
+    border: 5px solid rgb(0 0 0 / 38%);
+    background: transparent;
+}
+
+.square-coordinate {
+    position: absolute;
+    bottom: 2px;
+    left: 4px;
+    color: rgb(23 38 31 / 65%);
+    font-size: clamp(0.5rem, 1.4vw, 0.72rem);
+    font-weight: 800;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.square.dark .square-coordinate {
+    color: rgb(245 243 232 / 70%);
+}
+
+.board-footer {
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
+.board-footer-actions {
+    gap: 4px;
+}
+
+.text-button {
+    min-height: 34px;
+    padding: 0 10px;
+    color: #000000;
+    font-size: 0.82rem;
+}
+
+.text-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.game-sidebar {
+    display: grid;
+    gap: 14px;
+}
+
+.opening-card {
+    display: grid;
+    gap: 8px;
+}
+
+.opening-card h2 {
+    margin: 0;
+    color: #2a4d67;
+    font-family: "capsmall", sans-serif;
+    font-size: 1rem;
+    font-weight: normal;
+}
+
+.opening-name {
+    margin: 0;
+    font-family: "capsmall", sans-serif;
+    line-height: 1.35;
+}
+
+.opening-book-status {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.book-moves {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.book-move {
+    display: grid;
+    min-width: 0;
+    min-height: 40px;
+    align-content: center;
+    justify-items: start;
+    gap: 2px;
+    border: 3px solid #ffffff;
+    border-radius: 0;
+    padding: 4px 6px;
+    background: var(--surface-raised);
+    cursor: pointer;
+    text-align: left;
+}
+
+.book-move:hover:not(:disabled) {
+    background: #ffffff;
+}
+
+.book-move:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.book-move-san {
+    color: #2a4d67;
+    font-family: "capsmall", sans-serif;
+}
+
+.book-move-name {
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 0.68rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.analysis-card {
+    display: grid;
+    gap: 10px;
+}
+
+.analysis-heading {
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.analysis-heading .text-button {
+    flex: 0 0 auto;
+    padding: 0 6px;
+    font-size: 0.74rem;
+}
+
+.analysis-status,
+.principal-variation {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.evaluation-row {
+    gap: 10px;
+}
+
+.evaluation-score {
+    min-width: 38px;
+    color: #2a4d67;
+    font-family: "capsmall", sans-serif;
+    text-align: right;
+}
+
+.evaluation-bar {
+    position: relative;
+    height: 20px;
+    flex: 1;
+    overflow: hidden;
+    border: 2px solid #000000;
+    background: #111111;
+}
+
+.evaluation-white {
+    width: 50%;
+    height: 100%;
+    background: #ffffff;
+    transition: width 180ms ease-out;
+}
+
+.sidebar-card {
+    min-width: 0;
+    padding: 16px;
+}
+
+.sidebar-card h2 {
+    margin: 0;
+    color: #2a4d67;
+    font-family: "capsmall", sans-serif;
+    font-weight: normal;
+    font-size: 1rem;
+}
+
+.captured-card h2 {
+    margin-bottom: 12px;
+}
+
+.captured-row {
+    min-height: 34px;
+    gap: 10px;
+}
+
+.captured-row + .captured-row {
+    border-top: 2px solid rgb(0 0 0 / 12%);
+}
+
+.captured-label {
+    width: 48px;
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+.captured-pieces {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px;
+}
+
+.captured-piece {
+    width: 13px;
+    height: 25px;
+    background-image: url("../../assets/minigames/chess/pieces.png");
+    background-repeat: no-repeat;
+    background-size: 600% 200%;
+    image-rendering: pixelated;
+}
+
+.move-heading {
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.move-count {
+    color: var(--muted);
+    font-size: 0.76rem;
+}
+
+.move-list {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    gap: 2px 10px;
+    max-height: 360px;
+    overflow: auto;
+    margin: 12px -4px 0;
+    padding: 0 4px;
+    list-style: none;
+}
+
+.move-number,
+.move-white,
+.move-black {
+    min-height: 28px;
+    padding: 5px 6px;
+    font-size: 0.84rem;
+}
+
+.move-number {
+    color: var(--muted);
+}
+
+.move-white,
+.move-black {
+    border-radius: 0;
+}
+
+.move-entry {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    min-height: 24px;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+}
+
+.move-entry-san {
+    min-width: 0;
+}
+
+.move-entry:disabled {
+    cursor: default;
+}
+
+.move-entry:not(:disabled):hover {
+    color: #2a4d67;
+    text-decoration: underline;
+}
+
+.reviewed-move {
+    outline: 2px solid #2a4d67;
+    outline-offset: -2px;
+}
+
+.move-quality {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    line-height: 12px;
+}
+
+.quality-icon {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 8px;
+    background-image: url("../../assets/icons.png");
+    background-repeat: no-repeat;
+    background-position-y: -24px;
+    transform: scale(1.5);
+    transform-origin: center;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    animation: chess-label-play 0.5s steps(4) 1;
+}
+
+.quality-icon.label-error {
+    background-position-x: -80px;
+}
+
+.quality-icon.label-warn {
+    background-position-x: -88px;
+}
+
+.quality-icon.label-success {
+    background-position-x: -96px;
+}
+
+.quality-icon.label-info {
+    background-position-x: -104px;
+}
+
+.quality-icon.label-book {
+    background-image: url("../../assets/minigames/chess/book.png");
+    background-position: center;
+    background-size: contain;
+    animation: none;
+}
+
+@keyframes chess-label-play {
+    from { background-position-y: 0; }
+    to { background-position-y: -32px; }
+}
+
+.quality-great {
+    color: #276092;
+}
+
+.quality-book {
+    color: #753939;
+    font-family: "capsmall", sans-serif;
+}
+
+.quality-best {
+    color: #237443;
+}
+
+.quality-inaccuracy {
+    color: #9a7410;
+}
+
+.quality-blunder {
+    color: #a3372c;
+}
+
+.review-start-button {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.latest-move {
+    background: #dfe4ea;
+    color: #2a4d67;
+    font-family: "capsmall", sans-serif;
+}
+
+.empty-history {
+    margin: 15px 0 0;
+    color: var(--muted);
+    font-size: 0.84rem;
+}
+
+.empty-history[hidden] {
+    display: none;
+}
+
+.promotion-dialog {
+    width: min(330px, calc(100% - 32px));
+    border: 4px solid #ffffff;
+    border-radius: 0;
+    padding: 20px;
+    background: var(--surface);
+    color: #000000;
+    box-shadow: 0 8px 0 rgb(26 37 49 / 18%);
+}
+
+.promotion-dialog::backdrop {
+    background: rgb(26 37 49 / 45%);
+}
+
+.promotion-dialog form > p {
+    margin: 0 0 14px;
+    color: #2a4d67;
+    font-family: "capsmall", sans-serif;
+    text-align: center;
+}
+
+.promotion-choices {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.promotion-choices button {
+    aspect-ratio: 1;
+    border: 4px solid #ffffff;
+    border-radius: 0;
+    background-color: var(--surface-raised);
+    background-image: url("../../assets/minigames/chess/pieces.png");
+    background-repeat: no-repeat;
+    background-size: 600% 200%;
+    cursor: pointer;
+}
+
+.promotion-choices button:hover {
+    background-color: #ffffff;
+}
+
+#cancelPromotionBtn {
+    width: 100%;
+}
+
+@media (max-width: 680px) {
+    body {
+        padding: 12px;
+    }
+
+    .game-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .board-frame {
+        width: min(100%, calc(100vh - 205px), 560px);
+    }
+
+    .board-footer {
+        align-items: flex-start;
+    }
+
+    .board-footer-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .game-sidebar {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        align-items: start;
+    }
+
+    .sidebar-card {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 460px) {
+    .topbar {
+        align-items: flex-start;
+    }
+
+    .topbar-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .primary-button,
+    .quiet-button {
+        min-height: 36px;
+        padding: 0 10px;
+        font-size: 0.82rem;
+    }
+
+    .game-sidebar {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .move-list {
+        max-height: 220px;
+    }
+}

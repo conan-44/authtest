@@ -1,11 +1,20 @@
 [
-  // achievement identifiers
-  "main:the-end",
-  "main:rebirth",
+  // main
   "main:beginning",
-  "main:suit-up",
-  "main:team-fort",
-  "main:codebreaker",
+  "main:channel-join",
+  "main:channel-host",
+  "main:gif-sender",
+  // bulls & cows
   "mastermind:beginner",
-  "mastermind:master"
+  "mastermind:codebreaker",
+  "mastermind:hard-mode",
+  "mastermind:master",
+  // chess
+  "chess:first-game",
+  "chess:ten-games",
+  "chess:checkmate",
+  "chess:first-analysis",
+  "chess:ten-analyses",
+  "chess:first-opening",
+  "chess:opening-collector"
 ]

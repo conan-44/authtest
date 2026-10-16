@@ -5,6 +5,7 @@ let chatHistoryRequestId = 0;
 let censoring = true;
 let blankMessageCleanupInterval = null;
 const messageRecords = new Map();
+const seenChatJoinNotices = new Set();
 window.addEventListener('censoring-setting-changed', () => {
   censoring = window.getAppSetting ? window.getAppSetting('chat', 'censoring', true) : true;
   updateExistingMessagesCensoring();
@@ -70,6 +71,10 @@ async function fetchChatHistory(channelId = activeChatChannelId) {
 function initRealtimeChat() {
   realtimeChannel = _supabase
     .channel('public:messages')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_room_first_joins' }, (payload) => {
+      if (payload.new.room_key !== (activeChatChannelId || "global")) return;
+      appendChatJoinNotice(payload.new);
+    })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
       if (!payload.new.content || (payload.new.channel_id || null) !== activeChatChannelId) return;
       const { data: profile } = await _supabase
@@ -99,6 +104,35 @@ function initRealtimeChat() {
       removeMessageUI(payload.old.id);
     })
     .subscribe();
+}
+
+function appendChatJoinNotice(join) {
+  if (!join?.user_id || !join?.room_key || join.room_key !== (activeChatChannelId || "global")) return;
+  const noticeKey = `${join.room_key}:${join.user_id}`;
+  if (seenChatJoinNotices.has(noticeKey)) return;
+  seenChatJoinNotices.add(noticeKey);
+
+  const notice = document.createElement("div");
+  notice.className = "chat-join-notice";
+  notice.dataset.joinNoticeId = noticeKey;
+  notice.textContent = `---- ${join.username || "Player"} joined the chat ----`;
+  document.getElementById("chatMessages").appendChild(notice);
+  scrollToBottom();
+}
+
+async function recordChatRoomFirstJoin(channelId = activeChatChannelId) {
+  if (!currentChatUserId) return;
+  const { data, error } = await _supabase.rpc("record_chat_room_first_join", {
+    p_channel_id: channelId || null
+  });
+  if (error) {
+    console.error("Could not record first chat-room join.", error.message);
+    if (typeof showPopup === "function") showPopup(`Could not record chat-room join: ${error.message}`, "error");
+    return;
+  }
+
+  const joined = Array.isArray(data) ? data[0] : data;
+  if (joined?.user_id) appendChatJoinNotice(joined);
 }
 
 // 3. SEND MESSAGE
@@ -219,7 +253,7 @@ function censorSwearWords(str) {
   const badWords = [
     "fuck", "shit", "bitch", "asshole", "dick",
     "pussy", "cunt", "cock", "suck", "nigga", "nigger", "fag",
-    "andrew chiu", "andrewchiu", "chiu, andrew"
+    "andrew chiu", "andrewchiu", "chiu, andrew", "a. chiu"
   ];
 
   const charMap = {
@@ -284,6 +318,7 @@ window.initChatTab = async function initChatTab() {
   }
   await loadJoinedChatChannels();
   initRealtimeChat();
+  await recordChatRoomFirstJoin();
 };
 
 async function handleChatAuthChange(userId) {
@@ -298,6 +333,7 @@ async function handleChatAuthChange(userId) {
   }
   if (!realtimeChannel && currentChatUserId) initRealtimeChat();
   await loadJoinedChatChannels();
+  await recordChatRoomFirstJoin();
 }
 
 window.addEventListener("app-auth-state-changed", event => {
@@ -306,4 +342,3 @@ window.addEventListener("app-auth-state-changed", event => {
 
 document.getElementById('sendChatBtn').addEventListener('click', sendMessage);
 document.getElementById('chatInput').addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
-

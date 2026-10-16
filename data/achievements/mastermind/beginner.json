@@ -1,6 +1,6 @@
 {
-	"title": "Beginning Master Mind",
-	"description": "Win your first game of Master Mind",
-	"rarity": "common",
-	"icon": "BMM"
+    "title": "Amateur",
+    "description": "Crack your first Bulls & Cows code.",
+    "rarity": "common",
+    "icon": "🎯"
 }

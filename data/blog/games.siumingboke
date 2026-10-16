@@ -1,0 +1,17 @@
+# GAMES update
+### ++ DATE: 17-10-2026
+### ++ UPDATE: build 3.7
+Why do short people in my class want games?
+### Stuff I added
+ - Chess game
+ - Styled Bulls and Cows
+ - More game space
+### Achievements
+Yes you can unlock them without the Developer Console
+Figure them out yourself
+### Chess
+Engine is Stockfish 19 LITE
+Openings are stored in data / minigames / chess. / tsv
+They are from the Lichess Github
+https://github.com/lichess-org/chess-openings/tree/master
+

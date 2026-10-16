@@ -20,7 +20,7 @@
             if (el) el.classList.toggle('is-hidden', name !== tabName);
         });
 
-        milestonesPanel?.classList.toggle('is-hidden', tabName === 'chat');
+        milestonesPanel?.classList.toggle('is-hidden', tabName === 'chat' || tabName === 'games');
         chatOptionsPanel?.classList.toggle('is-hidden', tabName !== 'chat');
 
         document.querySelectorAll('.tab-btn').forEach(btn => {

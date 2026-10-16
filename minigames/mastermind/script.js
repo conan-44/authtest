@@ -17,9 +17,13 @@ function getBullsAndCows(secret, guess) {
     return { bulls, cows };
 }
 
-function addGuess(guess, bulls, cows) {
+function addGuess(guess, bulls, cows, solver = 'you') {
     const li = document.createElement('li');
     li.className = 'guess-row';
+
+    const guessNumber = document.createElement('span');
+    guessNumber.className = 'guess-number';
+    guessNumber.textContent = String(++attemptCount).padStart(2, '0');
 
     const pegRow = document.createElement('div');
     pegRow.className = 'peg-row';
@@ -46,12 +50,32 @@ function addGuess(guess, bulls, cows) {
     }
     const feedbackText = document.createElement('span');
     feedbackText.className = 'feedback-text';
-    feedbackText.innerHTML =
-        `<img src="${bullsIconSRC}" alt="Bulls" class="icon"> ${bulls} <img src="${cowsIconSRC}" alt="Cows" class="icon"> ${cows}`;
+    feedbackText.textContent = `${bulls}B · ${cows}C`;
+    feedbackText.setAttribute(
+        'aria-label',
+        `${bulls} ${bulls === 1 ? 'bull' : 'bulls'}, ${cows} ${cows === 1 ? 'cow' : 'cows'}`
+    );
+    feedbackRow.className = 'guess-feedback';
     feedbackRow.append(feedbackPegs, feedbackText);
 
-    li.append(pegRow, feedbackRow);
+    li.append(guessNumber, pegRow, feedbackRow);
     guessesList.appendChild(li);
+    document.getElementById('attempt-count').textContent =
+        `${attemptCount} ${attemptCount === 1 ? 'guess' : 'guesses'}`;
+    document.getElementById('empty-history').hidden = true;
+    const gameStatus = document.getElementById('gameStatus');
+    const gameHint = document.getElementById('gameHint');
+    gameStatus.textContent = bulls === digits
+        ? (solver === 'computer' ? 'The AI cracked the code!' : 'Code cracked!')
+        : 'Guess recorded';
+    gameHint.textContent = bulls === digits
+        ? `${solver === 'computer' ? 'The AI' : 'You'} solved the ${digits}-digit code in ${attemptCount} ${attemptCount === 1 ? 'guess' : 'guesses'}.`
+        : `${bulls} ${bulls === 1 ? 'bull' : 'bulls'} and ${cows} ${cows === 1 ? 'cow' : 'cows'} — keep going.`;
+    if (bulls === digits) {
+        gameFinished = true;
+        guessInput.disabled = true;
+        document.getElementById('submit-guess').disabled = true;
+    }
 }
 
 function addRevealedSecretToList() {
@@ -66,10 +90,18 @@ function addRevealedSecretToList() {
     li.className = 'secret-reveal-item';
     li.textContent = `SECRET: ${secret}`;
     guessesList.appendChild(li);
+    document.getElementById('empty-history').hidden = true;
+    document.getElementById('gameStatus').textContent = 'Code revealed';
+    document.getElementById('gameHint').textContent = 'Start a new game when you are ready to try again.';
+    gameFinished = true;
+    guessInput.disabled = true;
+    document.getElementById('submit-guess').disabled = true;
 }
 // Universal elements
 let secret = num.getRandomNumber(4, 'string');
 let guesses = [];
+let attemptCount = 0;
+let gameFinished = false;
 let currentDifficulty = 'medium';
 const guessForm = document.getElementById('guess-form');
 const guessInput = document.getElementById('guess-input');
@@ -77,8 +109,6 @@ const guessesList = document.getElementById('guesses-list');
 const revealSecretBtn = document.getElementById('reveal-secret');
 const bullsElem = document.getElementById('bulls');
 const cowsElem = document.getElementById('cows');
-const bullsIconSRC = "../assets/sprites/bull.png";
-const cowsIconSRC = "../assets/sprites/cow.png";
 //AI solve elements
 const aiSolveBtn = document.getElementById('ai-solve-btn');
 const youBtn = document.getElementById('you-btn');
@@ -125,6 +155,12 @@ function updateInputRules() {
         const repeatHint = allowRepeats ? ' Repeated digits are allowed.' : ' Digits must be unique.';
         aiSecretLabel.textContent = `Enter a ${digits}-digit number for the AI to solve.${repeatHint}`;
     }
+    const inputHint = document.getElementById('input-hint');
+    if (inputHint) {
+        inputHint.textContent = allowRepeats
+            ? 'Repeated digits are allowed for this difficulty.'
+            : 'Use each digit once on this difficulty.';
+    }
 }
 
 function isValidCode(code) {
@@ -132,22 +168,37 @@ function isValidCode(code) {
     if (!allowRepeats && new Set(code).size !== digits) return false;
     return true;
 }
-// Notify the parent achievements panel (same-origin embed) that the code was cracked.
-function unlockCodebreakerAchievement() {
+function recordGameAchievementEvent(eventName, details) {
+    if (window.parent === window) return;
     try {
-        const parentAchievements = window.parent !== window ? window.parent.achievements : null;
-        if (parentAchievements && typeof parentAchievements.unlock === 'function') {
-            parentAchievements.unlock('main:codebreaker');
+        const recorder = window.parent.achievements?.recordGameEvent;
+        if (typeof recorder !== 'function') {
+            console.error('Game achievement tracker is unavailable.');
+            return;
         }
+        recorder('mastermind', eventName, details).catch(error => {
+            console.error('Could not record Bulls & Cows achievement progress.', error);
+        });
     } catch (error) {
-        console.warn('Could not unlock achievement (not embedded or cross-origin):', error);
+        console.error('Could not reach the game achievement tracker.', error);
     }
 }
+
 function resetGameState() {
     guesses = [];
+    attemptCount = 0;
+    gameFinished = false;
     guessesList.innerHTML = '';
+    guessInput.removeAttribute('aria-invalid');
+    guessInput.disabled = false;
+    document.getElementById('submit-guess').disabled = false;
+    document.getElementById('attempt-count').textContent = '0 guesses';
+    document.getElementById('empty-history').hidden = false;
     bullsElem.textContent = '0';
     cowsElem.textContent = '0';
+    document.getElementById('gameStatus').textContent = 'Crack the secret code';
+    document.getElementById('gameHint').textContent =
+        'Enter a code to see how many digits are in the right place.';
     secret = num.getRandomNumber(digits, 'string', allowRepeats);
 }
 
@@ -169,19 +220,29 @@ secret = num.getRandomNumber(digits, 'string', allowRepeats);
 if (guessForm) {
     guessForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        if (gameFinished) return;
         const guess = guessInput.value;
         if (!isValidCode(guess)) {
-            guessInput.style.border = '2px solid red';
+            guessInput.setAttribute('aria-invalid', 'true');
+            document.getElementById('gameStatus').textContent = 'That code is not valid';
+            document.getElementById('gameHint').textContent = allowRepeats
+                ? `Enter exactly ${digits} digits.`
+                : `Enter ${digits} different digits.`;
             return;
         }
-        guessInput.style.border = '';
+        guessInput.removeAttribute('aria-invalid');
         const { bulls, cows } = getBullsAndCows(secret, guess);
         bullsElem.textContent = bulls;
         cowsElem.textContent = cows;
         addGuess(guess, bulls, cows);
         guesses.push({ guess, bulls, cows });
         guessInput.value = '';
-        if (bulls === digits) unlockCodebreakerAchievement();
+        if (bulls === digits) {
+            recordGameAchievementEvent('solved', {
+                difficulty: currentDifficulty,
+                guesses: attemptCount
+            });
+        }
     });
 }
 
@@ -211,13 +272,15 @@ if (hardBtn) {
 if (aiSolveBtn && aiSolveModal) {
     aiSolveBtn.addEventListener('click', () => {
         setModeButtonActive(aiSolveBtn);
-        aiSolveModal.style.display = 'flex';
+        aiSolveModal.hidden = false;
+        userSecretInput.focus();
     });
 }
 if (closeAiSolveBtn && aiSolveModal) {
     closeAiSolveBtn.addEventListener('click', () => {
-        aiSolveModal.style.display = 'none';
+        aiSolveModal.hidden = true;
         userSecretInput.value = '';
+        userSecretInput.removeAttribute('aria-invalid');
         setModeButtonActive(youBtn);
     });
 }
@@ -231,18 +294,27 @@ if (startAiSolveBtn && userSecretInput) {
     startAiSolveBtn.addEventListener('click', () => {
         const userSecret = userSecretInput.value;
         if (!isValidCode(userSecret)) {
-            userSecretInput.style.border = '2px solid red';
+            userSecretInput.setAttribute('aria-invalid', 'true');
             return;
         }
-        userSecretInput.style.border = '';
-        aiSolveModal.style.display = 'none';
+        userSecretInput.removeAttribute('aria-invalid');
+        aiSolveModal.hidden = true;
         userSecretInput.value = '';
+        guesses = [];
+        attemptCount = 0;
+        gameFinished = false;
+        guessInput.disabled = false;
+        document.getElementById('submit-guess').disabled = false;
         guessesList.innerHTML = '';
+        document.getElementById('attempt-count').textContent = '0 guesses';
+        document.getElementById('empty-history').hidden = false;
         bullsElem.textContent = '0';
         cowsElem.textContent = '0';
+        document.getElementById('gameStatus').textContent = 'AI is cracking the code';
+        document.getElementById('gameHint').textContent = 'The computer is testing possible combinations.';
         setModeButtonActive(aiSolveBtn);
         aiSolve(userSecret, (guess, bulls, cows, tries) => {
-            addGuess(guess, bulls, cows);
+            addGuess(guess, bulls, cows, 'computer');
             bullsElem.textContent = bulls;
             cowsElem.textContent = cows;
             if (bulls === digits) setModeButtonActive(youBtn); // Return to You mode after solve

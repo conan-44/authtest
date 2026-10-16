@@ -17,6 +17,9 @@ const history_file = "./history/achievements.skvwhist";
             lastMilestonePoints: 0,
             profile: null
         };
+        const gameProgressStorageKey = "skvwaffle.game-achievement-progress.v1";
+        let gameProgress = loadGameProgress();
+        let achievementsLoadPromise = null;
 
         const config = {
             indexUrl: options.indexUrl || indexmeta_file,
@@ -36,15 +39,122 @@ const history_file = "./history/achievements.skvwhist";
         const loaders = window.AchievementLib.createLoaders(state, config);
         const renderers = window.AchievementLib.createRenderers(state, elements);
 
-        async function loadAllFromDirectoryIndex() {
-            const list = await loaders.loadAllFromDirectoryIndex();
-            await loadUserProfile();
-            // Baseline so existing progress doesn't retrigger popups on page load.
-            state.lastMilestonePoints = getSummary(state).unlockedPoints;
-            renderers.renderAll();
-            renderers.renderMilestones();
-            if (onRender) onRender(getSummary(state));
-            return list;
+        function loadAllFromDirectoryIndex() {
+            if (!achievementsLoadPromise) {
+                achievementsLoadPromise = (async () => {
+                    const list = await loaders.loadAllFromDirectoryIndex();
+                    await loadUserProfile();
+                    // Baseline so existing progress doesn't retrigger popups on page load.
+                    state.lastMilestonePoints = getSummary(state).unlockedPoints;
+                    renderers.renderAll();
+                    renderers.renderMilestones();
+                    if (onRender) onRender(getSummary(state));
+                    return list;
+                })();
+            }
+            return achievementsLoadPromise;
+        }
+
+        function loadGameProgress() {
+            const emptyProgress = {
+                mastermind: { solves: 0 },
+                chess: { games: 0, analyses: 0, openings: [] }
+            };
+            try {
+                const saved = JSON.parse(localStorage.getItem(gameProgressStorageKey) || "null");
+                if (!saved || saved.version !== 1) return emptyProgress;
+                return {
+                    mastermind: {
+                        solves: Number.isInteger(saved.mastermind?.solves) && saved.mastermind.solves >= 0
+                            ? saved.mastermind.solves
+                            : 0
+                    },
+                    chess: {
+                        games: Number.isInteger(saved.chess?.games) && saved.chess.games >= 0
+                            ? saved.chess.games
+                            : 0,
+                        analyses: Number.isInteger(saved.chess?.analyses) && saved.chess.analyses >= 0
+                            ? saved.chess.analyses
+                            : 0,
+                        openings: Array.isArray(saved.chess?.openings)
+                            ? [...new Set(saved.chess.openings.filter(name => typeof name === "string"))]
+                            : []
+                    }
+                };
+            } catch (error) {
+                console.warn("Could not load saved game achievement progress.", error);
+                return emptyProgress;
+            }
+        }
+
+        function saveGameProgress() {
+            try {
+                localStorage.setItem(gameProgressStorageKey, JSON.stringify({
+                    version: 1,
+                    ...gameProgress
+                }));
+            } catch (error) {
+                console.warn("Could not save game achievement progress.", error);
+            }
+        }
+
+        async function recordGameEvent(gameName, eventName, details = {}) {
+            if (!achievementsLoadPromise) await loadAllFromDirectoryIndex();
+            else await achievementsLoadPromise;
+
+            const unlockedIds = [];
+            if (gameName === "main" && eventName === "cloak-used") {
+                unlockedIds.push("main:beginning");
+            } else if (gameName === "main" && eventName === "channel-joined") {
+                unlockedIds.push("main:channel-join");
+            } else if (gameName === "main" && eventName === "channel-created") {
+                unlockedIds.push("main:channel-host");
+            } else if (gameName === "main" && eventName === "gif-sent") {
+                unlockedIds.push("main:gif-sender");
+            } else if (gameName === "mastermind" && eventName === "solved") {
+                gameProgress.mastermind.solves += 1;
+                unlockedIds.push("mastermind:beginner");
+                if (Number.isInteger(details.guesses) && details.guesses <= 5) {
+                    unlockedIds.push("mastermind:codebreaker");
+                }
+                if (details.difficulty === "hard") {
+                    unlockedIds.push("mastermind:hard-mode");
+                }
+                if (gameProgress.mastermind.solves >= 10) {
+                    unlockedIds.push("mastermind:master");
+                }
+            } else if (gameName === "chess" && eventName === "completed") {
+                gameProgress.chess.games += 1;
+                unlockedIds.push("chess:first-game");
+                if (gameProgress.chess.games >= 10) {
+                    unlockedIds.push("chess:ten-games");
+                }
+                if (details.winner === "white" || details.winner === "black") {
+                    unlockedIds.push("chess:checkmate");
+                }
+            } else if (gameName === "chess" && eventName === "analyzed") {
+                gameProgress.chess.analyses += 1;
+                unlockedIds.push("chess:first-analysis");
+                if (gameProgress.chess.analyses >= 10) {
+                    unlockedIds.push("chess:ten-analyses");
+                }
+            } else if (gameName === "chess" && eventName === "opening-discovered") {
+                const opening = typeof details.name === "string" ? details.name.trim() : "";
+                if (opening && !gameProgress.chess.openings.includes(opening)) {
+                    gameProgress.chess.openings.push(opening);
+                    unlockedIds.push("chess:first-opening");
+                    if (gameProgress.chess.openings.length >= 5) {
+                        unlockedIds.push("chess:opening-collector");
+                    }
+                }
+            } else {
+                console.warn(`Ignoring unknown game achievement event: ${gameName}.${eventName}`);
+                return false;
+            }
+
+            saveGameProgress();
+            await Promise.all(unlockedIds.map(id => unlock(id)));
+            return true;
         }
 
         async function loadUserProfile(userId) {
@@ -260,6 +370,7 @@ const history_file = "./history/achievements.skvwhist";
                 return executeCodeCommand(command.startsWith("points") ? command : `points(${command})`);
             },
             unlock,
+            recordGameEvent,
             revoke,
             reset,
             isCompleted: id => isCompleted(state, id),
@@ -329,4 +440,3 @@ const history_file = "./history/achievements.skvwhist";
     window.calc = value => ({ action: "calc", value: String(value) });
     window.achievements = achievements;
 })();
-

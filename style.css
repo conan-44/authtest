@@ -899,6 +899,15 @@ body {
 .chat-messages::-webkit-scrollbar-thumb:hover {
     background: var(--color-points);
 }
+.chat-join-notice {
+    align-self: stretch;
+    flex: 0 0 auto;
+    width: 100%;
+    padding: 4px 0;
+    color: var(--color-text);
+    font-family: 'lowsmall', sans-serif;
+    text-align: center;
+}
 .chat-msg {
     border: 28px solid transparent;
     border-bottom-width: 27px;
@@ -1179,11 +1188,14 @@ body {
     text-align: right;
 }
 .achievements-grid { display: grid; grid-template-columns: repeat(var(--achievement-columns), minmax(0, 1fr)); gap: var(--card-gap); }
+.achievement-namespace { display: grid; grid-column: 1 / -1; gap: var(--card-gap); min-width: 0; }
+.achievement-namespace-heading { margin: 8px 0 0; color: var(--color-heading); font-family: 'capsmall', sans-serif; font-size: 16px; font-weight: normal; letter-spacing: 0.08em; }
+.achievement-namespace-grid { display: grid; grid-template-columns: repeat(var(--achievement-columns), minmax(0, 1fr)); gap: var(--card-gap); min-width: 0; }
 @media (max-width: 899px) {
-    .achievements-grid { grid-template-columns: 1fr; }
+    .achievements-grid, .achievement-namespace-grid { grid-template-columns: 1fr; }
 }
 @media (min-width: 900px) and (max-width: 1299px) {
-    .achievements-grid { grid-template-columns: repeat(var(--achievement-columns-medium), minmax(0, 1fr)); }
+    .achievements-grid, .achievement-namespace-grid { grid-template-columns: repeat(var(--achievement-columns-medium), minmax(0, 1fr)); }
 }
 .achievement-card {
     position: relative;

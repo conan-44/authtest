@@ -64,23 +64,50 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
         if (elements.scoreEl) elements.scoreEl.textContent = `Points: ${summary.unlockedPoints} / ${summary.totalPoints}`;
         if (!elements.gridEl) return;
         elements.gridEl.innerHTML = "";
+        const groups = new Map();
         state.achievementsMap.forEach(achievement => {
-            const complete = isCompleted(state, achievement.id);
-            const card = document.createElement("article");
-            card.className = "achievement-card" + ` rarity-${achievement.rarity}` + (complete ? " is-completed" : " is-locked") + (achievement.rarity === "secret" && !complete ? " is-secret-locked" : "");
-            const banner = document.createElement("span"); banner.className = `banners banners-${achievement.rarity}`;
-            const cardInner = document.createElement("div"); cardInner.className = "achievement-card-inner";
-            const icon = document.createElement("div"); icon.className = "achievement-icon"; icon.textContent = achievement.icon;
-            const body = document.createElement("div");
-            const title = document.createElement("h3"); title.className = `achievement-title rarity-${achievement.rarity}`; title.textContent = achievement.title;
-            const description = document.createElement("p"); description.className = "achievement-description"; description.textContent = achievement.rarity === "secret" && !complete ? "???" : (achievement.description || "No description.");
-            const points = document.createElement("span"); points.className = "achievement-pts"; points.textContent = `+${achievement.points}p`;
-            const status = document.createElement("span"); status.className = "achievement-status"; status.title = complete ? "Completed" : "Locked";
-            const statusIcon = document.createElement("span"); statusIcon.className = "icons_status " + (complete ? "icons_status-unlocked" : "icons_status-locked");
-            status.append(statusIcon);
-            const meta = document.createElement("div"); meta.className = "achievement-meta";
-            meta.append(points, status);
-            body.append(title, description, meta); cardInner.append(icon, body); card.append(banner, cardInner); elements.gridEl.append(card);
+            if (!groups.has(achievement.namespace)) groups.set(achievement.namespace, []);
+            groups.get(achievement.namespace).push(achievement);
+        });
+        const namespaceOrder = [
+            ...[...groups.keys()].filter(namespace => namespace === "main"),
+            ...[...groups.keys()].filter(namespace => namespace !== "main").sort()
+        ];
+        namespaceOrder.forEach(namespace => {
+            const achievements = groups.get(namespace);
+            if (!achievements?.length) return;
+
+            const section = document.createElement("section");
+            section.className = "achievement-namespace";
+            section.setAttribute("aria-labelledby", `achievement-namespace-${namespace}`);
+            const heading = document.createElement("h2");
+            heading.className = "achievement-namespace-heading";
+            heading.id = `achievement-namespace-${namespace}`;
+            heading.textContent = `---- ${namespace} ----`;
+            const groupGrid = document.createElement("div");
+            groupGrid.className = "achievement-namespace-grid";
+
+            achievements.forEach(achievement => {
+                const complete = isCompleted(state, achievement.id);
+                const card = document.createElement("article");
+                card.className = "achievement-card" + ` rarity-${achievement.rarity}` + (complete ? " is-completed" : " is-locked") + (achievement.rarity === "secret" && !complete ? " is-secret-locked" : "");
+                const banner = document.createElement("span"); banner.className = `banners banners-${achievement.rarity}`;
+                const cardInner = document.createElement("div"); cardInner.className = "achievement-card-inner";
+                const icon = document.createElement("div"); icon.className = "achievement-icon"; icon.textContent = achievement.icon;
+                const body = document.createElement("div");
+                const title = document.createElement("h3"); title.className = `achievement-title rarity-${achievement.rarity}`; title.textContent = achievement.title;
+                const description = document.createElement("p"); description.className = "achievement-description"; description.textContent = achievement.rarity === "secret" && !complete ? "???" : (achievement.description || "No description.");
+                const points = document.createElement("span"); points.className = "achievement-pts"; points.textContent = `+${achievement.points}p`;
+                const status = document.createElement("span"); status.className = "achievement-status"; status.title = complete ? "Completed" : "Locked";
+                const statusIcon = document.createElement("span"); statusIcon.className = "icons_status " + (complete ? "icons_status-unlocked" : "icons_status-locked");
+                status.append(statusIcon);
+                const meta = document.createElement("div"); meta.className = "achievement-meta";
+                meta.append(points, status);
+                body.append(title, description, meta); cardInner.append(icon, body); card.append(banner, cardInner); groupGrid.append(card);
+            });
+
+            section.append(heading, groupGrid);
+            elements.gridEl.append(section);
         });
     }
 

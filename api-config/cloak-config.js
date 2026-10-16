@@ -8,6 +8,17 @@
     };
     window.cloakConfigState = state;
 
+    function recordCloakAchievement() {
+        const recorder = window.achievements?.recordGameEvent;
+        if (typeof recorder !== "function") {
+            console.error("Game achievement tracker is unavailable for the invisibility cloak.");
+            return;
+        }
+        recorder("main", "cloak-used").catch(error => {
+            console.error("Could not record invisibility cloak achievement.", error);
+        });
+    }
+
     function applyCloakSettings() {
         const cloakApi = window.cloak;
         if (!cloakApi || typeof cloakApi.setCloak !== "function" || typeof cloakApi.reset !== "function") {
@@ -36,14 +47,17 @@
             case "managebac": {
                 cloakApi.setCloak("ManageBac | My Workspace", "./assets/cloak/managebac.png");
                 state.appliedConfig = config;
+                recordCloakAchievement();
                 break; }
             case "drive": {
                 cloakApi.setCloak("Home - Google Drive", "./assets/cloak/drive.png");
-                state.appliedConfig = config; 
+                state.appliedConfig = config;
+                recordCloakAchievement();
                 break; }
             case "portal": {
                 cloakApi.setCloak("VSA - Announcements", "./assets/cloak/vsa.png");
                 state.appliedConfig = config; 
+                recordCloakAchievement();
                 break; }
             default: {
                 console.error(`Cloak option "${config}" is not configured.`);

@@ -2,70 +2,112 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href=".../style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>Bulls &amp; Cows</title>
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <div id="topbar"><h1>Master Mind</h1></div>
-    <div class="main-layout">
-        <div class="header">MASTER MIND</div>
-        <div class="body-layout">
-            <div class="stats-container"></div>
-            <div class="xp-bar"></div>
-            <div class="game-section">
-                <div class="game-container">
-                    <ul id="guesses-list" style="list-style:none; padding:0; margin-top:18px; width:100%;"></ul>
-                </div>
-                <div class="form">
-                    <form id="guess-form" autocomplete="off">
-                        <input id="guess-input" type="text" maxlength="4" 
-                        pattern="\d{4}" placeholder="0123" required style="width:120px; font-size:1.2em; text-align:center;">
-                        <button id="submit-guess" type="submit">Guess</button>
-                        <button id="reset-game" type="button">Reset</button>
-                        <button id="reveal-secret" type="button">Reveal</button>
-                    </form>
-                    <div class="form-buttons">
-                        <button>New game</button>
-                        <button>Quit to Menu</button>
-                    </div>
-                </div>
+    <main class="mastermind-app">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">LOCAL GAME</p>
+                <h1>bulls &amp; cows</h1>
             </div>
-            <div class="side-section">
-                <div id="turn-stats-container">
-                    <div id="bulls-container">
-                        <img id="bull-img" src="../assets/sprites/bull.png" alt="bulls">
-                        <p id="bulls">0</p>
+            <button id="reset-game" class="primary-button" type="button">New game</button>
+        </header>
+
+        <section class="game-layout" aria-label="Bulls and Cows game">
+            <div class="board-column">
+                <div class="turn-card" aria-live="polite">
+                    <span class="turn-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                    <div>
+                        <p id="gameStatus" class="game-status">Crack. it.</p>
+                        <p id="gameHint" class="game-hint">guess your guess below</p>
                     </div>
-                    <div id="cows-container">
-                        <img id="cow-img" src="../assets/sprites/cow.png" alt="cows">
-                        <p id="cows">0</p>
-                    </div>
-                </div>
-                <div class="difficulty">
-                    <div class="difficulty-title">difficulty</div>
-                    <button id="easy-btn" type="button">easy</button>
-                    <button id="medium-btn" type="button">medium</button>
-                    <button id="hard-btn" type="button">hard</button>
-                </div>
-                <div class="player-choice">
-                    <div class="player-title">Computer or you</div>
-                    <button id="ai-solve-btn">AI Solve</button>
-                    <button id="you-btn">You</button>
                 </div>
 
-                <div id="ai-solve-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; z-index:1000;">
-                  <div style="background:var(--theme-background); border:4px solid var(--theme-light); padding:2rem; display:flex; flex-direction:column; align-items:center;">
-                                        <label id="ai-secret-label" for="user-secret-input" style="color:var(--theme-light); font-family:var(--font-family); font-size:1.2rem;">Enter a 4-digit number for the AI to solve:</label>
-                    <input id="user-secret-input" type="text" maxlength="4" pattern="\d{4}" style="margin:1rem 0; font-size:1.5rem; text-align:center; font-family:var(--font-family);">
-                    <button id="start-ai-solve" style="font-family:var(--font-family);">Start</button>
-                    <button id="close-ai-solve" style="margin-top:0.5rem; font-family:var(--font-family);">Cancel</button>
-                  </div>
-                </div>
+                <section class="sidebar-card play-card" aria-labelledby="guess-heading">
+                    <h2 id="guess-heading">Make a guess</h2>
+                    <p class="section-hint">BULLS | right place entirely <br>COWS | wrong place but in code</p>
+                    <form id="guess-form" class="guess-form" autocomplete="off">
+                        <label class="input-label" for="guess-input">Your code</label>
+                        <div class="guess-entry">
+                            <input id="guess-input" class="code-input" type="text" inputmode="numeric" maxlength="4"
+                                pattern="\d{4}" placeholder="0123" aria-describedby="input-hint" required>
+                            <button id="submit-guess" class="primary-button" type="submit">Guess</button>
+                        </div>
+                        <p id="input-hint" class="input-hint">use each digit ONCE on medium and hard.</p>
+                    </form>
+
+                    <div class="turn-stats" aria-label="Latest guess feedback">
+                        <div class="stat-card">
+                            <span class="stat-mark bull-mark" aria-hidden="true"></span>
+                            <div><span class="stat-label">BULLS</span><p id="bulls" class="stat-value">0</p></div>
+                            <span class="stat-description">right place</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-mark cow-mark" aria-hidden="true"></span>
+                            <div><span class="stat-label">COWS</span><p id="cows" class="stat-value">0</p></div>
+                            <span class="stat-description">wrong place</span>
+                        </div>
+                    </div>
+
+                    <div class="play-actions">
+                        <button id="reveal-secret" class="text-button" type="button">give up</button>
+                    </div>
+                </section>
+
+                <section class="sidebar-card settings-card" aria-label="Game settings">
+                    <div class="setting-group">
+                        <h2>Difficulty</h2>
+                        <div class="button-row">
+                            <button id="easy-btn" class="option-button" type="button">Easy</button>
+                            <button id="medium-btn" class="option-button" type="button">Medium</button>
+                            <button id="hard-btn" class="option-button" type="button">Hard</button>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <h2>Player</h2>
+                        <div class="button-row">
+                            <button id="you-btn" class="option-button" type="button">You</button>
+                            <button id="ai-solve-btn" class="option-button" type="button">AI solve</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="game-sidebar">
+                <section class="sidebar-card history-card" aria-labelledby="history-heading">
+                    <div class="history-heading">
+                        <h2 id="history-heading">Previous guesses</h2>
+                        <span id="attempt-count" class="attempt-count">0 guesses</span>
+                    </div>
+                    <div class="history-columns" aria-hidden="true">
+                        <span>GUESS</span>
+                        <span>FEEDBACK</span>
+                    </div>
+                    <ol id="guesses-list" class="guesses-list" aria-label="Previous guesses" aria-live="polite"></ol>
+                    <p id="empty-history" class="empty-history">guesses here</p>
+                </section>
+            </aside>
+        </section>
+    </main>
+
+    <div id="ai-solve-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ai-secret-label" hidden>
+        <div class="modal-card">
+            <p class="eyebrow">AI CHALLENGE</p>
+            <h2 id="ai-secret-label">Enter a 4-digit number for the AI to solve.</h2>
+            <label class="input-label" for="user-secret-input">Secret code</label>
+            <input id="user-secret-input" class="code-input modal-input" type="text" inputmode="numeric"
+                maxlength="4" pattern="\d{4}" placeholder="0123">
+            <div class="modal-actions">
+                <button id="close-ai-solve" class="text-button" type="button">Cancel</button>
+                <button id="start-ai-solve" class="primary-button" type="button">Start solving</button>
             </div>
         </div>
     </div>
-    <script src="num.js" type="module"></script>
-    <script src="script.js" type="module"></script>
+
+    <script src="./script.js" type="module"></script>
 </body>
 </html>

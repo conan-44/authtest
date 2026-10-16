@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Chess</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <main class="chess-app">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">LOCAL GAME</p>
+                <h1>chess</h1>
+            </div>
+            <div class="topbar-actions">
+                <button id="flipBoardBtn" class="quiet-button" type="button">Flip board</button>
+                <button id="newGameBtn" class="primary-button" type="button">New game</button>
+            </div>
+        </header>
+
+        <section class="game-layout" aria-label="Chess game">
+            <div class="board-column">
+                <div class="turn-card" aria-live="polite">
+                    <span id="turnIndicator" class="turn-piece" aria-hidden="true"></span>
+                    <div>
+                        <p id="gameStatus" class="game-status">White to move</p>
+                        <p id="gameHint" class="game-hint">choose a piece</p>
+                    </div>
+                </div>
+                <div class="board-frame">
+                    <div id="chessBoard" class="chess-board" role="grid" aria-label="Chess board"></div>
+                </div>
+                <div class="board-footer">
+                    <span>two players · same device</span>
+                    <div class="board-footer-actions">
+                        <button id="reviewGameBtn" class="text-button" type="button">Review game</button>
+                        <button id="undoBtn" class="text-button" type="button" disabled>Undo Move</button>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="game-sidebar">
+                <section class="sidebar-card opening-card">
+                    <h2>Opening book</h2>
+                    <p id="openingName" class="opening-name">Loading openings…</p>
+                    <p id="openingBookStatus" class="opening-book-status" aria-live="polite">Loading opening names and moves.</p>
+                    <div id="bookMoves" class="book-moves" aria-label="Book moves"></div>
+                </section>
+                <section id="analysisCard" class="sidebar-card analysis-card">
+                    <div class="analysis-heading">
+                        <h2>Game analysis</h2>
+                        <button id="analyzeGameBtn" class="text-button" type="button" disabled>Analyze game</button>
+                    </div>
+                    <p id="analysisStatus" class="analysis-status" aria-live="polite">Play a few moves, then review your game.</p>
+                    <div class="evaluation-row">
+                        <span id="evaluationScore" class="evaluation-score">—</span>
+                        <div id="evaluationBar" class="evaluation-bar" role="meter" aria-label="White's evaluation" aria-valuemin="-10" aria-valuemax="10" aria-valuenow="0">
+                            <div id="evaluationWhite" class="evaluation-white"></div>
+                        </div>
+                    </div>
+                    <p id="principalVariation" class="principal-variation">Engine line will appear here.</p>
+                </section>
+                <section class="sidebar-card captured-card">
+                    <h2>Captured pieces</h2>
+                    <div class="captured-row">
+                        <span class="captured-label">White</span>
+                        <div id="whiteCaptured" class="captured-pieces" aria-label="Pieces captured by White"></div>
+                    </div>
+                    <div class="captured-row">
+                        <span class="captured-label">Black</span>
+                        <div id="blackCaptured" class="captured-pieces" aria-label="Pieces captured by Black"></div>
+                    </div>
+                </section>
+                <section class="sidebar-card move-card">
+                    <div class="move-heading">
+                        <h2>move history</h2>
+                        <span id="moveCount" class="move-count">0 moves</span>
+                    </div>
+                    <button id="reviewStartBtn" class="text-button review-start-button" type="button" disabled>Start position</button>
+                    <ol id="moveList" class="move-list" aria-label="Move history"></ol>
+                    <p id="emptyHistory" class="empty-history">play a move</p>
+                </section>
+            </aside>
+        </section>
+    </main>
+
+    <dialog id="promotionDialog" class="promotion-dialog" aria-labelledby="promotionTitle">
+        <form method="dialog">
+            <p id="promotionTitle">promote your pawn</p>
+            <div class="promotion-choices">
+                <button type="button" data-promotion="q" aria-label="Promote to queen"></button>
+                <button type="button" data-promotion="r" aria-label="Promote to rook"></button>
+                <button type="button" data-promotion="b" aria-label="Promote to bishop"></button>
+                <button type="button" data-promotion="n" aria-label="Promote to knight"></button>
+            </div>
+            <button id="cancelPromotionBtn" class="text-button" type="button">Cancel</button>
+        </form>
+    </dialog>
+
+    <script type="module" src="./game.js"></script>
+</body>
+</html>

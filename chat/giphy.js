@@ -291,6 +291,14 @@ async function sendGiphyGif(gif) {
   setGifSearchStatus("GIF sent.");
   clearReplyTarget();
   playSendIconAnimation();
+  const recorder = window.achievements?.recordGameEvent;
+  if (typeof recorder !== "function") {
+    console.error("Game achievement tracker is unavailable for GIF progress.");
+  } else {
+    recorder("main", "gif-sent").catch(error => {
+      console.error("Could not record GIF achievement.", error);
+    });
+  }
 }
 
 
