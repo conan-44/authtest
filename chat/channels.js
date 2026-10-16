@@ -7,6 +7,56 @@ const openChatChannelSelect = document.getElementById("openChatChannelSelect");
 const createChatChannelBtn = document.getElementById("createChatChannelBtn");
 const joinChatChannelBtn = document.getElementById("joinChatChannelBtn");
 const inviteChatChannelBtn = document.getElementById("inviteChatChannelBtn");
+let chatInviteWordsPromise = null;
+
+async function createRandomChatInviteCode() {
+  try {
+    chatInviteWordsPromise ??= fetch("./data/chat/list.txt")
+      .then(response => {
+        if (!response.ok) throw new Error(`Could not load invite words (${response.status}).`);
+        return response.text();
+      })
+      .then(text => text
+        .split(/\r?\n/)
+        .map(word => word.trim())
+        .filter(word => /^[a-z]+$/.test(word)));
+
+    const words = await chatInviteWordsPromise;
+    if (words.length < 3) throw new Error("The invite word list must contain at least three single words.");
+    if (!globalThis.crypto?.getRandomValues) throw new Error("Secure random generation is unavailable in this browser.");
+
+    const range = 0x100000000;
+    const limit = Math.floor(range / words.length) * words.length;
+    const randomValue = new Uint32Array(1);
+    const codeWords = [];
+    while (codeWords.length < 3) {
+      globalThis.crypto.getRandomValues(randomValue);
+      if (randomValue[0] < limit) codeWords.push(words[randomValue[0] % words.length]);
+    }
+
+    const numberRange = 99999;
+    const numberLimit = Math.floor(range / numberRange) * numberRange;
+    let codeNumber;
+    do {
+      globalThis.crypto.getRandomValues(randomValue);
+    } while (randomValue[0] >= numberLimit);
+    codeNumber = (randomValue[0] % numberRange) + 1;
+
+    return `${codeWords.join("-")}-${String(codeNumber).padStart(5, "0")}`;
+  } catch (error) {
+    chatInviteWordsPromise = null;
+    throw error;
+  }
+}
+
+async function storeChatInviteCode(channelId, code, replacedCode = null) {
+  return runChatChannelRpc("store_chat_channel_invite_code", {
+    p_channel_id: channelId,
+    p_code: code,
+    p_replaced_code: replacedCode
+  });
+}
+
 function chatChannelStorageKey(kind) {
   return `chat-${kind}-${currentChatUserId || "guest"}`;
 }
@@ -144,19 +194,35 @@ async function createChatChannel() {
     if (typeof showPopup === "function") showPopup("Channel names must be 40 characters or fewer.", "error");
     return;
   }
+  let inviteCode;
+  try {
+    inviteCode = await createRandomChatInviteCode();
+  } catch (error) {
+    console.error("Could not generate a channel invite code.", error);
+    if (typeof showPopup === "function") showPopup(`Could not generate an invite code: ${error.message}`, "error");
+    return;
+  }
+
   const data = await runChatChannelRpc("create_chat_channel", { p_name: name });
   const created = getRpcResultRow(data);
   if (!created?.channel_id || !created?.invite_code) return;
 
+  const storedCode = await storeChatInviteCode(created.channel_id, inviteCode, created.invite_code);
+  if (storedCode !== inviteCode) return;
+
   await loadJoinedChatChannels();
   openChatChannelIds.add(created.channel_id);
   await activateChatChannel(created.channel_id);
-  window.prompt("created channel, share this invite code (one-time):", created.invite_code);
+  window.prompt("created channel, share this invite code (one-time):", inviteCode);
 }
 
 async function joinChatChannel() {
-  const code = window.prompt("enter invite code:")?.trim();
+  const code = window.prompt("enter invite code:")?.trim().toLowerCase();
   if (!code) return;
+  if (!/^(?:[a-z]+(?:-[a-z]+){2}-(?!00000)[0-9]{5}|[a-z]+(?:-[a-z]+){2}|[0-9a-f]{32})$/.test(code)) {
+    if (typeof showPopup === "function") showPopup("Invite codes must be three words followed by a five-digit number.", "error");
+    return;
+  }
   const data = await runChatChannelRpc("join_chat_channel", { p_code: code });
   const joined = getRpcResultRow(data);
   if (!joined?.channel_id) return;
@@ -167,9 +233,17 @@ async function joinChatChannel() {
 
 async function createChatChannelInvite() {
   if (!activeChatChannelId) return;
-  const data = await runChatChannelRpc("create_chat_channel_invite", { p_channel_id: activeChatChannelId });
-  if (typeof data === "string" && data) {
-    window.prompt("share this one-time invite code:", data);
+  let inviteCode;
+  try {
+    inviteCode = await createRandomChatInviteCode();
+  } catch (error) {
+    console.error("Could not generate a channel invite code.", error);
+    if (typeof showPopup === "function") showPopup(`Could not generate an invite code: ${error.message}`, "error");
+    return;
+  }
+  const storedCode = await storeChatInviteCode(activeChatChannelId, inviteCode);
+  if (storedCode === inviteCode) {
+    window.prompt("share this one-time invite code:", inviteCode);
   }
 }
 
@@ -196,4 +270,3 @@ openChatChannelSelect.addEventListener("change", () => {
 createChatChannelBtn.addEventListener("click", createChatChannel);
 joinChatChannelBtn.addEventListener("click", joinChatChannel);
 inviteChatChannelBtn.addEventListener("click", createChatChannelInvite);
-
