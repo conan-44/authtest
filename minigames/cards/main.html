@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
     <title>Card Games</title>
-    <link rel="stylesheet" href="./style.css?v=card-variants">
+    <link rel="stylesheet" href="./style.css?v=game-invites">
 </head>
 <body>
     <main class="cards-app">
@@ -16,6 +16,24 @@
             </div>
             <button id="newGameBtn" class="primary-button" type="button">new game</button>
         </header>
+        <section class="multiplayer-controls" aria-label="Online Dou Dizhu game" id="douDizhuMultiplayerControls" hidden>
+            <label>Mode
+                <select id="multiplayerMode">
+                    <option value="live">Live</option>
+                    <option value="turn_based">Turn-based (no timer)</option>
+                </select>
+            </label>
+            <button id="createMultiplayerGameBtn" class="quiet-button" type="button">Create online game</button>
+            <label>Invite code <input id="multiplayerInviteCode" type="text" maxlength="8" autocomplete="off" /></label>
+            <button id="joinMultiplayerGameBtn" class="quiet-button" type="button">Join</button>
+            <div id="multiplayerInviteActions" class="multiplayer-invite-actions" hidden>
+                <button id="copyGameInviteLinkBtn" class="quiet-button" type="button">Copy invite link</button>
+                <button id="shareGameInviteChatBtn" class="quiet-button" type="button">Share in chat</button>
+                <label>Invite username <input id="inviteUsername" type="text" maxlength="80" autocomplete="off" /></label>
+                <button id="sendGameInviteBtn" class="quiet-button" type="button">Send popup</button>
+            </div>
+            <span id="multiplayerStatus" class="multiplayer-status" aria-live="polite">Local game</span>
+        </section>
 
         <div class="card-game-layout">
             <aside class="game-selector" aria-label="Choose a card game">
@@ -125,6 +143,6 @@
         </div>
         <footer class="footer">Programmed by Conan · Card Games</footer>
     </main>
-    <script src="./script.js?v=game-review"></script>
+    <script src="./script.js?v=game-invites"></script>
 </body>
 </html>

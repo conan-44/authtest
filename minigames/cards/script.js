@@ -23,6 +23,9 @@ let analysisWorker = null;
 let analysisRequestId = 0;
 let analysisCleanup = null;
 let handScrollbarDrag = null;
+let onlineMatch = null;
+let onlineUnsubscribe = null;
+let onlineBusy = false;
 
 function recordCardGameAchievement(game, eventName, details = {}) {
   try {
@@ -383,6 +386,7 @@ function createCardElement(card, { hidden = false, selected = false, selectable 
 }
 
 function setGame(game) {
+  if (onlineMatch && game !== "doudizhu") return;
   selectedGame = game;
   resetAnalysis();
   gameChoices.forEach(button => {
@@ -392,10 +396,12 @@ function setGame(game) {
   });
   blackjackView.hidden = game !== "blackjack";
   douDizhuView.hidden = game !== "doudizhu";
+  document.getElementById("douDizhuMultiplayerControls").hidden = game !== "doudizhu";
   newGame();
 }
 
 function newGame() {
+  if (onlineMatch) return;
   window.clearTimeout(turnTimer);
   window.clearTimeout(impactTimer);
   douDizhuView.classList.remove("impact-frame", "impact-bomb", "impact-joker", "impact-two", "impact-nuke");
@@ -517,6 +523,222 @@ function createDouDizhuDeck() {
   });
   deck.push(makeCard(16), makeCard(17, true));
   return shuffle(deck);
+}
+
+function createOnlineDouDizhuSetup() {
+  const deck = createDouDizhuDeck();
+  const hands = [deck.splice(0, 17), deck.splice(0, 17), deck.splice(0, 17)];
+  const bottom = deck;
+  const initialSeat = Math.floor(Math.random() * 3);
+  return {
+    publicState: {
+      players: hands.map((hand, seat) => ({ name: `Player ${seat + 1}`, handCount: hand.length })),
+      stage: "bidding",
+      bidTurn: initialSeat,
+      bidsMade: 0,
+      highestBid: 0,
+      landlord: null,
+      currentPlayer: null,
+      currentTrick: null,
+      lastPlayer: null,
+      passes: 0,
+      passesAfterBid: 0,
+      playedCounts: Array(15).fill(0),
+      status: "choosing landlord"
+    },
+    privateStates: {
+      "0": { hand: hands[0] },
+      "1": { hand: hands[1] },
+      "2": { hand: hands[2] },
+      bottom
+    }
+  };
+}
+
+function makeHiddenHand(count) {
+  return Array.from({ length: count }, () => makeCard(3));
+}
+
+function onlineDouPublicState() {
+  const seat = onlineMatch.seat;
+  const toAbsoluteSeat = localSeat => (seat + localSeat) % 3;
+  const players = douDizhu.players.map((player, localSeat) => ({
+    name: localSeat === 0 ? "You" : `Player ${toAbsoluteSeat(localSeat) + 1}`,
+    handCount: player.hand.length
+  }));
+  const trick = douDizhu.currentTrick;
+  return {
+    players,
+    stage: douDizhu.stage,
+    bidTurn: douDizhu.bidTurn === null ? null : toAbsoluteSeat(douDizhu.bidTurn),
+    bidsMade: douDizhu.bidsMade,
+    highestBid: douDizhu.highestBid,
+    landlord: douDizhu.landlord === null ? null : toAbsoluteSeat(douDizhu.landlord),
+    currentPlayer: douDizhu.currentPlayer === null ? null : toAbsoluteSeat(douDizhu.currentPlayer),
+    currentTrick: trick ? {
+      cards: trick.cards.map(({ rank, red }) => ({ rank, red: Boolean(red) })),
+      combo: trick.combo,
+      player: toAbsoluteSeat(trick.player)
+    } : null,
+    lastPlayer: douDizhu.lastPlayer === undefined ? null : toAbsoluteSeat(douDizhu.lastPlayer),
+    passes: douDizhu.passes,
+    passesAfterBid: douDizhu.passesAfterBid || 0,
+    playedCounts: douDizhu.playedCounts.slice(),
+    status: douDizhu.status
+  };
+}
+
+function loadOnlineDouDizhu(publicState, privateState, seat) {
+  if (onlineMatch && Array.isArray(privateState?.bottom)) {
+    onlineMatch.bottomAvailable = true;
+    onlineMatch.privateBottom = privateState.bottom;
+  }
+  const toLocalSeat = absoluteSeat => absoluteSeat === null || absoluteSeat === undefined
+    ? null
+    : (absoluteSeat - seat + 3) % 3;
+  const ownHand = Array.isArray(privateState?.hand) ? privateState.hand : [];
+  const publicOwnCount = publicState.players?.[seat]?.handCount ?? ownHand.length;
+  const bottomCards = privateState?.bottom || onlineMatch?.privateBottom;
+  if (
+    publicState.landlord === seat &&
+    publicOwnCount > ownHand.length &&
+    Array.isArray(bottomCards)
+  ) {
+    ownHand.push(...bottomCards);
+  }
+  const players = [0, 1, 2].map(localSeat => {
+    const absoluteSeat = (seat + localSeat) % 3;
+    const count = publicState.players?.[absoluteSeat]?.handCount ?? 0;
+    return {
+      name: localSeat === 0 ? "You" : `Player ${absoluteSeat + 1}`,
+      isHuman: true,
+      hand: localSeat === 0 ? ownHand : makeHiddenHand(count)
+    };
+  });
+  const trick = publicState.currentTrick;
+  douDizhu = {
+    players,
+    stage: publicState.stage,
+    bidTurn: toLocalSeat(publicState.bidTurn),
+    bidsMade: publicState.bidsMade,
+    highestBid: publicState.highestBid,
+    landlord: toLocalSeat(publicState.landlord),
+    bottom: [],
+    currentPlayer: toLocalSeat(publicState.currentPlayer),
+    currentTrick: trick ? {
+      cards: trick.cards.map(card => ({ ...card, id: `played-${Math.random()}` })),
+      combo: trick.combo,
+      player: toLocalSeat(trick.player)
+    } : null,
+    lastPlayer: toLocalSeat(publicState.lastPlayer),
+    passes: publicState.passes,
+    passesAfterBid: publicState.passesAfterBid,
+    playedCounts: publicState.playedCounts.slice(),
+    humanTurnReviews: [],
+    selected: new Set(),
+    status: publicState.status
+  };
+  if (onlineMatch && onlineMatch.seat === publicState.landlord && Array.isArray(bottomCards)) {
+    douDizhu.bottom = bottomCards;
+  }
+  renderDouDizhu();
+}
+
+function subscribeOnlineDouDizhu(match) {
+  onlineUnsubscribe?.();
+  onlineMatch = match;
+  if (match.invite_code) {
+    document.getElementById("multiplayerInviteCode").value = match.invite_code;
+    document.getElementById("multiplayerInviteActions").hidden = false;
+  }
+  onlineUnsubscribe = window.parent.gameMultiplayer.subscribe(
+    match.id,
+    payload => {
+      if (payload.version !== onlineMatch.version + 1) {
+        refreshOnlineDouDizhu().catch(error => {
+          document.getElementById("multiplayerStatus").textContent = error.message;
+        });
+        return;
+      }
+      onlineMatch.version = payload.version;
+      onlineMatch.currentTurn = payload.public_state.currentPlayer ?? payload.public_state.bidTurn;
+      if (payload.public_state.landlord === onlineMatch.seat && !onlineMatch.bottomAvailable) {
+        refreshOnlineDouDizhu().catch(error => {
+          document.getElementById("multiplayerStatus").textContent = error.message;
+        });
+        return;
+      }
+      loadOnlineDouDizhu(payload.public_state, {
+        hand: douDizhu.players[0].hand,
+        bottom: onlineMatch.privateBottom
+      }, onlineMatch.seat);
+    },
+    payload => {
+      if (Number.isInteger(payload.seat)) {
+        onlineMatch.players ??= [];
+        onlineMatch.players[payload.seat] = true;
+        renderDouDizhu();
+      }
+    },
+    status => {
+      if (status === "SUBSCRIBED") {
+        refreshOnlineDouDizhu().catch(error => {
+          document.getElementById("multiplayerStatus").textContent = error.message;
+        });
+      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        document.getElementById("multiplayerStatus").textContent =
+          "Live updates unavailable. Apply supabase/game_sessions.sql.";
+      }
+    }
+  );
+}
+
+async function refreshOnlineDouDizhu() {
+  const state = await window.parent.gameMultiplayer.get(onlineMatch.id);
+  if (state.game !== "doudizhu") throw new Error("This invite is not for Dou Dizhu.");
+  onlineMatch.version = state.version;
+  onlineMatch.currentTurn = state.current_turn;
+  onlineMatch.players = state.players;
+  loadOnlineDouDizhu(state.public_state, state.private_state, onlineMatch.seat);
+}
+
+async function persistOnlineDouDizhuMove(action) {
+  if (!onlineMatch || onlineBusy) return;
+  onlineBusy = true;
+  renderDouDizhu();
+  const absoluteNextTurn = (onlineMatch.seat + (douDizhu.stage === "bidding" ? douDizhu.bidTurn : douDizhu.currentPlayer)) % 3;
+  try {
+    let privateHand = douDizhu.players[0].hand;
+    if (
+      action.type === "bid" &&
+      douDizhu.stage === "playing" &&
+      douDizhu.landlord === 0 &&
+      !onlineMatch.bottomAvailable
+    ) {
+      privateHand = privateHand.slice(0, 17);
+    }
+    const result = await window.parent.gameMultiplayer.submit(
+      onlineMatch.id,
+      onlineMatch.version,
+      absoluteNextTurn,
+      action,
+      onlineDouPublicState(),
+      { hand: privateHand }
+    );
+    onlineMatch.version = result.version;
+    onlineMatch.currentTurn = absoluteNextTurn;
+  } catch (error) {
+    let refreshFailed = false;
+    await refreshOnlineDouDizhu().catch(refreshError => {
+      refreshFailed = true;
+      document.getElementById("multiplayerStatus").textContent =
+        `${error.message} Latest state unavailable: ${refreshError.message}`;
+    });
+    if (!refreshFailed) document.getElementById("multiplayerStatus").textContent = error.message;
+  } finally {
+    onlineBusy = false;
+    renderDouDizhu();
+  }
 }
 
 function sortedHand(hand) {
@@ -767,24 +989,32 @@ function takeBid(player, bid) {
 
   if (bid === 3 || (douDizhu.landlord !== null && douDizhu.passesAfterBid >= 2)) {
     beginDouDizhuPlay();
+    if (onlineMatch && player === 0) void persistOnlineDouDizhuMove({ type: "bid", bid });
     return;
   }
   if (douDizhu.bidsMade >= 3 && douDizhu.landlord === null) {
-    douDizhu.stage = "dealing";
-    douDizhu.status = "everyone passed…";
+    douDizhu.stage = onlineMatch ? "finished" : "dealing";
+    douDizhu.status = onlineMatch ? "everyone passed · start a new game to redeal" : "everyone passed…";
     renderDouDizhu();
-    turnTimer = window.setTimeout(startDouDizhu, 900);
+    if (onlineMatch) void persistOnlineDouDizhuMove({ type: "bid", bid });
+    else turnTimer = window.setTimeout(startDouDizhu, 900);
     return;
   }
   douDizhu.bidTurn = (player + 1) % 3;
   renderDouDizhu();
   scheduleBotTurn();
+  if (onlineMatch && player === 0) void persistOnlineDouDizhuMove({ type: "bid", bid });
 }
 
 function beginDouDizhuPlay() {
   const landlord = douDizhu.landlord ?? 0;
   douDizhu.stage = "playing";
-  douDizhu.players[landlord].hand.push(...douDizhu.bottom);
+  const bottomCards = douDizhu.bottom.length === 3
+    ? douDizhu.bottom
+    : onlineMatch
+      ? makeHiddenHand(3)
+      : [];
+  douDizhu.players[landlord].hand.push(...bottomCards);
   douDizhu.players.forEach(player => {
     player.hand = sortedHand(player.hand);
   });
@@ -861,6 +1091,9 @@ function playDouDizhuCards(playerIndex, cards) {
   else if (cards.some(card => card.rank === 15)) triggerDouDizhuImpact("two");
   renderDouDizhu();
   if (douDizhu.stage === "playing") scheduleBotTurn();
+  if (onlineMatch && playerIndex === 0) {
+    void persistOnlineDouDizhuMove({ type: "play", ranks: cards.map(card => card.rank).sort((a, b) => a - b) });
+  }
   return true;
 }
 
@@ -880,6 +1113,7 @@ function passDouDizhu(playerIndex) {
   }
   renderDouDizhu();
   scheduleBotTurn();
+  if (onlineMatch && playerIndex === 0) void persistOnlineDouDizhuMove({ type: "pass" });
 }
 
 function sameTeam(playerA, playerB) {
@@ -910,7 +1144,7 @@ function botPlay(playerIndex) {
 }
 
 function scheduleBotTurn() {
-  if (!douDizhu || douDizhu.stage === "finished") return;
+  if (!douDizhu || douDizhu.stage === "finished" || onlineMatch) return;
   const playerIndex = douDizhu.stage === "bidding" ? douDizhu.bidTurn : douDizhu.currentPlayer;
   if (playerIndex === 0) return;
   window.clearTimeout(turnTimer);
@@ -943,12 +1177,18 @@ function renderOpponent(playerIndex, handId, countId) {
 
 function renderDouDizhu() {
   if (!douDizhu) return;
-  const humanTurn = douDizhu.stage === "bidding" ? douDizhu.bidTurn === 0 : douDizhu.currentPlayer === 0;
+  const allPlayersReady = !onlineMatch || onlineMatch.players?.length === 3 && onlineMatch.players.every(Boolean);
+  const humanTurn = allPlayersReady && !onlineBusy
+    && (douDizhu.stage === "bidding" ? douDizhu.bidTurn === 0 : douDizhu.currentPlayer === 0);
   const bidding = douDizhu.stage === "bidding";
   const playing = douDizhu.stage === "playing";
   analyzePositionButton.hidden = !playing || !humanTurn;
-  document.getElementById("doudizhuStatus").textContent = bidding ? "Bidding" : playing ? "Play" : "Round over";
-  document.getElementById("trickStatus").textContent = douDizhu.status;
+  document.getElementById("doudizhuStatus").textContent = onlineMatch
+    ? allPlayersReady ? (bidding ? "Online bidding" : playing ? "Online play" : "Round over") : "Waiting for players"
+    : bidding ? "Bidding" : playing ? "Play" : "Round over";
+  document.getElementById("trickStatus").textContent = allPlayersReady
+    ? onlineBusy ? "Saving move…" : douDizhu.status
+    : `Invite ${3 - (onlineMatch?.players?.filter(Boolean).length || 1)} more player${3 - (onlineMatch?.players?.filter(Boolean).length || 1) === 1 ? "" : "s"} to start.`;
   document.getElementById("landlordInfo").textContent = douDizhu.landlord === null
     ? `Current bid: ${douDizhu.highestBid || "none"}`
     : `Landlord: ${douDizhu.players[douDizhu.landlord].name}`;
@@ -963,8 +1203,8 @@ function renderDouDizhu() {
   playActions.hidden = !playing || !humanTurn;
   const finishedActions = document.getElementById("finishedActions");
   finishedActions.hidden = douDizhu.stage !== "finished" || !douDizhu.humanTurnReviews.length;
-  document.getElementById("playCardsBtn").disabled = douDizhu.selected.size === 0;
-  document.getElementById("passTurnBtn").disabled = !douDizhu.currentTrick;
+  document.getElementById("playCardsBtn").disabled = !humanTurn || douDizhu.selected.size === 0;
+  document.getElementById("passTurnBtn").disabled = !humanTurn || !douDizhu.currentTrick;
 
   const names = douDizhu.players;
   document.getElementById("leftPlayerName").textContent = `${names[1].name}${douDizhu.landlord === 1 ? " · Landlord" : ""}`;
@@ -983,6 +1223,7 @@ function renderDouDizhu() {
   });
   syncHandScrollbar();
   document.getElementById("ownCardCount").textContent = `${names[0].hand.length} cards`;
+  newGameButton.disabled = Boolean(onlineMatch);
 
   const bottom = document.getElementById("bottomCards");
   bottom.replaceChildren();
@@ -993,6 +1234,116 @@ function renderDouDizhu() {
   trickCards.replaceChildren();
   douDizhu.currentTrick?.cards.forEach(card => trickCards.appendChild(createCardElement(card)));
 }
+
+document.getElementById("createMultiplayerGameBtn").addEventListener("click", async () => {
+  const button = document.getElementById("createMultiplayerGameBtn");
+  const status = document.getElementById("multiplayerStatus");
+  button.disabled = true;
+  try {
+    if (selectedGame !== "doudizhu") throw new Error("Select Dou Dizhu before creating an online game.");
+    if (!window.parent.gameMultiplayer) throw new Error("Open Card Games from the main app to use online games.");
+    const setup = createOnlineDouDizhuSetup();
+    const result = await window.parent.gameMultiplayer.create(
+      "doudizhu",
+      document.getElementById("multiplayerMode").value,
+      3,
+      setup.publicState,
+      setup.privateStates
+    );
+    const state = await window.parent.gameMultiplayer.get(result.id);
+    const match = {
+      ...result,
+      mode: state.mode,
+      version: state.version,
+      currentTurn: state.current_turn,
+      players: state.players,
+      invite_code: state.invite_code || result.invite_code
+    };
+    onlineMatch = match;
+    loadOnlineDouDizhu(setup.publicState, {
+      hand: setup.privateStates["0"].hand,
+      bottom: setup.privateStates.bottom
+    }, 0);
+    douDizhu.bottom = setup.privateStates.bottom;
+    subscribeOnlineDouDizhu(match);
+    status.textContent = `Dou Dizhu · ${state.mode === "live" ? "live" : "turn-based, no timer"} · invite code ${result.invite_code}`;
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
+
+async function joinOnlineDouDizhu(inviteCode) {
+  const status = document.getElementById("multiplayerStatus");
+  try {
+    if (selectedGame !== "doudizhu") throw new Error("Select Dou Dizhu before joining an online game.");
+    if (!window.parent.gameMultiplayer) throw new Error("Open Card Games from the main app to use online games.");
+    const result = await window.parent.gameMultiplayer.join(
+      inviteCode,
+      "doudizhu"
+    );
+    const state = await window.parent.gameMultiplayer.get(result.id);
+    const match = {
+      ...result,
+      mode: state.mode,
+      version: state.version,
+      currentTurn: state.current_turn,
+      players: state.players,
+      invite_code: state.invite_code || result.invite_code
+    };
+    subscribeOnlineDouDizhu(match);
+    loadOnlineDouDizhu(state.public_state, state.private_state, result.seat);
+    status.textContent = `Joined ${state.mode === "live" ? "live" : "turn-based"} Dou Dizhu · seat ${result.seat + 1}`;
+  } catch (error) {
+    status.textContent = error.message;
+  }
+}
+
+document.getElementById("joinMultiplayerGameBtn").addEventListener("click", async () => {
+  const button = document.getElementById("joinMultiplayerGameBtn");
+  button.disabled = true;
+  try {
+    await joinOnlineDouDizhu(document.getElementById("multiplayerInviteCode").value);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById("copyGameInviteLinkBtn").addEventListener("click", async () => {
+  try {
+    const link = window.parent.gameMultiplayer.createInviteLink("doudizhu", onlineMatch?.invite_code);
+    await navigator.clipboard.writeText(link);
+    document.getElementById("multiplayerStatus").textContent = "Invite link copied.";
+  } catch (error) {
+    document.getElementById("multiplayerStatus").textContent = error.message || "Could not copy the invite link.";
+  }
+});
+
+document.getElementById("shareGameInviteChatBtn").addEventListener("click", async () => {
+  try {
+    await window.parent.gameMultiplayer.shareInviteToChat("doudizhu", onlineMatch?.invite_code);
+    document.getElementById("multiplayerStatus").textContent = "Invite shared in chat.";
+  } catch (error) {
+    document.getElementById("multiplayerStatus").textContent = error.message;
+  }
+});
+
+document.getElementById("sendGameInviteBtn").addEventListener("click", async event => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    const result = await window.parent.gameMultiplayer.sendInvite(
+      onlineMatch?.id,
+      document.getElementById("inviteUsername").value
+    );
+    document.getElementById("multiplayerStatus").textContent = `Game popup sent to ${result.username}.`;
+  } catch (error) {
+    document.getElementById("multiplayerStatus").textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
 
 gameChoices.forEach(button => {
   button.addEventListener("click", () => setGame(button.dataset.gameChoice));
@@ -1041,3 +1392,9 @@ if ("ResizeObserver" in window) {
 }
 
 startBlackjack();
+const inviteCodeFromUrl = new URLSearchParams(window.location.search).get("invite");
+if (inviteCodeFromUrl) {
+  setGame("doudizhu");
+  document.getElementById("multiplayerInviteCode").value = inviteCodeFromUrl;
+  joinOnlineDouDizhu(inviteCodeFromUrl);
+}

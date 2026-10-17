@@ -4,6 +4,13 @@ let currentChatUserId = null;
 let chatHistoryRequestId = 0;
 let censoring = true;
 let blankMessageCleanupInterval = null;
+let chatPresenceChannel = null;
+let chatPresenceHeartbeat = null;
+let chatPresenceGeneration = 0;
+let lastPresenceActivityAt = Date.now();
+let lastPresenceTrackAt = 0;
+let lastPresenceStatus = null;
+let presenceUsername = "Player";
 const messageRecords = new Map();
 const seenChatJoinNotices = new Set();
 window.addEventListener('censoring-setting-changed', () => {
@@ -106,6 +113,160 @@ function initRealtimeChat() {
     .subscribe();
 }
 
+function renderChatPresence(state = {}) {
+  const list = document.getElementById("chatPresenceList");
+  const count = document.getElementById("chatPresenceCount");
+  const status = document.getElementById("chatPresenceStatus");
+  if (!list || !count || !status) return;
+
+  const members = new Map();
+  Object.values(state).flat().forEach(presence => {
+    const userId = presence?.user_id;
+    if (!userId) return;
+    const existing = members.get(userId);
+    if (!existing || presence.status === "active") {
+      members.set(userId, {
+        username: typeof presence.username === "string" && presence.username.trim()
+          ? presence.username.trim()
+          : "Player",
+        status: presence.status === "active" ? "active" : "idle"
+      });
+    }
+  });
+
+  const sortedMembers = [...members.entries()].sort((a, b) => {
+    if (a[1].status !== b[1].status) return a[1].status === "active" ? -1 : 1;
+    return a[1].username.localeCompare(b[1].username);
+  });
+  list.replaceChildren(...sortedMembers.map(([, member]) => {
+    const item = document.createElement("li");
+    item.className = "chat-presence-member";
+    const dot = document.createElement("i");
+    dot.className = `presence-dot is-${member.status}`;
+    dot.setAttribute("aria-hidden", "true");
+    const name = document.createElement("span");
+    name.className = "chat-presence-name";
+    name.textContent = member.username;
+    const label = document.createElement("span");
+    label.className = "chat-presence-member-status";
+    label.textContent = member.status;
+    item.append(dot, name, label);
+    return item;
+  }));
+  count.textContent = String(sortedMembers.length);
+  if (sortedMembers.length) {
+    status.textContent = "";
+  } else if (chatPresenceChannel) {
+    status.textContent = "No members are online yet.";
+  }
+}
+
+function stopChatPresence() {
+  chatPresenceGeneration++;
+  if (chatPresenceHeartbeat) {
+    window.clearInterval(chatPresenceHeartbeat);
+    chatPresenceHeartbeat = null;
+  }
+  if (chatPresenceChannel) {
+    const previous = chatPresenceChannel;
+    chatPresenceChannel = null;
+    _supabase.removeChannel(previous);
+  }
+  lastPresenceStatus = null;
+  lastPresenceTrackAt = 0;
+  renderChatPresence();
+}
+
+function getChatPresenceStatus() {
+  return document.visibilityState === "visible"
+    && Date.now() - lastPresenceActivityAt < 5 * 60 * 1000
+    ? "active"
+    : "idle";
+}
+
+async function trackChatPresence(force = false) {
+  const channel = chatPresenceChannel;
+  if (!channel || !currentChatUserId) return;
+  const now = Date.now();
+  const status = getChatPresenceStatus();
+  if (!force && status === lastPresenceStatus && now - lastPresenceTrackAt < 60 * 1000) return;
+
+  lastPresenceStatus = status;
+  lastPresenceTrackAt = now;
+  try {
+    const result = await channel.track({
+      user_id: currentChatUserId,
+      username: presenceUsername,
+      status,
+      last_active_at: new Date(now).toISOString()
+    });
+    if (result !== "ok") console.error("Chat presence update was not acknowledged.", result);
+  } catch (error) {
+    console.error("Could not update chat presence.", error);
+  }
+}
+
+window.setChatPresenceRoom = async function setChatPresenceRoom(channelId) {
+  stopChatPresence();
+  const generation = chatPresenceGeneration;
+  const title = document.getElementById("chatPresenceTitle");
+  const status = document.getElementById("chatPresenceStatus");
+  const list = document.getElementById("chatPresenceList");
+  const count = document.getElementById("chatPresenceCount");
+  const roomName = channelId
+    ? joinedChatChannels.find(channel => channel.id === channelId)?.name || "Channel"
+    : "Global Chat";
+  if (title) title.textContent = `${roomName} members`;
+  if (list) list.replaceChildren();
+  if (count) count.textContent = "0";
+  if (!currentChatUserId) {
+    if (status) status.textContent = "Sign in to see who's here.";
+    return;
+  }
+
+  lastPresenceActivityAt = Date.now();
+  if (status) status.textContent = "Connecting to presence…";
+  const { data: profile, error: profileError } = await _supabase
+    .from("profiles")
+    .select("username")
+    .eq("id", currentChatUserId)
+    .maybeSingle();
+  if (profileError) console.error("Could not load the chat presence profile.", profileError.message);
+  if (generation !== chatPresenceGeneration || !currentChatUserId) return;
+  presenceUsername = profile?.username || "Player";
+
+  const topic = channelId ? `chat-presence:channel:${channelId}` : "chat-presence:global";
+  const channel = _supabase.channel(topic, {
+    config: { private: true, presence: { key: currentChatUserId } }
+  });
+  chatPresenceChannel = channel;
+  channel
+    .on("presence", { event: "sync" }, () => {
+      if (chatPresenceChannel === channel) renderChatPresence(channel.presenceState());
+    })
+    .subscribe(async subscriptionStatus => {
+      if (chatPresenceChannel !== channel) return;
+      if (subscriptionStatus === "SUBSCRIBED") {
+        await trackChatPresence(true);
+        renderChatPresence(channel.presenceState());
+      } else if (subscriptionStatus === "CHANNEL_ERROR" || subscriptionStatus === "TIMED_OUT") {
+        console.error(`Chat presence subscription failed (${subscriptionStatus}).`);
+        if (status) status.textContent = "Presence unavailable. Apply supabase/chat_presence.sql in Supabase.";
+      }
+    });
+  chatPresenceHeartbeat = window.setInterval(() => trackChatPresence(), 15 * 1000);
+};
+
+function recordChatPresenceActivity() {
+  lastPresenceActivityAt = Date.now();
+  if (lastPresenceStatus !== "active") trackChatPresence(true);
+}
+
+["pointerdown", "pointermove", "keydown", "touchstart", "scroll"].forEach(eventName => {
+  document.addEventListener(eventName, recordChatPresenceActivity, { passive: true });
+});
+document.addEventListener("visibilitychange", () => trackChatPresence(true));
+
 function appendChatJoinNotice(join) {
   if (!join?.user_id || !join?.room_key || join.room_key !== (activeChatChannelId || "global")) return;
   const noticeKey = `${join.room_key}:${join.user_id}`;
@@ -204,6 +365,26 @@ window.shareGameToChat = async function shareGameToChat(game, data) {
   const { error } = await _supabase.from("messages").insert([message]);
   if (error) throw new Error(`Could not share the game: ${error.message}`);
 
+  clearReplyTarget();
+  playSendIconAnimation();
+};
+
+window.shareGameInviteToChat = async function shareGameInviteToChat(game, inviteCode) {
+  if (!["chess", "doudizhu"].includes(game) || !/^[A-Z0-9]{8}$/.test(inviteCode)) {
+    throw new Error("This game invite is invalid.");
+  }
+  const { data: authData, error: authError } = await _supabase.auth.getUser();
+  if (authError) throw new Error(`Could not verify your sign-in: ${authError.message}`);
+  if (!authData.user) throw new Error("Sign in to share a game invite in chat.");
+
+  const message = {
+    user_id: authData.user.id,
+    content: encodeReplyContent(`game-invite:v1:${JSON.stringify({ game, invite_code: inviteCode })}`)
+  };
+  if (activeChatChannelId) message.channel_id = activeChatChannelId;
+
+  const { error } = await _supabase.from("messages").insert([message]);
+  if (error) throw new Error(`Could not share the game invite: ${error.message}`);
   clearReplyTarget();
   playSendIconAnimation();
 };
@@ -369,11 +550,13 @@ window.initChatTab = async function initChatTab() {
   }
   await loadJoinedChatChannels();
   initRealtimeChat();
+  await window.setChatPresenceRoom(activeChatChannelId);
   await recordChatRoomFirstJoin();
 };
 
 async function handleChatAuthChange(userId) {
   if (currentChatUserId === userId) return;
+  stopChatPresence();
   currentChatUserId = userId;
   if (!currentChatUserId && blankMessageCleanupInterval) {
     window.clearInterval(blankMessageCleanupInterval);
@@ -384,6 +567,7 @@ async function handleChatAuthChange(userId) {
   }
   if (!realtimeChannel && currentChatUserId) initRealtimeChat();
   await loadJoinedChatChannels();
+  await window.setChatPresenceRoom(activeChatChannelId);
   await recordChatRoomFirstJoin();
 }
 

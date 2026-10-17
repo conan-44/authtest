@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/gh/Parcoil/cloak@main/src/index.min.js"></script>
     <link rel="icon" type="image/x-icon" href="./assets/test-favicon.png">
-    <link rel="stylesheet" href="./style.css?v=card-games">
+    <link rel="stylesheet" href="./style.css?v=game-invites">
 </head>
 <body>
     <main class="page">
@@ -54,14 +54,30 @@
                 </div>
             </div>
             <div class="panel-body chat-panel-body">
-                <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
-                <div id="chatReplyContext" class="chat-reply-context is-hidden">
-                    <span id="chatReplyText"></span>
-                    <button type="button" id="cancelChatReplyBtn" aria-label="Cancel reply">Cancel</button>
-                </div>
-                <div class="chat-input-row">
-                    <input type="text" id="chatInput" placeholder="Type a message..." />
-                    <button id="sendChatBtn"><span class="btn-icon icon-send"></span>Send</button>
+                <div class="chat-workspace">
+                    <div class="chat-conversation">
+                        <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+                        <div id="chatReplyContext" class="chat-reply-context is-hidden">
+                            <span id="chatReplyText"></span>
+                            <button type="button" id="cancelChatReplyBtn" aria-label="Cancel reply">Cancel</button>
+                        </div>
+                        <div class="chat-input-row">
+                            <input type="text" id="chatInput" placeholder="Type a message..." />
+                            <button id="sendChatBtn"><span class="btn-icon icon-send"></span>Send</button>
+                        </div>
+                    </div>
+                    <aside id="chatPresencePanel" class="chat-presence-panel" aria-label="Channel members">
+                        <div class="chat-presence-heading">
+                            <h2 id="chatPresenceTitle">Members</h2>
+                            <span id="chatPresenceCount" class="chat-presence-count">0</span>
+                        </div>
+                        <p id="chatPresenceStatus" class="chat-presence-status" aria-live="polite">Sign in to see who's here.</p>
+                        <ul id="chatPresenceList" class="chat-presence-list"></ul>
+                        <div class="chat-presence-legend" aria-label="Presence status definitions">
+                            <span><i class="presence-dot is-active"></i>Active</span>
+                            <span><i class="presence-dot is-idle"></i>Idle</span>
+                        </div>
+                    </aside>
                 </div>
             </div>
         </section>
@@ -230,15 +246,15 @@
     <script src="./js/blog.js"></script>
     <script src="./js/tabs.js"></script>
     <script src="./js/settings.js"></script>
-    <script src="./js/games.js?v=chat-sharing"></script>
+    <script src="./js/games.js?v=game-invites"></script>
     <script src="./js/tips.js"></script>
     <!-- api config stuff -->
     <script src="./api-config/giphy-config.js"></script>
     <script src="./api-config/cloak-config.js?v=main-achievements"></script>
     <!-- chat stuff -->
-    <script src="./chat/chat.js?v=chat-sharing"></script>
-    <script src="./chat/channels.js?v=main-achievements"></script>
-    <script src="./chat/actions.js?v=chat-sharing"></script>
-    <script src="./chat/giphy.js?v=chat-sharing"></script>
+    <script src="./chat/chat.js?v=game-invites"></script>
+    <script src="./chat/channels.js?v=chat-presence"></script>
+    <script src="./chat/actions.js?v=game-invites"></script>
+    <script src="./chat/giphy.js?v=game-invites"></script>
 </body>
 </html>

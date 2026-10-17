@@ -1,6 +1,7 @@
 // GIPHY message rendering, search, pagination, and send controls.
 const GIF_MESSAGE_PREFIX = "gif:v1:";
 const SHARED_GAME_MESSAGE_PREFIX = "game:v1:";
+const GAME_INVITE_MESSAGE_PREFIX = "game-invite:v1:";
 const GIF_HIDE_SETTING = "hide gifs";
 const gifSearchForm = document.getElementById("gifSearchForm");
 const gifSearchInput = document.getElementById("gifSearchInput");
@@ -86,6 +87,25 @@ function parseSharedGameMessage(content) {
   }
 }
 
+function parseGameInviteMessage(content) {
+  if (
+    typeof content !== "string" ||
+    content.length > 1000 ||
+    !content.startsWith(GAME_INVITE_MESSAGE_PREFIX)
+  ) return null;
+  try {
+    const invite = JSON.parse(content.slice(GAME_INVITE_MESSAGE_PREFIX.length));
+    if (
+      !["chess", "doudizhu"].includes(invite?.game) ||
+      typeof invite.invite_code !== "string" ||
+      !/^[A-Z0-9]{8}$/.test(invite.invite_code)
+    ) return null;
+    return invite;
+  } catch (error) {
+    return null;
+  }
+}
+
 function isGiphyMediaUrl(value) {
   if (typeof value !== "string") return false;
   try {
@@ -110,7 +130,42 @@ function renderChatMessageBody(bodyDiv, rawContent, username = "Player") {
   const content = parseReplyMessage(rawContent).content;
   const gif = parseGifMessage(content);
   const sharedGame = parseSharedGameMessage(content);
+  const gameInvite = parseGameInviteMessage(content);
   bodyDiv.replaceChildren();
+
+  if (gameInvite) {
+    const card = document.createElement("div");
+    card.className = `chat-shared-game chat-game-invite chat-shared-game-${gameInvite.game}`;
+
+    const icon = document.createElement("span");
+    icon.className = "chat-shared-game-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = gameInvite.game === "chess" ? "♟" : "地主";
+
+    const title = document.createElement("span");
+    title.className = "chat-shared-game-title";
+    title.textContent = `${username} invited you to ${gameInvite.game === "chess" ? "Chess" : "Dou Dizhu"}`;
+
+    const joinButton = document.createElement("button");
+    joinButton.type = "button";
+    joinButton.className = "chat-shared-game-open";
+    joinButton.textContent = "Join game";
+    joinButton.addEventListener("click", () => {
+      if (typeof window.openGameInvite !== "function") {
+        console.error("The game launcher is unavailable.");
+        return;
+      }
+      try {
+        window.openGameInvite(gameInvite.game, gameInvite.invite_code);
+      } catch (error) {
+        console.error("Could not open the game invite.", error);
+      }
+    });
+
+    card.append(icon, title, joinButton);
+    bodyDiv.appendChild(card);
+    return;
+  }
 
   if (sharedGame) {
     const card = document.createElement("div");
@@ -180,7 +235,10 @@ function renderChatMessageBody(bodyDiv, rawContent, username = "Player") {
 function getChatMessagePreview(content) {
   if (typeof content !== "string") return getMessagePreview(content);
   if (parseGifMessage(content)) return "sent a GIF";
-  const sharedGame = parseSharedGameMessage(parseReplyMessage(content).content);
+  const message = parseReplyMessage(content).content;
+  const invite = parseGameInviteMessage(message);
+  if (invite) return `invited you to ${invite.game === "chess" ? "Chess" : "Dou Dizhu"}`;
+  const sharedGame = parseSharedGameMessage(message);
   if (sharedGame) return sharedGame.game === "chess" ? "shared a chess game" : "shared a Number Pillars level";
   return getMessagePreview(content);
 }

@@ -131,6 +131,9 @@ async function activateChatChannel(channelId) {
   saveOpenChatChannels();
   renderChatChannelTabs();
   clearReplyTarget();
+  window.setChatPresenceRoom(activeChatChannelId).catch(error => {
+    console.error("Could not switch chat presence rooms.", error);
+  });
   await fetchChatHistory(activeChatChannelId);
   await recordChatRoomFirstJoin(activeChatChannelId);
 }
@@ -271,6 +274,11 @@ chatChannelTabs.addEventListener("click", event => {
     saveOpenChatChannels();
     renderChatChannelTabs();
     clearReplyTarget();
+    if (activeChatChannelId === null) {
+      window.setChatPresenceRoom(null).catch(error => {
+        console.error("Could not switch chat presence rooms.", error);
+      });
+    }
     fetchChatHistory(activeChatChannelId);
     return;
   }

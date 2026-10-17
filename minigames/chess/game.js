@@ -42,6 +42,9 @@ let openingBook = null;
 let openingBookError = "";
 let chessGameRecorded = false;
 let analysisAchievementRecorded = false;
+let onlineMatch = null;
+let onlineUnsubscribe = null;
+let onlineBusy = false;
 const discoveredOpenings = new Set();
 
 function recordGameAchievementEvent(eventName, details = {}) {
@@ -179,6 +182,14 @@ function renderStatus(boardGame) {
     gameStatus.textContent = `${side} to move${boardGame.isCheck() ? " — check" : ""}`;
     gameHint.textContent = isReviewing
       ? `Reviewing position after ${reviewedPly === 0 ? "the start" : `ply ${reviewedPly}`}.`
+      : onlineMatch
+      ? onlineBusy
+        ? "Saving move…"
+        : onlineMatch.players?.[1 - onlineMatch.seat]
+          ? onlineMatch.seat === (turn === "w" ? 0 : 1)
+            ? `Your ${side.toLowerCase()} turn.`
+            : `Waiting for ${side.toLowerCase()}.`
+          : "Waiting for your opponent to join."
       : boardGame.isCheck()
       ? `${side}'s king on ${kingSquare} is under attack.`
       : selectedSquare
@@ -228,10 +239,10 @@ function renderMoveHistory() {
   const fullMoves = Math.ceil(history.length / 2);
   moveCount.textContent = `${fullMoves} ${fullMoves === 1 ? "move" : "moves"}`;
   emptyHistory.hidden = history.length > 0;
-  undoButton.disabled = history.length === 0 || isReviewing;
+  undoButton.disabled = history.length === 0 || isReviewing || Boolean(onlineMatch);
   reviewStartButton.disabled = !isReviewing;
   reviewButton.disabled = analysisInProgress;
-  newGameButton.disabled = analysisInProgress;
+  newGameButton.disabled = analysisInProgress || Boolean(onlineMatch);
   reviewButton.textContent = isReviewing ? "Exit review" : "Review game";
   analyzeButton.disabled = history.length === 0 || analysisInProgress;
   shareGameButton.hidden = !game.isGameOver() && evaluations.length !== history.length + 1;
@@ -282,7 +293,7 @@ function renderOpeningBook() {
     return;
   }
 
-  const canPlayBookMove = !isReviewing && !analysisInProgress && !game.isGameOver();
+  const canPlayBookMove = !isReviewing && !analysisInProgress && !game.isGameOver() && canMoveOnline();
   const displayedMoves = opening.moves.slice(0, 6);
   openingBookStatus.textContent = isReviewing
     ? `Showing ${displayedMoves.length} of ${opening.moves.length} book moves.`
@@ -549,7 +560,7 @@ shareGameButton.addEventListener("click", async () => {
 });
 
 function selectSquare(square) {
-  if (isReviewing) return;
+  if (isReviewing || !canMoveOnline()) return;
   const piece = game.get(square);
   if (!piece || piece.color !== game.turn() || game.isGameOver()) {
     selectedSquare = null;
@@ -562,9 +573,31 @@ function selectSquare(square) {
   renderBoard();
 }
 
-function makeMove(from, to, promotion = "q") {
+function canMoveOnline() {
+  if (!onlineMatch) return true;
+  if (onlineBusy || !onlineMatch.players?.[1 - onlineMatch.seat]) return false;
+  const turnSeat = game.turn() === "w" ? 0 : 1;
+  return onlineMatch.seat === turnSeat;
+}
+
+async function makeMove(from, to, promotion = "q") {
+  if (!canMoveOnline()) return;
+  let move;
   try {
-    game.move({ from, to, promotion });
+    move = game.move({ from, to, promotion });
+    if (onlineMatch) {
+      onlineBusy = true;
+      renderBoard();
+      const saved = await window.parent.gameMultiplayer.submit(
+        onlineMatch.id,
+        onlineMatch.version,
+        game.turn() === "w" ? 0 : 1,
+        { from, to, promotion },
+        { pgn: game.pgn() }
+      );
+      onlineMatch.version = saved.version;
+      onlineBusy = false;
+    }
     if (game.isGameOver() && !chessGameRecorded) {
       chessGameRecorded = true;
       recordGameAchievementEvent("completed", {
@@ -577,9 +610,171 @@ function makeMove(from, to, promotion = "q") {
     renderBoard();
     renderMoveHistory();
   } catch (error) {
+    if (move) game.undo();
+    onlineBusy = false;
+    if (onlineMatch) await refreshOnlineMatch().catch(refreshError => {
+      gameHint.textContent = `${error.message} Latest game state could not be loaded: ${refreshError.message}`;
+    });
     gameHint.textContent = error.message;
+    renderBoard();
+    renderMoveHistory();
   }
 }
+
+async function refreshOnlineMatch() {
+  const state = await window.parent.gameMultiplayer.get(onlineMatch.id);
+  if (state.game !== "chess") throw new Error("This invite is not for Chess.");
+  onlineMatch.version = state.version;
+  onlineMatch.currentTurn = state.current_turn;
+  onlineMatch.players = state.players;
+  game.loadPgn(state.public_state.pgn || "");
+  clearAnalysis();
+  renderBoard();
+  renderMoveHistory();
+}
+
+function attachOnlineMatch(match, version = 0) {
+  onlineUnsubscribe?.();
+  onlineMatch = { ...match, version };
+  const inviteActions = document.getElementById("multiplayerInviteActions");
+  if (match.invite_code) {
+    document.getElementById("multiplayerInviteCode").value = match.invite_code;
+    inviteActions.hidden = false;
+  }
+  document.getElementById("gamePlayerMode").textContent =
+    `${match.mode === "live" ? "Live" : "Turn-based · no timer"} · ${match.seat === 0 ? "White" : "Black"}`;
+  document.getElementById("multiplayerStatus").textContent =
+    `Invite code ${match.invite_code || "—"} · waiting for player`;
+  newGameButton.disabled = true;
+  undoButton.disabled = true;
+  onlineUnsubscribe = window.parent.gameMultiplayer.subscribe(
+    match.id,
+    payload => {
+      if (payload.version !== onlineMatch.version + 1) {
+        refreshOnlineMatch().catch(error => {
+          document.getElementById("multiplayerStatus").textContent = error.message;
+        });
+        return;
+      }
+      try {
+        game.loadPgn(payload.public_state?.pgn || "");
+      } catch (error) {
+        document.getElementById("multiplayerStatus").textContent = "Received an invalid Chess update.";
+        return;
+      }
+      onlineMatch.version = payload.version;
+      onlineMatch.currentTurn = 1 - payload.actor_seat;
+      clearAnalysis();
+      renderBoard();
+      renderMoveHistory();
+    },
+    payload => {
+      if (Number.isInteger(payload.seat)) {
+        onlineMatch.players ??= [];
+        onlineMatch.players[payload.seat] = true;
+        document.getElementById("multiplayerStatus").textContent = "Opponent joined. Game ready.";
+        renderBoard();
+      }
+    },
+    status => {
+      if (status === "SUBSCRIBED") {
+        refreshOnlineMatch().catch(error => {
+          document.getElementById("multiplayerStatus").textContent = error.message;
+        });
+      }
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        document.getElementById("multiplayerStatus").textContent =
+          "Live updates unavailable. Apply supabase/game_sessions.sql.";
+      }
+    }
+  );
+}
+
+document.getElementById("createMultiplayerGameBtn").addEventListener("click", async () => {
+  const button = document.getElementById("createMultiplayerGameBtn");
+  const status = document.getElementById("multiplayerStatus");
+  button.disabled = true;
+  try {
+    if (!window.parent.gameMultiplayer) throw new Error("Open Chess from the main app to use online games.");
+    const result = await window.parent.gameMultiplayer.create(
+      "chess",
+      document.getElementById("multiplayerMode").value,
+      2,
+      { pgn: "" }
+    );
+    const state = await window.parent.gameMultiplayer.get(result.id);
+    attachOnlineMatch({ ...result, mode: state.mode, players: state.players }, state.version);
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById("joinMultiplayerGameBtn").addEventListener("click", async () => {
+  const button = document.getElementById("joinMultiplayerGameBtn");
+  button.disabled = true;
+  try {
+    await joinOnlineChess(document.getElementById("multiplayerInviteCode").value);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+async function joinOnlineChess(inviteCode) {
+  const status = document.getElementById("multiplayerStatus");
+  try {
+    if (!window.parent.gameMultiplayer) throw new Error("Open Chess from the main app to use online games.");
+    const result = await window.parent.gameMultiplayer.join(
+      inviteCode,
+      "chess"
+    );
+    const state = await window.parent.gameMultiplayer.get(result.id);
+    attachOnlineMatch({ ...result, invite_code: state.invite_code, mode: state.mode, players: state.players }, state.version);
+    game.loadPgn(state.public_state.pgn || "");
+    onlineMatch.currentTurn = state.current_turn;
+    renderBoard();
+    renderMoveHistory();
+    status.textContent = `Joined ${state.mode === "live" ? "live" : "turn-based"} Chess · ${result.seat === 0 ? "White" : "Black"}`;
+  } catch (error) {
+    status.textContent = error.message;
+  }
+}
+
+document.getElementById("copyGameInviteLinkBtn").addEventListener("click", async () => {
+  try {
+    const link = window.parent.gameMultiplayer.createInviteLink("chess", onlineMatch?.invite_code);
+    await navigator.clipboard.writeText(link);
+    document.getElementById("multiplayerStatus").textContent = "Invite link copied.";
+  } catch (error) {
+    document.getElementById("multiplayerStatus").textContent = error.message || "Could not copy the invite link.";
+  }
+});
+
+document.getElementById("shareGameInviteChatBtn").addEventListener("click", async () => {
+  try {
+    await window.parent.gameMultiplayer.shareInviteToChat("chess", onlineMatch?.invite_code);
+    document.getElementById("multiplayerStatus").textContent = "Invite shared in chat.";
+  } catch (error) {
+    document.getElementById("multiplayerStatus").textContent = error.message;
+  }
+});
+
+document.getElementById("sendGameInviteBtn").addEventListener("click", async event => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    const result = await window.parent.gameMultiplayer.sendInvite(
+      onlineMatch?.id,
+      document.getElementById("inviteUsername").value
+    );
+    document.getElementById("multiplayerStatus").textContent = `Game popup sent to ${result.username}.`;
+  } catch (error) {
+    document.getElementById("multiplayerStatus").textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
 
 function requestPromotion(from, to) {
   pendingPromotion = { from, to };
@@ -694,3 +889,8 @@ loadSharedGame();
 renderBoard();
 renderMoveHistory();
 renderAnalysisPosition();
+const inviteCodeFromUrl = new URLSearchParams(window.location.search).get("invite");
+if (inviteCodeFromUrl) {
+  document.getElementById("multiplayerInviteCode").value = inviteCodeFromUrl;
+  joinOnlineChess(inviteCodeFromUrl);
+}

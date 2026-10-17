@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="dark">
     <title>Chess</title>
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./style.css?v=game-invites">
 </head>
 <body>
     <main class="chess-app">
@@ -20,6 +20,24 @@
                 <button id="newGameBtn" class="primary-button" type="button">New game</button>
             </div>
         </header>
+        <section class="multiplayer-controls" aria-label="Online game">
+            <label>Mode
+                <select id="multiplayerMode">
+                    <option value="live">Live</option>
+                    <option value="turn_based">Turn-based (no timer)</option>
+                </select>
+            </label>
+            <button id="createMultiplayerGameBtn" class="quiet-button" type="button">Create online game</button>
+            <label>Invite code <input id="multiplayerInviteCode" type="text" maxlength="8" autocomplete="off" /></label>
+            <button id="joinMultiplayerGameBtn" class="quiet-button" type="button">Join</button>
+            <div id="multiplayerInviteActions" class="multiplayer-invite-actions" hidden>
+                <button id="copyGameInviteLinkBtn" class="quiet-button" type="button">Copy invite link</button>
+                <button id="shareGameInviteChatBtn" class="quiet-button" type="button">Share in chat</button>
+                <label>Invite username <input id="inviteUsername" type="text" maxlength="80" autocomplete="off" /></label>
+                <button id="sendGameInviteBtn" class="quiet-button" type="button">Send popup</button>
+            </div>
+            <span id="multiplayerStatus" class="multiplayer-status" aria-live="polite">Local game</span>
+        </section>
 
         <section class="game-layout" aria-label="Chess game">
             <div class="board-column">
@@ -34,7 +52,7 @@
                     <div id="chessBoard" class="chess-board" role="grid" aria-label="Chess board"></div>
                 </div>
                 <div class="board-footer">
-                    <span>two players · same device</span>
+                    <span id="gamePlayerMode">two players · same device</span>
                     <div class="board-footer-actions">
                         <button id="reviewGameBtn" class="text-button" type="button">Review game</button>
                         <button id="undoBtn" class="text-button" type="button" disabled>Undo Move</button>
@@ -100,6 +118,6 @@
         </form>
     </dialog>
 
-    <script type="module" src="./game.js?v=chat-sharing"></script>
+    <script type="module" src="./game.js?v=game-invites"></script>
 </body>
 </html>

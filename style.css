@@ -812,6 +812,108 @@ body {
     gap: var(--card-gap);
     height: 100%;
 }
+.chat-workspace {
+    display: flex;
+    flex: 1 1 auto;
+    gap: var(--card-gap);
+    min-height: 0;
+}
+.chat-conversation {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+.chat-presence-panel {
+    display: flex;
+    flex: 0 0 190px;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    padding-left: var(--card-gap);
+    border-left: 2px solid var(--color-inset);
+}
+.chat-presence-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+.chat-presence-heading h2 {
+    margin: 0;
+    color: var(--color-heading);
+    font-family: 'capsmall', sans-serif;
+    font-size: 14px;
+    font-weight: normal;
+}
+.chat-presence-count {
+    color: var(--color-muted);
+    font-family: 'lowsmall', sans-serif;
+    font-size: 12px;
+}
+.chat-presence-status {
+    margin: 8px 0;
+    color: var(--color-muted);
+    font-family: 'lowsmall', sans-serif;
+    font-size: 11px;
+}
+.chat-presence-list {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 7px;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+.chat-presence-member {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    color: var(--color-text);
+    font-family: 'lowsmall', sans-serif;
+    font-size: 12px;
+}
+.chat-presence-name {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.chat-presence-member-status {
+    color: var(--color-muted);
+    font-size: 10px;
+    text-transform: capitalize;
+}
+.chat-presence-legend {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 5px 10px;
+    margin-top: 8px;
+    color: var(--color-muted);
+    font-family: 'lowsmall', sans-serif;
+    font-size: 10px;
+}
+.chat-presence-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.presence-dot {
+    display: inline-block;
+    flex: 0 0 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-muted);
+}
+.presence-dot.is-active { background: #55c879; }
+.presence-dot.is-idle { background: #d7a947; }
 #chatPanel > .panel-header {
     flex-wrap: wrap;
 }
@@ -1228,6 +1330,38 @@ body {
 .chat-shared-game-open:hover {
     background: var(--color-control-pressed);
 }
+.game-invite-popups {
+    position: fixed;
+    z-index: 10000;
+    right: 16px;
+    bottom: 16px;
+    display: grid;
+    width: min(360px, calc(100vw - 32px));
+    gap: 10px;
+}
+.game-invite-popup {
+    border: 4px solid var(--color-white);
+    padding: 12px;
+    background: var(--color-panel-surface);
+    color: var(--color-text);
+    box-shadow: 0 4px 18px rgb(0 0 0 / 25%);
+}
+.game-invite-popup p {
+    margin: 0 0 10px;
+    font-family: 'capsmall', sans-serif;
+}
+.game-invite-popup-actions {
+    display: flex;
+    gap: 8px;
+}
+.game-invite-popup-actions button {
+    width: auto;
+    min-height: 32px;
+    margin: 0;
+    padding: 6px 10px;
+    border: 2px solid var(--color-white);
+    font-size: 14px;
+}
 .achievements-grid { display: grid; grid-template-columns: repeat(var(--achievement-columns), minmax(0, 1fr)); gap: var(--card-gap); }
 .achievement-namespace { display: grid; grid-column: 1 / -1; gap: var(--card-gap); min-width: 0; }
 .achievement-namespace-heading { margin: 8px 0 0; color: var(--color-heading); font-family: 'capsmall', sans-serif; font-size: 16px; font-weight: normal; letter-spacing: 0.08em; }
@@ -1550,6 +1684,10 @@ body {
     .panel-header { padding: var(--mobile-panel-header-padding); flex-direction: column; align-items: flex-start; gap: var(--mobile-panel-header-gap); }
     .panel-body { padding: var(--mobile-page-padding); }
     .achievements-grid { grid-template-columns: 1fr; }
+    .chat-presence-panel { flex-basis: 125px; padding-left: 8px; }
+    .chat-presence-heading h2 { font-size: 12px; }
+    .chat-presence-member { gap: 4px; font-size: 10px; }
+    .chat-presence-member-status { font-size: 9px; }
 }
 
 @media (hover: none) {

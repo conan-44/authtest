@@ -60,6 +60,16 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 }
 
 .topbar { justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.multiplayer-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; margin: -6px 0 18px; border: 4px solid var(--border); padding: 8px; background: var(--surface); }
+.multiplayer-controls label { display: grid; gap: 3px; color: var(--muted); font-size: 0.75rem; }
+.multiplayer-controls select, .multiplayer-controls input { min-height: 32px; border: 2px solid var(--border); border-radius: 0; padding: 3px 6px; background: #ffffff; color: #000000; font: inherit; }
+.multiplayer-controls input { width: 110px; text-transform: uppercase; }
+.multiplayer-controls .quiet-button { min-height: 34px; }
+.multiplayer-invite-actions { display: flex; flex: 1 1 100%; flex-wrap: wrap; align-items: end; gap: 8px; }
+.multiplayer-invite-actions[hidden] { display: none; }
+.multiplayer-invite-actions label { flex: 1 1 140px; }
+.multiplayer-invite-actions input { width: 100%; text-transform: none; }
+.multiplayer-status { flex: 1 1 180px; align-self: center; color: var(--muted); font-size: 0.78rem; }
 .eyebrow { margin: 0 0 3px; color: var(--accent); font: 0.68rem "capsmall", sans-serif; letter-spacing: 0.16em; }
 h1 { margin: 0; color: var(--accent); font: normal clamp(1.6rem, 4vw, 2.2rem) "lowbig", sans-serif; text-shadow: 4px 4px 0 rgb(26 37 49 / 18%); }
 h2, h3 { margin: 0; color: var(--accent); font: normal 1rem "capsmall", sans-serif; }
@@ -258,6 +268,10 @@ h2, h3 { margin: 0; color: var(--accent); font: normal 1rem "capsmall", sans-ser
     .selector-note { display: none; }
     .card-game-layout { min-height: 0; }
     .game-view { min-height: 520px; }
+    .multiplayer-controls { align-items: stretch; }
+    .multiplayer-controls label { flex: 1 1 120px; }
+    .multiplayer-controls .quiet-button { flex: 1 1 130px; }
+    .multiplayer-status { flex-basis: 100%; }
 }
 
 @media (max-width: 460px) {

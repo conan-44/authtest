@@ -22,6 +22,8 @@ function encodeReplyContent(content) {
 function getMessagePreview(content) {
   const message = parseReplyMessage(content);
   if (parseGifMessage(message.content)) return "GIF";
+  const invite = parseGameInviteMessage(message.content);
+  if (invite) return `invited you to ${invite.game === "chess" ? "Chess" : "Dou Dizhu"}`;
   const sharedGame = parseSharedGameMessage(message.content);
   if (sharedGame) return sharedGame.game === "chess" ? "shared a chess game" : "shared a Number Pillars level";
   return censoring ? censorSwearWords(message.content) : message.content;
