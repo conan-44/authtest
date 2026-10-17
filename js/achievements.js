@@ -10,7 +10,7 @@ const history_file = "./history/achievements.skvwhist";
     function createAchievementModule(options = {}) {
         const state = {
             achievementsMap: new Map(),
-            completionMap: {},
+            completionMap: loadCompletionMap(),
             bonusPoints: 0,
             pointsConfig: { common: 10, rare: 25, epic: 50, legendary: 80, secret_default: 100 },
             milestones: [],
@@ -20,6 +20,45 @@ const history_file = "./history/achievements.skvwhist";
         const gameProgressStorageKey = "skvwaffle.game-achievement-progress.v1";
         let gameProgress = loadGameProgress();
         let achievementsLoadPromise = null;
+        let unlockSyncQueue = Promise.resolve();
+
+        function loadCompletionMap() {
+            try {
+                const saved = JSON.parse(localStorage.getItem("skvwaffle.unlocked-achievements.v1") || "[]");
+                if (!Array.isArray(saved)) return {};
+                return Object.fromEntries([...new Set(saved.filter(id => typeof id === "string"))]
+                    .map(id => [id, { unlockedAt: Date.now() }]));
+            } catch (error) {
+                console.warn("Could not load locally saved achievements.", error);
+                return {};
+            }
+        }
+
+        function saveCompletionMap() {
+            try {
+                localStorage.setItem(
+                    "skvwaffle.unlocked-achievements.v1",
+                    JSON.stringify(Object.keys(state.completionMap))
+                );
+            } catch (error) {
+                console.warn("Could not save unlocked achievements locally.", error);
+            }
+        }
+
+        async function getAuthenticatedUser() {
+            if (typeof _supabase === "undefined") return null;
+            try {
+                const { data, error } = await _supabase.auth.getUser();
+                if (error) {
+                    if (error.name === "AuthSessionMissingError") return null;
+                    throw error;
+                }
+                return data?.user || null;
+            } catch (error) {
+                if (error?.name === "AuthSessionMissingError") return null;
+                throw error;
+            }
+        }
 
         const config = {
             indexUrl: options.indexUrl || indexmeta_file,
@@ -58,11 +97,14 @@ const history_file = "./history/achievements.skvwhist";
         function loadGameProgress() {
             const emptyProgress = {
                 mastermind: { solves: 0 },
-                chess: { games: 0, analyses: 0, openings: [] }
+                chess: { games: 0, analyses: 0, openings: [] },
+                numberPillars: { completed: 0, bestStreak: 0, totalXp: 0, customLevels: 0 },
+                blackjack: { hands: 0, wins: 0, naturals: 0, busts: 0, fiveCardHands: 0, winStreak: 0 },
+                douDizhu: { games: 0, wins: 0, landlordWins: 0, landlordWinStreak: 0, farmerWins: 0, bombs: 0, rockets: 0, twos: 0, jokers: 0, analyses: 0 }
             };
             try {
                 const saved = JSON.parse(localStorage.getItem(gameProgressStorageKey) || "null");
-                if (!saved || saved.version !== 1) return emptyProgress;
+                if (!saved || ![1, 2, 3].includes(saved.version)) return emptyProgress;
                 return {
                     mastermind: {
                         solves: Number.isInteger(saved.mastermind?.solves) && saved.mastermind.solves >= 0
@@ -79,7 +121,33 @@ const history_file = "./history/achievements.skvwhist";
                         openings: Array.isArray(saved.chess?.openings)
                             ? [...new Set(saved.chess.openings.filter(name => typeof name === "string"))]
                             : []
-                    }
+                    },
+                    numberPillars: {
+                        completed: Number.isInteger(saved.numberPillars?.completed) && saved.numberPillars.completed >= 0
+                            ? saved.numberPillars.completed
+                            : 0,
+                        bestStreak: Number.isInteger(saved.numberPillars?.bestStreak) && saved.numberPillars.bestStreak >= 0
+                            ? saved.numberPillars.bestStreak
+                            : 0,
+                        totalXp: Number.isInteger(saved.numberPillars?.totalXp) && saved.numberPillars.totalXp >= 0
+                            ? saved.numberPillars.totalXp
+                            : 0,
+                        customLevels: Number.isInteger(saved.numberPillars?.customLevels) && saved.numberPillars.customLevels >= 0
+                            ? saved.numberPillars.customLevels
+                            : 0
+                    },
+                    blackjack: Object.fromEntries(Object.keys(emptyProgress.blackjack).map(key => [
+                        key,
+                        Number.isInteger(saved.blackjack?.[key]) && saved.blackjack[key] >= 0
+                            ? saved.blackjack[key]
+                            : 0
+                    ])),
+                    douDizhu: Object.fromEntries(Object.keys(emptyProgress.douDizhu).map(key => [
+                        key,
+                        Number.isInteger(saved.douDizhu?.[key]) && saved.douDizhu[key] >= 0
+                            ? saved.douDizhu[key]
+                            : 0
+                    ]))
                 };
             } catch (error) {
                 console.warn("Could not load saved game achievement progress.", error);
@@ -90,7 +158,7 @@ const history_file = "./history/achievements.skvwhist";
         function saveGameProgress() {
             try {
                 localStorage.setItem(gameProgressStorageKey, JSON.stringify({
-                    version: 1,
+                    version: 3,
                     ...gameProgress
                 }));
             } catch (error) {
@@ -147,6 +215,91 @@ const history_file = "./history/achievements.skvwhist";
                         unlockedIds.push("chess:opening-collector");
                     }
                 }
+            } else if (gameName === "number-pillars" && eventName === "level-completed") {
+                gameProgress.numberPillars.completed += 1;
+                gameProgress.numberPillars.bestStreak = Math.max(
+                    gameProgress.numberPillars.bestStreak,
+                    Number.isInteger(details.streak) && details.streak > 0 ? details.streak : 0
+                );
+                gameProgress.numberPillars.totalXp +=
+                    Number.isInteger(details.earnedXp) && details.earnedXp > 0 ? details.earnedXp : 0;
+                unlockedIds.push("number-pillars:first-win");
+                if (gameProgress.numberPillars.bestStreak >= 5) {
+                    unlockedIds.push("number-pillars:streak-five");
+                }
+                if (gameProgress.numberPillars.totalXp >= 100) {
+                    unlockedIds.push("number-pillars:xp-hundred");
+                }
+            } else if (gameName === "number-pillars" && eventName === "custom-level-played") {
+                gameProgress.numberPillars.customLevels += 1;
+                unlockedIds.push("number-pillars:custom-level");
+            } else if (gameName === "blackjack" && eventName === "round-completed") {
+                gameProgress.blackjack.hands += 1;
+                unlockedIds.push("blackjack:first-hand");
+                if (details.status === "blackjack") {
+                    gameProgress.blackjack.naturals += 1;
+                    unlockedIds.push("blackjack:natural");
+                }
+                if (details.status === "bust") {
+                    gameProgress.blackjack.busts += 1;
+                    unlockedIds.push("blackjack:busted");
+                }
+                if (Number.isInteger(details.playerCards) && details.playerCards >= 5) {
+                    gameProgress.blackjack.fiveCardHands += 1;
+                    unlockedIds.push("blackjack:five-card-hand");
+                }
+                if (details.status === "win" || details.status === "blackjack") {
+                    gameProgress.blackjack.wins += 1;
+                    gameProgress.blackjack.winStreak += 1;
+                    unlockedIds.push("blackjack:first-win");
+                    if (gameProgress.blackjack.wins >= 10) unlockedIds.push("blackjack:ten-wins");
+                    if (gameProgress.blackjack.winStreak >= 3) unlockedIds.push("blackjack:hot-streak");
+                } else {
+                    gameProgress.blackjack.winStreak = 0;
+                }
+            } else if (gameName === "dou-dizhu" && eventName === "round-completed") {
+                gameProgress.douDizhu.games += 1;
+                unlockedIds.push("dou-dizhu:first-game");
+                if (gameProgress.douDizhu.games >= 5) unlockedIds.push("dou-dizhu:five-games");
+                if (details.won) {
+                    gameProgress.douDizhu.wins += 1;
+                    unlockedIds.push("dou-dizhu:first-win");
+                    if (details.humanWasLandlord) {
+                        gameProgress.douDizhu.landlordWins += 1;
+                        gameProgress.douDizhu.landlordWinStreak += 1;
+                        unlockedIds.push("dou-dizhu:landlord-win");
+                        if (gameProgress.douDizhu.landlordWinStreak >= 5) {
+                            unlockedIds.push("dou-dizhu:landlord-five-streak");
+                        }
+                    } else {
+                        gameProgress.douDizhu.landlordWinStreak = 0;
+                        gameProgress.douDizhu.farmerWins += 1;
+                        unlockedIds.push("dou-dizhu:farmer-win");
+                    }
+                } else {
+                    gameProgress.douDizhu.landlordWinStreak = 0;
+                }
+            } else if (gameName === "dou-dizhu" && eventName === "special-played") {
+                if (details.bomb) {
+                    gameProgress.douDizhu.bombs += 1;
+                    unlockedIds.push("dou-dizhu:bomb");
+                }
+                if (details.rocket) {
+                    gameProgress.douDizhu.rockets += 1;
+                    unlockedIds.push("dou-dizhu:rocket");
+                }
+                if (details.playedTwo) {
+                    gameProgress.douDizhu.twos += 1;
+                    unlockedIds.push("dou-dizhu:two");
+                }
+                if (details.playedJoker) {
+                    gameProgress.douDizhu.jokers += 1;
+                    unlockedIds.push("dou-dizhu:joker");
+                }
+            } else if (gameName === "dou-dizhu" && eventName === "analyzed") {
+                gameProgress.douDizhu.analyses += 1;
+                unlockedIds.push("dou-dizhu:first-analysis");
+                if (gameProgress.douDizhu.analyses >= 10) unlockedIds.push("dou-dizhu:ten-analyses");
             } else {
                 console.warn(`Ignoring unknown game achievement event: ${gameName}.${eventName}`);
                 return false;
@@ -161,7 +314,7 @@ const history_file = "./history/achievements.skvwhist";
             if (typeof _supabase === "undefined") return null;
 
             if (!userId) {
-                const { data: { user } } = await _supabase.auth.getUser();
+                const user = await getAuthenticatedUser();
                 if (!user) return null; // Guest mode / not logged in
                 userId = user.id;
             }
@@ -186,13 +339,32 @@ const history_file = "./history/achievements.skvwhist";
 
             console.log("Unlocked Achievements Array:", data.achievements);
 
-            (data.achievements || []).forEach(achievementId => {
+            if (data.achievements !== null && data.achievements !== undefined && !Array.isArray(data.achievements)) {
+                console.error("Supabase returned achievements in an unexpected format.", data.achievements);
+                return state.profile;
+            }
+            (data.achievements || []).filter(achievementId => typeof achievementId === "string").forEach(achievementId => {
                 if (!state.completionMap[achievementId]) {
                     state.completionMap[achievementId] = { unlockedAt: Date.now() };
                 }
             });
+            saveCompletionMap();
+            await syncUnlocksToSupabase(Object.keys(state.completionMap));
             return state.profile;
         }
+
+        window.addEventListener("app-auth-state-changed", event => {
+            const userId = event.detail?.userId;
+            if (!userId) return;
+            loadUserProfile(userId).then(() => {
+                state.lastMilestonePoints = getSummary(state).unlockedPoints;
+                renderers.renderAll();
+                renderers.renderMilestones();
+                if (onRender) onRender(getSummary(state));
+            }).catch(error => {
+                console.error("Could not load achievements after authentication changed.", error);
+            });
+        });
 
         function executeCodeCommand(commandString) {
             if (!commandString || typeof commandString !== "string") return false;
@@ -272,6 +444,7 @@ const history_file = "./history/achievements.skvwhist";
             const achievement = state.achievementsMap.get(id);
             if (!achievement || state.completionMap[id]) return false;
             state.completionMap[id] = { unlockedAt: Date.now() };
+            saveCompletionMap();
             renderers.renderAll(); renderers.showUnlockPopup(achievement);
             checkMilestones();
             if (onRender) onRender(getSummary(state));
@@ -294,26 +467,40 @@ const history_file = "./history/achievements.skvwhist";
             return data;
         }
 
-        async function syncUnlockToSupabase(achievementId) {
-            if (typeof _supabase === "undefined") return;
-            const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) return; 
-            if (typeof printLog === "function") printLog(`Unlocking achievement: ${achievementId}...`);
+        function syncUnlockToSupabase(achievementId) {
+            return syncUnlocksToSupabase([achievementId]);
+        }
 
-            const stats = await getUserStats(user.id);
-            const currentList = stats?.achievements || [];
-            if (currentList.includes(achievementId)) {
-                console.log(`Achievement '${achievementId}' already unlocked.`);
-                return;
-            }
-            const updatedList = [...currentList, achievementId];
+        function syncUnlocksToSupabase(achievementIds) {
+            unlockSyncQueue = unlockSyncQueue.then(async () => {
+                if (typeof _supabase === "undefined") return;
+                const user = await getAuthenticatedUser();
+                if (!user) return;
+                if (typeof printLog === "function") printLog("Syncing unlocked achievements...");
 
-            const { error } = await _supabase
-                .from('user_stats')
-                .update({ achievements: updatedList })
-                .eq('user_id', user.id);
-            if (error) console.error("Error unlocking achievement:", error.message);
-            else console.log(`\uD83C\uDFC6 Unlocked: ${achievementId}`);
+                const { data, error: readError } = await _supabase
+                    .from('user_stats')
+                    .select('achievements')
+                    .eq('user_id', user.id)
+                    .single();
+                if (readError) throw readError;
+                if (data?.achievements !== null && !Array.isArray(data?.achievements)) {
+                    throw new TypeError("Supabase returned achievements in an unexpected format.");
+                }
+                const currentList = (data?.achievements || []).filter(id => typeof id === "string");
+                const updatedList = [...new Set([...currentList, ...achievementIds.filter(id => typeof id === "string")])];
+                if (updatedList.length === currentList.length) return;
+
+                const { error: updateError } = await _supabase
+                    .from('user_stats')
+                    .update({ achievements: updatedList })
+                    .eq('user_id', user.id);
+                if (updateError) throw updateError;
+                console.log(`🏆 Synced ${updatedList.length - currentList.length} unlocked achievement(s).`);
+            }).catch(error => {
+                console.error("Error syncing unlocked achievements to Supabase.", error);
+            });
+            return unlockSyncQueue;
         }
 
         async function syncPointsToSupabase(amount) {
@@ -335,6 +522,7 @@ const history_file = "./history/achievements.skvwhist";
         function revoke(id) {
             if (!state.achievementsMap.has(id) || !state.completionMap[id]) return false;
             delete state.completionMap[id]; renderers.renderAll();
+            saveCompletionMap();
             state.lastMilestonePoints = Math.min(state.lastMilestonePoints, getSummary(state).unlockedPoints);
             renderers.renderMilestones();
             if (onRender) onRender(getSummary(state));
@@ -352,6 +540,7 @@ const history_file = "./history/achievements.skvwhist";
 
         function reset() {
             state.completionMap = {};
+            saveCompletionMap();
             state.bonusPoints = 0;
             state.lastMilestonePoints = 0;
             renderers.renderAll();

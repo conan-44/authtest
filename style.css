@@ -1187,6 +1187,47 @@ body {
     font-size: 12px;
     text-align: right;
 }
+.chat-shared-game {
+    display: flex;
+    min-width: 220px;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px;
+    border: 2px solid var(--color-white);
+    background: var(--color-card-surface);
+}
+.chat-shared-game-icon {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    place-items: center;
+    color: var(--color-heading);
+    font-size: 22px;
+    line-height: 1;
+}
+.chat-shared-game-title {
+    flex: 1 1 130px;
+    min-width: 0;
+    color: var(--color-text);
+    font-family: 'capsmall', sans-serif;
+    font-size: 13px;
+}
+.chat-shared-game-open {
+    width: auto;
+    min-height: 30px;
+    margin: 0 0 0 auto;
+    padding: 4px 8px;
+    border: 2px solid var(--color-white);
+    background: var(--color-control-surface);
+    color: var(--color-text);
+    font-family: 'capsmall', sans-serif;
+    font-size: 11px;
+}
+.chat-shared-game-open:hover {
+    background: var(--color-control-pressed);
+}
 .achievements-grid { display: grid; grid-template-columns: repeat(var(--achievement-columns), minmax(0, 1fr)); gap: var(--card-gap); }
 .achievement-namespace { display: grid; grid-column: 1 / -1; gap: var(--card-gap); min-width: 0; }
 .achievement-namespace-heading { margin: 8px 0 0; color: var(--color-heading); font-family: 'capsmall', sans-serif; font-size: 16px; font-weight: normal; letter-spacing: 0.08em; }

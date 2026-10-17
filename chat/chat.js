@@ -21,7 +21,7 @@ function updateExistingMessagesCensoring() {
 
     const rawContent = contentDiv.getAttribute('data-raw');
     if (rawContent !== null) {
-      renderChatMessageBody(contentDiv, rawContent);
+      renderChatMessageBody(contentDiv, rawContent, div.dataset.username || "Player");
     }
   });
 }
@@ -158,6 +158,56 @@ async function sendMessage() {
   clearReplyTarget();
 }
 
+window.shareGameToChat = async function shareGameToChat(game, data) {
+  if (game !== "chess" && game !== "number-pillars") {
+    throw new Error("This game cannot be shared in chat.");
+  }
+  if (!data || typeof data !== "object") {
+    throw new Error("The shared game data is invalid.");
+  }
+  if (game === "chess") {
+    if (typeof data.pgn !== "string" || !data.pgn.trim() || data.pgn.length > 16_000) {
+      throw new Error("The shared Chess game is invalid.");
+    }
+    if (data.evaluations !== undefined && data.evaluations !== null &&
+      (!Array.isArray(data.evaluations) || data.evaluations.length > 200)) {
+      throw new Error("The shared Chess analysis is invalid.");
+    }
+  } else if (
+    !Array.isArray(data.numbers) ||
+    data.numbers.length === 0 ||
+    data.numbers.length > 40 ||
+    !data.numbers.every(number => Number.isFinite(number) && Math.abs(number) <= 1_000_000) ||
+    !Number.isFinite(data.answer) ||
+    Math.abs(data.answer) > 1_000_000 ||
+    (data.name !== undefined && (typeof data.name !== "string" || data.name.length > 60))
+  ) {
+    throw new Error("The shared Number Pillars level is invalid.");
+  }
+
+  const payload = { ...data, game };
+  const content = `game:v1:${JSON.stringify(payload)}`;
+  if (content.length > 40_000) {
+    throw new Error("This game is too large to share in chat.");
+  }
+
+  const { data: authData, error: authError } = await _supabase.auth.getUser();
+  if (authError) throw new Error(`Could not verify your sign-in: ${authError.message}`);
+  if (!authData.user) throw new Error("Sign in to share a game in chat.");
+
+  const message = {
+    user_id: authData.user.id,
+    content: encodeReplyContent(content)
+  };
+  if (activeChatChannelId) message.channel_id = activeChatChannelId;
+
+  const { error } = await _supabase.from("messages").insert([message]);
+  if (error) throw new Error(`Could not share the game: ${error.message}`);
+
+  clearReplyTarget();
+  playSendIconAnimation();
+};
+
 function playSendIconAnimation() {
   const icon = document.querySelector('#sendChatBtn .icon-send');
   if (!icon) return;
@@ -187,6 +237,7 @@ function appendMessageUI(msg) {
   div.className = `chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}`;
   div.dataset.messageId = String(msg.id);
   div.dataset.userId = String(msg.user_id || "");
+  div.dataset.username = msg.profiles?.username || "Player";
 
   const username = escapeHTML(msg.profiles?.username || 'Player');
   const flair = msg.profiles?.flair ? `<span class="chat-flair">${escapeHTML(msg.profiles.flair)}</span>` : '';
@@ -198,7 +249,7 @@ function appendMessageUI(msg) {
   const bodyDiv = div.querySelector('.chat-body');
   bodyDiv.setAttribute('data-raw', rawContent);
   renderReplyPreview(div, rawContent);
-  renderChatMessageBody(bodyDiv, rawContent);
+  renderChatMessageBody(bodyDiv, rawContent, div.dataset.username);
   div.querySelector(".chat-reply-button").addEventListener("click", () => setReplyTarget(div));
 
   if (isOwn) {
@@ -230,7 +281,7 @@ function updateMessageUI(msg) {
   const body = messageEl.querySelector(".chat-body");
   body.setAttribute("data-raw", msg.content);
   renderReplyPreview(messageEl, msg.content);
-  renderChatMessageBody(body, msg.content);
+  renderChatMessageBody(body, msg.content, messageEl.dataset.username || "Player");
 }
 
 function removeMessageUI(id) {

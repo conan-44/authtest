@@ -9,6 +9,11 @@
   "mastermind:codebreaker",
   "mastermind:hard-mode",
   "mastermind:master",
+  // number pillars
+  "number-pillars:first-win",
+  "number-pillars:streak-five",
+  "number-pillars:xp-hundred",
+  "number-pillars:custom-level",
   // chess
   "chess:first-game",
   "chess:ten-games",
@@ -16,5 +21,26 @@
   "chess:first-analysis",
   "chess:ten-analyses",
   "chess:first-opening",
-  "chess:opening-collector"
+  "chess:opening-collector",
+  // blackjack
+  "blackjack:first-hand",
+  "blackjack:first-win",
+  "blackjack:natural",
+  "blackjack:busted",
+  "blackjack:five-card-hand",
+  "blackjack:ten-wins",
+  "blackjack:hot-streak",
+  // dou dizhu
+  "dou-dizhu:first-game",
+  "dou-dizhu:five-games",
+  "dou-dizhu:first-win",
+  "dou-dizhu:landlord-win",
+  "dou-dizhu:landlord-five-streak",
+  "dou-dizhu:farmer-win",
+  "dou-dizhu:bomb",
+  "dou-dizhu:rocket",
+  "dou-dizhu:two",
+  "dou-dizhu:joker",
+  "dou-dizhu:first-analysis",
+  "dou-dizhu:ten-analyses"
 ]

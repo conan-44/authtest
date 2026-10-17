@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/gh/Parcoil/cloak@main/src/index.min.js"></script>
     <link rel="icon" type="image/x-icon" href="./assets/test-favicon.png">
-    <link rel="stylesheet" href="./style.css?v=achievement-namespaces">
+    <link rel="stylesheet" href="./style.css?v=card-games">
 </head>
 <body>
     <main class="page">
@@ -89,12 +89,30 @@
                             </div>
                         </div>
                     </article>
+                    <article class="achievement-card rarity-common game-card" data-game="number-pillars" data-src="./minigames/number-pillars/main.html" tabindex="0" role="button" aria-label="Play Number Pillars">
+                        <div class="achievement-card-inner">
+                            <div class="achievement-icon">🧮</div>
+                            <div>
+                                <h3 class="achievement-title rarity-common">Number Pillars</h3>
+                                <p class="achievement-description">Clear number tiles to leave a stack that matches the target.</p>
+                            </div>
+                        </div>
+                    </article>
                     <article class="achievement-card rarity-common game-card" data-game="chess" data-src="./minigames/chess/game.html" tabindex="0" role="button" aria-label="Play Chess">
                         <div class="achievement-card-inner">
                             <div class="achievement-icon">♟</div>
                             <div>
                                 <h3 class="achievement-title rarity-common">Chess</h3>
                                 <p class="achievement-description">A local two-player game with legal moves and full chess rules.</p>
+                            </div>
+                        </div>
+                    </article>
+                    <article class="achievement-card rarity-common game-card" data-game="cards" data-src="./minigames/cards/main.html" tabindex="0" role="button" aria-label="Play card games">
+                        <div class="achievement-card-inner">
+                            <div class="achievement-icon">🂠</div>
+                            <div>
+                                <h3 class="achievement-title rarity-common">Card Games</h3>
+                                <p class="achievement-description">Play Blackjack or Dou Dizhu with dynamically dealt cards.</p>
                             </div>
                         </div>
                     </article>
@@ -212,15 +230,15 @@
     <script src="./js/blog.js"></script>
     <script src="./js/tabs.js"></script>
     <script src="./js/settings.js"></script>
-    <script src="./js/games.js"></script>
+    <script src="./js/games.js?v=chat-sharing"></script>
     <script src="./js/tips.js"></script>
     <!-- api config stuff -->
     <script src="./api-config/giphy-config.js"></script>
     <script src="./api-config/cloak-config.js?v=main-achievements"></script>
     <!-- chat stuff -->
-    <script src="./chat/chat.js"></script>
+    <script src="./chat/chat.js?v=chat-sharing"></script>
     <script src="./chat/channels.js?v=main-achievements"></script>
-    <script src="./chat/actions.js"></script>
-    <script src="./chat/giphy.js?v=main-achievements"></script>
+    <script src="./chat/actions.js?v=chat-sharing"></script>
+    <script src="./chat/giphy.js?v=chat-sharing"></script>
 </body>
 </html>

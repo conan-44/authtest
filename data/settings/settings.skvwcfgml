@@ -20,3 +20,7 @@ enabled: true
 # min [4000]
 # default [15000]
 # max [40000]
+[number pillars]
+music: false
+confetti: true
+large popups: false

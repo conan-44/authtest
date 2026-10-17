@@ -354,6 +354,13 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
         bindSettingAnimations();
         settingsList.querySelectorAll(".settings-checkbox").forEach(checkbox => {
             checkbox.addEventListener("change", () => {
+                window.dispatchEvent(new CustomEvent("app-setting-changed", {
+                    detail: {
+                        section: checkbox.dataset.section,
+                        key: checkbox.dataset.setting,
+                        value: checkbox.checked
+                    }
+                }));
                 if (checkbox.dataset.section === "chat" && checkbox.dataset.setting === "censoring") {
                     window.dispatchEvent(new Event("censoring-setting-changed"));
                 }

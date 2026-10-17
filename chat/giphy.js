@@ -1,5 +1,6 @@
 // GIPHY message rendering, search, pagination, and send controls.
 const GIF_MESSAGE_PREFIX = "gif:v1:";
+const SHARED_GAME_MESSAGE_PREFIX = "game:v1:";
 const GIF_HIDE_SETTING = "hide gifs";
 const gifSearchForm = document.getElementById("gifSearchForm");
 const gifSearchInput = document.getElementById("gifSearchInput");
@@ -50,6 +51,41 @@ function parseGifMessage(content) {
   }
 }
 
+function parseSharedGameMessage(content) {
+  if (
+    typeof content !== "string" ||
+    content.length > 40_000 ||
+    !content.startsWith(SHARED_GAME_MESSAGE_PREFIX)
+  ) return null;
+  try {
+    const shared = JSON.parse(content.slice(SHARED_GAME_MESSAGE_PREFIX.length));
+    if (shared?.game === "chess") {
+      if (typeof shared.pgn !== "string" || !shared.pgn.trim() || shared.pgn.length > 16_000) return null;
+      if (
+        shared.evaluations !== undefined &&
+        shared.evaluations !== null &&
+        (!Array.isArray(shared.evaluations) || shared.evaluations.length > 200)
+      ) return null;
+      return shared;
+    }
+    if (
+      shared?.game === "number-pillars" &&
+      Array.isArray(shared.numbers) &&
+      shared.numbers.length > 0 &&
+      shared.numbers.length <= 40 &&
+      shared.numbers.every(number => Number.isFinite(number) && Math.abs(number) <= 1_000_000) &&
+      Number.isFinite(shared.answer) &&
+      Math.abs(shared.answer) <= 1_000_000 &&
+      (shared.name === undefined || (typeof shared.name === "string" && shared.name.length <= 60))
+    ) {
+      return shared;
+    }
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
 function isGiphyMediaUrl(value) {
   if (typeof value !== "string") return false;
   try {
@@ -70,10 +106,45 @@ function isGiphyPageUrl(value) {
   }
 }
 
-function renderChatMessageBody(bodyDiv, rawContent) {
+function renderChatMessageBody(bodyDiv, rawContent, username = "Player") {
   const content = parseReplyMessage(rawContent).content;
   const gif = parseGifMessage(content);
+  const sharedGame = parseSharedGameMessage(content);
   bodyDiv.replaceChildren();
+
+  if (sharedGame) {
+    const card = document.createElement("div");
+    card.className = `chat-shared-game chat-shared-game-${sharedGame.game}`;
+
+    const icon = document.createElement("span");
+    icon.className = "chat-shared-game-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = sharedGame.game === "chess" ? "♟" : "🧮";
+
+    const title = document.createElement("span");
+    title.className = "chat-shared-game-title";
+    title.textContent = `${username} shared a ${sharedGame.game === "chess" ? "chess game" : "Number Pillars level"}`;
+
+    const openButton = document.createElement("button");
+    openButton.type = "button";
+    openButton.className = "chat-shared-game-open";
+    openButton.textContent = sharedGame.game === "chess" ? "Review game" : "Play level";
+    openButton.addEventListener("click", () => {
+      if (typeof window.openSharedGame !== "function") {
+        console.error("The game launcher is unavailable.");
+        return;
+      }
+      try {
+        window.openSharedGame(sharedGame.game, sharedGame);
+      } catch (error) {
+        console.error("Could not open the shared game.", error);
+      }
+    });
+
+    card.append(icon, title, openButton);
+    bodyDiv.appendChild(card);
+    return;
+  }
 
   if (gif) {
     const hideGifs = window.getAppSetting ? window.getAppSetting("chat", GIF_HIDE_SETTING, false) : false;
@@ -107,7 +178,11 @@ function renderChatMessageBody(bodyDiv, rawContent) {
 }
 
 function getChatMessagePreview(content) {
-  return typeof content === "string" && parseGifMessage(content) ? "sent a GIF" : getMessagePreview(content);
+  if (typeof content !== "string") return getMessagePreview(content);
+  if (parseGifMessage(content)) return "sent a GIF";
+  const sharedGame = parseSharedGameMessage(parseReplyMessage(content).content);
+  if (sharedGame) return sharedGame.game === "chess" ? "shared a chess game" : "shared a Number Pillars level";
+  return getMessagePreview(content);
 }
 
 function setGifSearchStatus(message) {

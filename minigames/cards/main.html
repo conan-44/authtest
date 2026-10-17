@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>Card Games</title>
+    <link rel="stylesheet" href="./style.css?v=card-variants">
+</head>
+<body>
+    <main class="cards-app">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">LOCAL GAMES</p>
+                <h1>card games</h1>
+            </div>
+            <button id="newGameBtn" class="primary-button" type="button">new game</button>
+        </header>
+
+        <div class="card-game-layout">
+            <aside class="game-selector" aria-label="Choose a card game">
+                <h2>Choose a game</h2>
+                <button class="game-choice is-selected" type="button" data-game-choice="blackjack" aria-pressed="true">
+                    <span class="choice-icon" aria-hidden="true">21</span>
+                    <span><strong>Blackjack</strong><small>Beat the dealer</small></span>
+                </button>
+                <button class="game-choice" type="button" data-game-choice="doudizhu" aria-pressed="false">
+                    <span class="choice-icon" aria-hidden="true">地主</span>
+                    <span><strong>Dou Dizhu</strong><small>Landlord vs. farmers</small></span>
+                </button>
+                <div class="selector-note">
+                    <span class="stat-label">CARD SET</span>
+                    <p>Numbered cards, no suits.</p>
+                </div>
+            </aside>
+
+            <section class="game-content">
+                <section id="blackjackGame" class="game-view" aria-labelledby="blackjackTitle">
+                    <div class="game-heading">
+                        <div>
+                            <h2 id="blackjackTitle">Blackjack</h2>
+                            <p class="section-hint">Get closer to 21 than the dealer without going over.</p>
+                        </div>
+                        <span id="blackjackResult" class="round-result" aria-live="polite">Your turn</span>
+                    </div>
+
+                    <div class="blackjack-table">
+                        <section class="hand-area" aria-label="Dealer's hand">
+                            <div class="hand-heading"><h3>Dealer</h3><span id="dealerScore" class="hand-score">—</span></div>
+                            <div id="dealerHand" class="card-row"></div>
+                        </section>
+                        <div class="table-divider"><span>VS</span></div>
+                        <section class="hand-area player-hand-area" aria-label="Your hand">
+                            <div class="hand-heading"><h3>You</h3><span id="playerScore" class="hand-score">0</span></div>
+                            <div id="playerHand" class="card-row"></div>
+                        </section>
+                    </div>
+                    <div class="game-actions">
+                        <button id="hitBtn" class="primary-button" type="button">Hit</button>
+                        <button id="standBtn" class="quiet-button" type="button">Stand</button>
+                    </div>
+                </section>
+
+                <section id="doudizhuGame" class="game-view" aria-labelledby="doudizhuTitle" hidden>
+                    <div class="game-heading">
+                        <div>
+                            <h2 id="doudizhuTitle">Dou Dizhu</h2>
+                            <p class="section-hint">combo to empty your hand</p>
+                        </div>
+                        <span id="doudizhuStatus" class="round-result" aria-live="polite">Bidding</span>
+                    </div>
+                    <div class="doudizhu-table">
+                        <div class="opponents-row">
+                            <section class="opponent-area" aria-label="Left opponent">
+                                <div class="hand-heading"><h3 id="leftPlayerName">Player 2</h3><span id="leftCardCount" class="hand-score">17 cards</span></div>
+                                <div id="leftOpponentHand" class="card-row card-back-row"></div>
+                            </section>
+                            <section class="opponent-area" aria-label="Right opponent">
+                                <div class="hand-heading"><h3 id="rightPlayerName">Player 3</h3><span id="rightCardCount" class="hand-score">17 cards</span></div>
+                                <div id="rightOpponentHand" class="card-row card-back-row"></div>
+                            </section>
+                        </div>
+                        <div class="trick-area">
+                            <div class="trick-heading"><h3>what got played</h3><span id="landlordInfo" class="hand-score"></span></div>
+                            <div id="trickCards" class="card-row trick-cards"></div>
+                            <p id="trickStatus" class="section-hint">bid to start</p>
+                        </div>
+                        <section class="hand-area own-doudizhu-hand" aria-label="Your hand">
+                            <div class="hand-heading"><h3 id="yourRole">your hand</h3><span id="ownCardCount" class="hand-score">17 cards</span></div>
+                            <div id="bottomCards" class="card-row bottom-cards" hidden></div>
+                            <div class="own-hand-scroll">
+                                <div id="ownHand" class="card-row own-hand"></div>
+                                <div id="handScrollbar" class="hand-scrollbar" role="scrollbar" aria-label="Your hand cards" aria-controls="ownHand" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+                                    <div id="handScrollbarThumb" class="hand-scrollbar-thumb"></div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div id="bidActions" class="game-actions" hidden>
+                        <button class="primary-button bid-button" type="button" data-bid="1">bid 1</button>
+                        <button class="primary-button bid-button" type="button" data-bid="2">bid 2</button>
+                        <button class="primary-button bid-button" type="button" data-bid="3">bid 3</button>
+                        <button id="passBidBtn" class="quiet-button" type="button">pass</button>
+                    </div>
+                    <div id="playActions" class="game-actions" hidden>
+                        <button id="playCardsBtn" class="primary-button" type="button">play cards</button>
+                        <button id="passTurnBtn" class="quiet-button" type="button">pass</button>
+                    </div>
+                    <div id="finishedActions" class="game-actions" hidden>
+                        <button id="reviewGameBtn" class="primary-button" type="button">analyse this game</button>
+                    </div>
+                    <section id="analysisPanel" class="analysis-panel" aria-live="polite" hidden>
+                        <div class="analysis-heading">
+                            <div>
+                                <h3>Move analysis</h3>
+                                <p id="analysisSummary" class="section-hint"></p>
+                            </div>
+                            <button id="analyzePositionBtn" class="quiet-button" type="button">analyze position</button>
+                        </div>
+                        <ol id="analysisMoves" class="analysis-moves"></ol>
+                        <p class="analysis-disclaimer">might not be accurate always, only sees your own cards</p>
+                    </section>
+                </section>
+            </section>
+        </div>
+        <footer class="footer">Programmed by Conan · Card Games</footer>
+    </main>
+    <script src="./script.js?v=game-review"></script>
+</body>
+</html>

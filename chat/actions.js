@@ -21,7 +21,10 @@ function encodeReplyContent(content) {
 
 function getMessagePreview(content) {
   const message = parseReplyMessage(content);
-  return parseGifMessage(message.content) ? "GIF" : (censoring ? censorSwearWords(message.content) : message.content);
+  if (parseGifMessage(message.content)) return "GIF";
+  const sharedGame = parseSharedGameMessage(message.content);
+  if (sharedGame) return sharedGame.game === "chess" ? "shared a chess game" : "shared a Number Pillars level";
+  return censoring ? censorSwearWords(message.content) : message.content;
 }
 
 function renderReplyPreview(messageEl, rawContent) {
@@ -216,4 +219,3 @@ document.getElementById("chatMessages").addEventListener("click", event => {
       break;
   }
 });
-

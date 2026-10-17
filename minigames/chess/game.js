@@ -16,6 +16,7 @@ const reviewButton = document.getElementById("reviewGameBtn");
 const reviewStartButton = document.getElementById("reviewStartBtn");
 const analyzeButton = document.getElementById("analyzeGameBtn");
 const newGameButton = document.getElementById("newGameBtn");
+const shareGameButton = document.getElementById("shareGameBtn");
 const analysisStatus = document.getElementById("analysisStatus");
 const evaluationScore = document.getElementById("evaluationScore");
 const evaluationBar = document.getElementById("evaluationBar");
@@ -233,6 +234,8 @@ function renderMoveHistory() {
   newGameButton.disabled = analysisInProgress;
   reviewButton.textContent = isReviewing ? "Exit review" : "Review game";
   analyzeButton.disabled = history.length === 0 || analysisInProgress;
+  shareGameButton.hidden = !game.isGameOver() && evaluations.length !== history.length + 1;
+  shareGameButton.disabled = analysisInProgress;
   renderCapturedPieces();
   renderOpeningBook();
 }
@@ -469,6 +472,82 @@ async function analyzeGame() {
   }
 }
 
+function validSharedEvaluations(sharedEvaluations, expectedLength) {
+  return Array.isArray(sharedEvaluations)
+    && sharedEvaluations.length === expectedLength
+    && sharedEvaluations.length <= 200
+    && sharedEvaluations.every(evaluation =>
+      evaluation &&
+      Number.isFinite(evaluation.centipawns) &&
+      (evaluation.mate === null || Number.isFinite(evaluation.mate)) &&
+      Number.isFinite(evaluation.depth) &&
+      Array.isArray(evaluation.pv) &&
+      evaluation.pv.length <= 80 &&
+      evaluation.pv.every(move => typeof move === "string" && /^[a-h][1-8][a-h][1-8][qrbn]?$/.test(move)) &&
+      typeof evaluation.bestMove === "string" &&
+      evaluation.bestMove.length <= 6 &&
+      Array.isArray(evaluation.lines) &&
+      evaluation.lines.length <= 2 &&
+      evaluation.lines.every(line =>
+        typeof line.move === "string" &&
+        /^[a-h][1-8][a-h][1-8][qrbn]?$/.test(line.move) &&
+        Number.isFinite(line.centipawns)
+      )
+    );
+}
+
+function loadSharedGame() {
+  const serialized = new URLSearchParams(window.location.search).get("shared");
+  if (!serialized) return;
+
+  try {
+    const shared = JSON.parse(serialized);
+    if (
+      shared?.game !== "chess" ||
+      typeof shared.pgn !== "string" ||
+      !shared.pgn.trim() ||
+      shared.pgn.length > 16_000
+    ) {
+      throw new Error("The shared Chess game is invalid.");
+    }
+    game.loadPgn(shared.pgn);
+    const history = historyWithFen();
+    if (validSharedEvaluations(shared.evaluations, history.length + 1)) {
+      evaluations = shared.evaluations;
+      analysisStatus.textContent = "Shared engine analysis loaded.";
+    } else {
+      analysisStatus.textContent = "Shared game loaded. Analyze it to see engine evaluations.";
+    }
+    isReviewing = true;
+    reviewedPly = history.length;
+  } catch (error) {
+    game.reset();
+    analysisStatus.textContent = `Could not load the shared game: ${error.message}`;
+  }
+}
+
+shareGameButton.addEventListener("click", async () => {
+  const share = window.parent.shareGameToChat;
+  if (typeof share !== "function") {
+    gameHint.textContent = "Sharing is available when Chess is opened from the app.";
+    return;
+  }
+
+  shareGameButton.disabled = true;
+  try {
+    const analyzed = evaluations.length === historyWithFen().length + 1;
+    await share("chess", {
+      pgn: game.pgn(),
+      evaluations: analyzed ? evaluations : null
+    });
+    gameHint.textContent = "Game shared in chat.";
+  } catch (error) {
+    gameHint.textContent = error.message || "Could not share the game.";
+  } finally {
+    renderMoveHistory();
+  }
+});
+
 function selectSquare(square) {
   if (isReviewing) return;
   const piece = game.get(square);
@@ -611,5 +690,7 @@ document.getElementById("flipBoardBtn").addEventListener("click", () => {
   renderBoard();
 });
 
+loadSharedGame();
 renderBoard();
 renderMoveHistory();
+renderAnalysisPosition();

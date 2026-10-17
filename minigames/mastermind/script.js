@@ -92,7 +92,7 @@ function addRevealedSecretToList() {
     guessesList.appendChild(li);
     document.getElementById('empty-history').hidden = true;
     document.getElementById('gameStatus').textContent = 'Code revealed';
-    document.getElementById('gameHint').textContent = 'Start a new game when you are ready to try again.';
+    document.getElementById('gameHint').textContent = 'start a new game when you forgive your failures.';
     gameFinished = true;
     guessInput.disabled = true;
     document.getElementById('submit-guess').disabled = true;
@@ -196,9 +196,9 @@ function resetGameState() {
     document.getElementById('empty-history').hidden = false;
     bullsElem.textContent = '0';
     cowsElem.textContent = '0';
-    document.getElementById('gameStatus').textContent = 'Crack the secret code';
+    document.getElementById('gameStatus').textContent = 'Crack. it.';
     document.getElementById('gameHint').textContent =
-        'Enter a code to see how many digits are in the right place.';
+        'guess your guess here';
     secret = num.getRandomNumber(digits, 'string', allowRepeats);
 }
 
