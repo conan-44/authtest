@@ -1,0 +1,102 @@
+v0.9 INDEV: initial commit
+v1.0 PRE-ALPHA: added 3 new levels
+v1.1 ALPHA: added 2 new levels; added sound effects
+v1.1-2 BETA: added fonts
+v1.2: added 2 new levels
+v1.2-2: changed description
+v1.2-3: fixed minor bugs
+v1.2-20: redid layout; added reset button
+v1.3: added more fonts
+v1.4: added coins display
+v1.4-2: added level display
+v1.4-3: changed level display to show current level, not index
+v1.4-4: changed coin calculation formula
+v1.5: added lives system; fixed coin calculation bug
+v1.5-2: fixed lives not resetting on game over bug
+v1.5-3: changed game over behavior to reset level and coins
+v1.6: added styles to new displays
+v1.6-2: updated css for new displays
+v1.6-3: adjusted layout margins for better appearance
+v1.7: added animated background blobs
+v1.7-2: changed css display opacity
+v1.8: quiz data refactored
+v1.8-2: quiz answers are now shuffled every attempt
+v1.9: added button drop animation
+v1.9-2: fixed drop animation bugs; changed speed and distance
+v1.9-3: added button drop animation for other buttons
+v1.9-4: fixed button drop animation bugs
+v1.9-20: generateLevel function refactored
+v2.0: added difficulty settings (easy, medium, hard)
+v2.0-2: added difficulty buttons and related css
+v2.0-3: added modular resetGame function
+v2.0-20: reset game on difficulty change
+v2.0-21: fixed lives not resetting properly bug; refactored resetGame function
+v2.0-22: refactored resetBtn in css and html
+v2.1: changed difficulty-container layout; changed fonts for score displays
+v2.1-2: adjusted difficulty-container margins; changed button font size to 1rem
+v2.1-20: fixed some button hover bugs
+v2.1-21: fixed more button hover bugs
+v2.1-22: coins calculation now factors difficulty level
+v2.2: coins renamed to xp
+v2.2-2: updated css for xp display; closed bg div in html
+v2.3: added stack-container
+v2.3-1: added styles for stack-container in css; refactored difficulty-container in css
+v2.3-2: adjusted stack-container position; fixed xp integer display bug
+v2.3-3: changed fonts
+v2.4: on hard difficulty, answer sum is hidden
+v2.5: added hint button that costs xp; added mute button
+v2.5-2: adjusted hint button styles
+v2.5-20: hint button disabled on hard difficulty
+v2.5-21: added updateHintUI function; fixed bugs
+v2.6: changed hint cost from 5 to 12 xp
+v2.6-2: using hints now affects xp calculation; changed html to show correct hint cost
+v2.7 p-1: added LEVEL EDITOR (beta)
+v2.7 p-2: added level editor html structure
+v2.7: added functional level editor; added .js list
+v2.7-2: added editor toggle button; added related css
+v2.7-3: added editor input validation
+v2.7-4: adjusted level editor layout
+v2.8: added save / load level button
+v2.8-2: added level list display; added delete level button
+v2.8-3: changed level editor layout; fixed a few bugs
+v2.8-4: fixed level editor bugs; changed styles
+v2.9: added overlay and modal for level editor
+v2.9-1: adjusted overlay styles
+v2.9-2: fixed more overlay bugs
+v2.9-3: commented css
+v3.0: added open/close animation for level editor
+v3.0-2: fixed level editor animation bugs
+v3.1: added css styles to level editor; fixed overlay bugs
+v3.1-2: adjusted level editor width; changed font size
+v3.2 p-1: added dynamic tooltips (beta)
+v3.2: added dynamic tooltips for hint button
+v3.2-2: refactored tooltip code to be modular for further use
+v3.3: added tooltips for difficulty buttons; fixed tooltip bugs
+v3.3-2: added tooltip for reset button
+v3.4: changed tooltip font; added tooltip for level editor button
+v3.4-2: fixed hint button tooltip bug; added scaling to hint button
+v3.5: changed hint cost from 12 to 15 xp; inflation is hitting
+v3.5-2: updated html to show correct hint cost
+v3.6: added tooltip for xp, lives, level index, target number, and answer sum displays
+v3.6-2: fixed tooltip positioning bugs
+v3.7: on reset, generate current level
+v3.7-2: changed reset tooltip text
+v3.8: changed tooltip text for answer sum based on difficulty level
+v3.8-2: tooltips now diplay correct cursor style
+v3.9: added title screen overlay
+v3.9-2: refactored overlay code to be modular for further use
+v3.9-3: fixed tooltip layering bugs; added title screen text
+v3.9-4: simplified setDim function; removed unnecessary code
+v3.9-20: added css custom values for simplified color styling
+v4.0: level editor overhaul; allowed naming levels in the level editor; styling overhaul
+v4.0-2: added title text in editor menu; changed storage layout
+v4.1: universal font change using css variables
+v4.2 p-1: added popups to replace alert boxes (beta)
+v4.2 p-2: added confetti animation on level complete (beta)
+v4.2 p-3: added shake animation to popups (beta); added modular popup function
+v4.2: added confetti animation on level complete
+v4.2-2: fixed confetti animation bugs
+v4.3: added settings menu
+v4.3-2: added settings menu tooltips; fixed dimming bugs
+v5.0: integrated with the mini-games tab, refreshed the interface, and moved achievements into the shared system
+v4.4: added color option to popup function

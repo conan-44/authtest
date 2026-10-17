@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>Number Pillars</title>
+    <link rel="stylesheet" href="./style.css?v=chat-sharing">
+</head>
+<body>
+    <main id="bg" class="number-pillars-app">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">LOCAL GAME</p>
+                <h1>number pillars</h1>
+            </div>
+            <div class="topbar-actions">
+                <button id="statsBtn" class="quiet-button" type="button">Stats</button>
+                <button id="infoBtn" class="quiet-button" type="button">Info</button>
+                <button id="resetBtn" class="primary-button" type="button">Reset level</button>
+            </div>
+        </header>
+
+        <section class="instructions-container turn-card" aria-label="How to play">
+            <span class="turn-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+            <div>
+                <p class="game-status">clear the stack</p>
+                <p class="game-hint">make sum equal the target</p>
+            </div>
+        </section>
+
+        <section class="game-layout" aria-label="Number Pillars game">
+            <div class="board-column">
+                <section class="sidebar-card score-card" aria-label="Level information">
+                    <div class="score-target">
+                        <span class="stat-label">TARGET</span>
+                        <p><strong id="targetNum">11</strong></p>
+                    </div>
+                    <div class="score-sum">
+                        <span class="stat-label">CURRENT SUM</span>
+                        <p><strong id="answerSum">0</strong></p>
+                    </div>
+                </section>
+
+                <section class="sidebar-card run-container" aria-label="Run stats">
+                    <div class="run-stat"><span class="stat-label">LEVEL</span><strong id="levelIndex">1</strong></div>
+                    <div class="run-stat"><span class="stat-label">LIVES</span><strong id="lives">3</strong></div>
+                    <div class="run-stat"><span class="stat-label">XP</span><strong id="xp">0</strong></div>
+                    <button id="hintBtn" class="text-button" type="button">Hint · 15 XP</button>
+                </section>
+
+                <section class="sidebar-card settings-card difficulty-container" aria-labelledby="difficulty-heading">
+                    <h2 id="difficulty-heading">Difficulty</h2>
+                    <p class="section-hint">Hard mode hides your current sum.</p>
+                    <div class="button-row">
+                        <button id="easyBtn" class="option-button" type="button">Easy</button>
+                        <button id="mediumBtn" class="option-button" type="button">Medium</button>
+                        <button id="hardBtn" class="option-button" type="button">Hard</button>
+                    </div>
+                </section>
+
+                <section class="sidebar-card editor-container" aria-labelledby="editor-heading">
+                    <div class="section-heading">
+                        <div>
+                            <h2 id="editor-heading">Editor</h2>
+                            <p class="section-hint">make challenges</p>
+                        </div>
+                        <div class="section-actions">
+                            <button id="shareLevelBtn" class="text-button" type="button">Share level</button>
+                            <button id="editorToggle" class="text-button" type="button">Level editor</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <section class="sidebar-card stack-container" aria-labelledby="stack-heading">
+                <div class="history-heading">
+                    <div>
+                        <h2 id="stack-heading">Number stack</h2>
+                        <p class="section-hint">click a tile to push it out</p>
+                    </div>
+                </div>
+                <ul id="stack" aria-label="Number tiles"></ul>
+            </section>
+        </section>
+
+        <footer class="footer">
+            <span id="game-info">Programmed by Conan · version 5.0</span>
+        </footer>
+
+        <section id="levelEditor" class="modal-container level-editor hidden" role="dialog" aria-modal="true" aria-labelledby="level-editor-title">
+            <div class="modal-content">
+                <p class="eyebrow">CUSTOM CHALLENGE</p>
+                <h2 id="level-editor-title">Level editor</h2>
+                <div class="editor-row">
+                    <label for="editorName">Name</label>
+                    <input id="editorName" placeholder="my cool challenge" maxlength="60">
+                </div>
+                <div class="editor-row">
+                    <label for="editorNumbers">Numbers</label>
+                    <input id="editorNumbers" inputmode="decimal" placeholder="e.g. 1,2,3,4,5">
+                </div>
+                <div class="editor-row">
+                    <label for="editorTarget">Target</label>
+                    <input id="editorTarget" inputmode="decimal" placeholder="e.g. 10">
+                </div>
+                <div class="editor-actions">
+                    <button id="editorSave" class="primary-button" type="button">Save &amp; play</button>
+                    <button id="editorClose" class="text-button" type="button">Close</button>
+                </div>
+                <h3>Saved custom levels</h3>
+                <ul id="customList" class="custom-list"></ul>
+            </div>
+        </section>
+
+        <section id="statsAchievementsModal" class="modal-container hidden" role="dialog" aria-modal="true" aria-labelledby="stats-title">
+            <div class="modal-content">
+                <p class="eyebrow">YOUR RUNS</p>
+                <h2 id="stats-title">Statistics</h2>
+                <ul id="statsList" class="stats-list">
+                    <li><span>Levels completed</span><strong id="statGamesPlayed">0</strong></li>
+                    <li><span>Best streak</span><strong id="statBestStreak">0</strong></li>
+                    <li><span>Average XP</span><strong id="statAvgScore">0</strong></li>
+                    <li><span>Total XP earned</span><strong id="statTotalXP">0</strong></li>
+                </ul>
+                <div class="modal-actions">
+                    <button id="resetStatsBtn" class="text-button" type="button">Reset stats</button>
+                    <button id="statsClose" class="primary-button" type="button">Close</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="infoModal" class="modal-container hidden" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+            <div class="modal-content">
+                <p class="eyebrow">ABOUT THE GAME</p>
+                <h2 id="infoModalTitle">Info</h2>
+                <div class="modal-tabs">
+                    <button id="readmeTab" class="modal-tab active" type="button">How to play</button>
+                    <button id="versionTab" class="modal-tab" type="button">Version history</button>
+                </div>
+                <div id="readmePanel" class="modal-panel">
+                    <pre id="readmeContent"></pre>
+                </div>
+                <div id="versionPanel" class="modal-panel hidden">
+                    <pre id="versionContent"></pre>
+                </div>
+                <div class="modal-actions">
+                    <button id="infoClose" class="primary-button" type="button">Close</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="popup" class="popup hidden" role="status" aria-live="polite"></div>
+    <canvas id="confetti-canvas" class="hidden" aria-hidden="true"></canvas>
+    <audio id="bgMusic" loop preload="none">
+        <source src="bgmusic.wav" type="audio/wav">
+    </audio>
+    <script src="script.js?v=chat-sharing"></script>
+</body>
+</html>
