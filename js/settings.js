@@ -1,10 +1,24 @@
 const settingsConfigFile = "./data/settings/settings.skvwcfgml";
 const musicManifestFile = "./assets/audio/music/index.skvwmeta";
+const APP_THEME_STORAGE_KEY = "skvwaffle.theme.v1";
+const DEFAULT_APP_THEME = { accent: "#2a4d67", secondary: "#8a5a00" };
+const APP_THEME_PRESETS = [
+    { name: "Classic", accent: DEFAULT_APP_THEME.accent, secondary: DEFAULT_APP_THEME.secondary },
+    { name: "Cheese", accent: "#ff7b29", secondary: "#f5b904" },
+    { name: "Gameboy", accent: "#0f380f", secondary: "#8bac0f" },
+    { name: "Forest", accent: "#59433d", secondary: "#26806f" },
+    { name: "Sculking", accent: "#063b5b", secondary: "#c8c4bf" },
+    { name: "Sunset", accent: "#ff5e5e", secondary: "#ffb86c" },
+    { name: "Ocean", accent: "#1ca9c9", secondary: "#144e75" },
+    { name: "Midnight", accent: "#0d1b2a", secondary: "#1b263b" }
+];
 
 (() => {
     const settingsList = document.getElementById("settingsList");
     let musicController = null;
     let musicAutoplayRequested = false;
+    let appTheme = loadAppTheme();
+    applyAppTheme();
 
     window.getAppSetting = function getAppSetting(section, key, fallback = false) {
         const control = settingsList?.querySelector(
@@ -25,6 +39,174 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
 
     function formatSettingName(key) {
         return key.replace(/\b\w/g, character => character.toUpperCase());
+    }
+
+    function normalizeHexColor(value) {
+        return typeof value === "string" && /^#[\da-f]{6}$/i.test(value) ? value.toLowerCase() : null;
+    }
+
+    function loadAppTheme() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(APP_THEME_STORAGE_KEY) || "null");
+            const accent = normalizeHexColor(saved?.accent);
+            const secondary = normalizeHexColor(saved?.secondary);
+            if (accent && secondary) return { accent, secondary };
+        } catch (error) {
+            console.error("Could not load saved appearance settings.", error);
+            if (typeof showPopup === "function") showPopup("Could not load saved colors. Using the default palette.", "warning");
+        }
+        return { ...DEFAULT_APP_THEME };
+    }
+
+    function mixColors(baseHex, tintHex, strength) {
+        const base = baseHex.slice(1).match(/.{2}/g).map(channel => parseInt(channel, 16));
+        const tint = tintHex.slice(1).match(/.{2}/g).map(channel => parseInt(channel, 16));
+        return `#${base.map((channel, index) => Math.round(channel * (1 - strength) + tint[index] * strength)
+            .toString(16).padStart(2, "0")).join("")}`;
+    }
+
+    function colorWithAlpha(hex, alpha) {
+        const [red, green, blue] = hex.slice(1).match(/.{2}/g).map(channel => parseInt(channel, 16));
+        return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+    }
+
+    function applyAppTheme() {
+        const root = document.documentElement;
+        const isDefault = appTheme.accent === DEFAULT_APP_THEME.accent
+            && appTheme.secondary === DEFAULT_APP_THEME.secondary;
+        root.dataset.colorTheme = isDefault ? "classic" : "custom";
+        root.style.setProperty("--theme-accent", appTheme.accent);
+        root.style.setProperty("--theme-secondary", appTheme.secondary);
+
+        if (!isDefault) {
+            const accent = appTheme.accent;
+            const secondary = appTheme.secondary;
+            const variables = {
+                "--color-heading": accent,
+                "--color-panel-surface": mixColors("#dde2e7", accent, 0.08),
+                "--color-panel-header-surface": mixColors("#dfe4ea", accent, 0.09),
+                "--color-panel-body-surface": mixColors("#e9ebed", accent, 0.06),
+                "--color-card-surface": mixColors("#cfcfcf", secondary, 0.08),
+                "--color-control-surface": mixColors("#eef2f4", accent, 0.04),
+                "--color-panel": mixColors("#eeeeee", accent, 0.08),
+                "--color-panel-header": mixColors("#eeeeee", accent, 0.09),
+                "--color-card": mixColors("#dddddd", secondary, 0.08),
+                "--color-control": mixColors("#eeeeee", accent, 0.04),
+                "--color-rare": secondary,
+                "--color-points": secondary,
+                "--color-points-border": colorWithAlpha(secondary, 0.35),
+                "--color-rarity-rare-border": colorWithAlpha(secondary, 0.75),
+                "--color-score-surface": mixColors("#eef2f4", accent, 0.04),
+                "--color-shadow": colorWithAlpha(accent, 0.18),
+                "--shadow-heading": colorWithAlpha(accent, 0.18)
+            };
+            Object.entries(variables).forEach(([name, value]) => root.style.setProperty(name, value));
+        } else {
+            [
+                "--color-heading", "--color-panel-surface", "--color-panel-header-surface",
+                "--color-panel-body-surface", "--color-card-surface", "--color-control-surface",
+                "--color-panel", "--color-panel-header", "--color-card", "--color-control",
+                "--color-rare", "--color-points", "--color-points-border",
+                "--color-rarity-rare-border", "--color-score-surface", "--color-shadow",
+                "--shadow-heading"
+            ].forEach(name => root.style.removeProperty(name));
+        }
+    }
+
+    function saveAppTheme() {
+        applyAppTheme();
+        try {
+            localStorage.setItem(APP_THEME_STORAGE_KEY, JSON.stringify(appTheme));
+        } catch (error) {
+            console.error("Could not save appearance settings.", error);
+            if (typeof showPopup === "function") showPopup("Your color changes could not be saved on this device.", "error");
+        }
+    }
+
+    function findMatchingThemePreset() {
+        return APP_THEME_PRESETS.find(preset => (
+            preset.accent === appTheme.accent && preset.secondary === appTheme.secondary
+        ))?.name || null;
+    }
+
+    function updateThemePresetSelection(presetButtons) {
+        const selectedPreset = findMatchingThemePreset();
+        presetButtons.forEach(button => {
+            button.setAttribute("aria-pressed", String(button.dataset.preset === selectedPreset));
+        });
+    }
+
+    function renderAppearanceSettings() {
+        const heading = document.createElement("h2");
+        heading.className = "settings-section-heading";
+        heading.textContent = "Appearance";
+        settingsList.appendChild(heading);
+
+        const section = document.createElement("section");
+        section.className = "settings-appearance";
+        section.setAttribute("aria-label", "Appearance colors");
+
+        const description = document.createElement("p");
+        description.className = "settings-appearance-description";
+        description.textContent = "choose your colors";
+
+        const colorControls = document.createElement("div");
+        colorControls.className = "settings-color-controls";
+        const inputs = {};
+        [
+            ["accent", "Accent color"],
+            ["secondary", "Secondary color"]
+        ].forEach(([key, labelText]) => {
+            const label = document.createElement("label");
+            label.className = "settings-color-label";
+            label.htmlFor = `app-theme-${key}`;
+            label.textContent = labelText;
+
+            const input = document.createElement("input");
+            input.type = "color";
+            input.id = `app-theme-${key}`;
+            input.value = appTheme[key];
+            input.setAttribute("aria-label", labelText);
+            inputs[key] = input;
+            label.appendChild(input);
+            colorControls.appendChild(label);
+        });
+
+        const presetHeading = document.createElement("h3");
+        presetHeading.className = "settings-preset-heading";
+        presetHeading.textContent = "Presets";
+        const presets = document.createElement("div");
+        presets.className = "settings-color-presets";
+        const presetButtons = APP_THEME_PRESETS.map(preset => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "settings-color-preset";
+            button.dataset.preset = preset.name;
+            button.setAttribute("aria-pressed", "false");
+            button.style.setProperty("--preset-accent", preset.accent);
+            button.style.setProperty("--preset-secondary", preset.secondary);
+            button.textContent = preset.name;
+            button.addEventListener("click", () => {
+                appTheme = { accent: preset.accent, secondary: preset.secondary };
+                inputs.accent.value = appTheme.accent;
+                inputs.secondary.value = appTheme.secondary;
+                saveAppTheme();
+                updateThemePresetSelection(presetButtons);
+            });
+            presets.appendChild(button);
+            return button;
+        });
+
+        Object.entries(inputs).forEach(([key, input]) => {
+            input.addEventListener("input", () => {
+                appTheme = { ...appTheme, [key]: input.value.toLowerCase() };
+                saveAppTheme();
+                updateThemePresetSelection(presetButtons);
+            });
+        });
+        section.append(description, colorControls, presetHeading, presets);
+        settingsList.appendChild(section);
+        updateThemePresetSelection(presetButtons);
     }
 
     function createDropdownSetting(section, key, options) {
@@ -285,6 +467,7 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
 
     function renderSettings(settings) {
         settingsList.innerHTML = "";
+        renderAppearanceSettings();
         Object.entries(settings).forEach(([section, values]) => {
             const heading = document.createElement("h2");
             heading.className = "settings-section-heading";
