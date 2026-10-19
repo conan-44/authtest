@@ -1,6 +1,7 @@
 import { Chess } from "./chess.js";
-import { analyzeFens } from "./engine.js";
+import { analyzeFens, chooseBotMove } from "./engine.js";
 import { findOpening, loadOpeningBook } from "./opening-book.js";
+import { chooseBotLine, loadBotDialogue } from "../bot-dialogue.js";
 
 const game = new Chess();
 const initialFen = game.fen();
@@ -26,6 +27,12 @@ const openingNameElement = document.getElementById("openingName");
 const openingBookStatus = document.getElementById("openingBookStatus");
 const bookMovesElement = document.getElementById("bookMoves");
 const promotionDialog = document.getElementById("promotionDialog");
+const botLevelSelect = document.getElementById("chessBotLevel");
+const botPersonalitySelect = document.getElementById("chessBotPersonality");
+const botDialogueRow = document.getElementById("botDialogueRow");
+const botDialogue = document.getElementById("botDialogue");
+const botDialogueText = document.getElementById("botDialogueText");
+const botIcon = document.getElementById("botIcon");
 const files = "abcdefgh";
 const pieceColumn = { p: 0, n: 1, b: 2, r: 3, q: 4, k: 5 };
 const pieceName = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
@@ -45,6 +52,35 @@ let analysisAchievementRecorded = false;
 let onlineMatch = null;
 let onlineUnsubscribe = null;
 let onlineBusy = false;
+let botThinking = false;
+let botGameToken = 0;
+let cancelBotThinkDelay = null;
+let botDialogueConfig = {};
+const chessBots = [
+  null,
+  { depth: 1, skill: 0, multiPv: 5 },
+  { depth: 2, skill: 2, multiPv: 5 },
+  { depth: 4, skill: 5, multiPv: 4 },
+  { depth: 7, skill: 10, multiPv: 3 },
+  { depth: 11, skill: 18, multiPv: 2 },
+];
+const chessPersonalities = {
+  bob: { name: "Bob", profile: "bob", style: "balanced", sprite: 0, thinkTime: [700, 1900] },
+  banana: { name: "Banana", profile: "banana", style: "playful", sprite: 1, thinkTime: [250, 950] },
+  beryll: { name: "Beryll", profile: "beryll", style: "cautious", sprite: 2, thinkTime: [1200, 3000] },
+  bot: { name: "Bot", profile: "bot", style: "aggressive", sprite: 3, thinkTime: [300, 1400] }
+};
+const defaultChessDialogue = {
+  idle: ["Your move. I'm ready.", "Let's see what you have."],
+  capturing: ["I saw that piece hanging.", "That one is mine."],
+  captured: ["Nice capture.", "You found a way through."],
+  losing: ["I need to find a better plan.", "You're making this difficult."],
+  winning: ["I like my position.", "Things are going according to plan."],
+  draw: ["A fair draw.", "Neither of us could break through."],
+  won: ["Checkmate. Good game!", "That was a fun game."],
+  lost: ["You got me. Well played!", "A well-earned win."]
+};
+botDialogueConfig = defaultChessDialogue;
 const discoveredOpenings = new Set();
 
 function recordGameAchievementEvent(eventName, details = {}) {
@@ -71,6 +107,14 @@ loadOpeningBook()
   .catch(error => {
     openingBookError = error.message;
     renderOpeningBook();
+  });
+
+loadBotDialogue(new URL("../../data/minigames/chess/bots.skvwcfgml", import.meta.url), defaultChessDialogue)
+  .then(dialogue => { botDialogueConfig = dialogue; })
+  .catch(error => {
+    console.error("Could not load Chess bot dialogue.", error);
+    botDialogueConfig = defaultChessDialogue;
+    gameHint.textContent = "Bot dialogue config could not be loaded; built-in lines will be used.";
   });
 
 function historyWithFen() {
@@ -239,12 +283,14 @@ function renderMoveHistory() {
   const fullMoves = Math.ceil(history.length / 2);
   moveCount.textContent = `${fullMoves} ${fullMoves === 1 ? "move" : "moves"}`;
   emptyHistory.hidden = history.length > 0;
-  undoButton.disabled = history.length === 0 || isReviewing || Boolean(onlineMatch);
+  undoButton.disabled = history.length === 0 || isReviewing || botThinking || Boolean(onlineMatch);
   reviewStartButton.disabled = !isReviewing;
-  reviewButton.disabled = analysisInProgress;
-  newGameButton.disabled = analysisInProgress || Boolean(onlineMatch);
+  reviewButton.disabled = analysisInProgress || botThinking;
+  newGameButton.disabled = analysisInProgress || botThinking || Boolean(onlineMatch);
+  botLevelSelect.disabled = botThinking || Boolean(onlineMatch);
+  botPersonalitySelect.disabled = botThinking || Boolean(onlineMatch);
   reviewButton.textContent = isReviewing ? "Exit review" : "Review game";
-  analyzeButton.disabled = history.length === 0 || analysisInProgress;
+  analyzeButton.disabled = history.length === 0 || analysisInProgress || botThinking;
   shareGameButton.hidden = !game.isGameOver() && evaluations.length !== history.length + 1;
   shareGameButton.disabled = analysisInProgress;
   renderCapturedPieces();
@@ -560,7 +606,7 @@ shareGameButton.addEventListener("click", async () => {
 });
 
 function selectSquare(square) {
-  if (isReviewing || !canMoveOnline()) return;
+  if (isReviewing || !canMoveOnline() || botThinking || (!onlineMatch && Number(botLevelSelect.value) > 0 && game.turn() !== "w")) return;
   const piece = game.get(square);
   if (!piece || piece.color !== game.turn() || game.isGameOver()) {
     selectedSquare = null;
@@ -581,7 +627,7 @@ function canMoveOnline() {
 }
 
 async function makeMove(from, to, promotion = "q") {
-  if (!canMoveOnline()) return;
+  if (!canMoveOnline() || botThinking || (!onlineMatch && Number(botLevelSelect.value) > 0 && game.turn() !== "w")) return;
   let move;
   try {
     move = game.move({ from, to, promotion });
@@ -609,6 +655,12 @@ async function makeMove(from, to, promotion = "q") {
     clearAnalysis();
     renderBoard();
     renderMoveHistory();
+    if (game.isGameOver()) {
+      setChessBotDialogue(game.isDraw() ? "draw" : "lost");
+    } else if (!onlineMatch && Number(botLevelSelect.value) > 0 && game.turn() === "b") {
+      setChessBotDialogue(move?.captured ? "captured" : "idle");
+      void playChessBotTurn();
+    }
   } catch (error) {
     if (move) game.undo();
     onlineBusy = false;
@@ -618,6 +670,111 @@ async function makeMove(from, to, promotion = "q") {
     gameHint.textContent = error.message;
     renderBoard();
     renderMoveHistory();
+  }
+}
+
+function chessBotProfile() {
+  const strength = chessBots[Number(botLevelSelect.value)];
+  if (!strength) return null;
+  return { ...strength, ...chessPersonalities[botPersonalitySelect.value] };
+}
+
+function setChessBotDialogue(category) {
+  const bot = chessBotProfile();
+  const line = chooseBotLine(botDialogueConfig, category, Math.random, bot?.profile);
+  botDialogueRow.hidden = !bot || !line;
+  botDialogueText.textContent = bot && line ? line : "";
+  if (bot) botIcon.style.backgroundPosition = `${-bot.sprite * 24}px 0`;
+}
+
+function materialBalance() {
+  const values = { p: 1, n: 3, b: 3, r: 5, q: 9 };
+  return Object.entries(values).reduce((balance, [type, value]) => balance
+    + game.findPiece({ type, color: "b" }).length * value
+    - game.findPiece({ type, color: "w" }).length * value, 0);
+}
+
+function waitForBotThinkDelay(duration) {
+  return new Promise(resolve => {
+    const timer = window.setTimeout(() => {
+      if (cancelBotThinkDelay === cancel) cancelBotThinkDelay = null;
+      resolve();
+    }, duration);
+    const cancel = () => {
+      window.clearTimeout(timer);
+      if (cancelBotThinkDelay === cancel) cancelBotThinkDelay = null;
+      resolve();
+    };
+    cancelBotThinkDelay = cancel;
+  });
+}
+
+async function playChessBotTurn() {
+  const bot = chessBotProfile();
+  if (!bot || onlineMatch || game.turn() !== "b" || game.isGameOver() || botThinking) return;
+  const token = ++botGameToken;
+  botThinking = true;
+  gameHint.textContent = `${bot.name} is thinking…`;
+  renderMoveHistory();
+  try {
+    const [minimum, maximum] = bot.thinkTime;
+    const thinkDuration = minimum + Math.random() * (maximum - minimum);
+    await waitForBotThinkDelay(thinkDuration);
+    if (token !== botGameToken || !chessBotProfile() || game.turn() !== "b" || game.isGameOver()) return;
+
+    const result = await chooseBotMove(game.fen(), bot);
+    if (token !== botGameToken || !chessBotProfile() || game.turn() !== "b" || game.isGameOver()) return;
+    const candidates = result.lines?.filter(line => line.pv?.[0]) ?? [];
+    const topCandidates = candidates.slice(0, 3);
+    let selected = candidates[0];
+    if (bot.style === "playful" && topCandidates.length > 1) {
+      selected = topCandidates[Math.floor(Math.random() * topCandidates.length)];
+    } else if (bot.style === "cautious" && topCandidates.length > 1) {
+      const topScore = topCandidates[0].score;
+      const alternative = topCandidates.find((candidate, index) => index > 0
+        && candidate.scoreType === topCandidates[0].scoreType
+        && topScore - candidate.score <= 80);
+      if (alternative) selected = alternative;
+    } else if (bot.style === "aggressive" && topCandidates.length > 1) {
+      const legalMoves = game.moves({ verbose: true });
+      const capture = topCandidates
+        .map(candidate => ({
+          candidate,
+          move: legalMoves.find(move => `${move.from}${move.to}${move.promotion ?? ""}` === candidate.pv[0])
+        }))
+        .find(entry => entry.move?.captured && topCandidates[0].score - entry.candidate.score <= 120);
+      if (capture) selected = capture.candidate;
+    }
+    const uci = selected?.pv?.[0] ?? result.bestMove;
+    if (!uci || uci === "(none)") return;
+    const botMove = game.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] ?? "q" });
+    clearAnalysis();
+    selectedSquare = null;
+    legalMoves = [];
+    renderBoard();
+    renderMoveHistory();
+    if (game.isGameOver()) {
+      setChessBotDialogue(game.isDraw() ? "draw" : game.isCheckmate() ? "won" : "draw");
+      if (!chessGameRecorded) {
+        chessGameRecorded = true;
+        recordGameAchievementEvent("completed", {
+          winner: game.isCheckmate() ? "black" : null,
+        });
+      }
+    } else {
+      const balance = materialBalance();
+      setChessBotDialogue(botMove.captured ? "capturing" : balance >= 2 ? "winning" : balance <= -2 ? "losing" : "idle");
+    }
+  } catch (error) {
+    console.error("Chess bot could not select a move.", error);
+    botDialogueText.textContent = `I could not move: ${error.message}`;
+    botDialogueRow.hidden = false;
+  } finally {
+    if (token === botGameToken) {
+      botThinking = false;
+      renderBoard();
+      renderMoveHistory();
+    }
   }
 }
 
@@ -820,6 +977,7 @@ document.getElementById("cancelPromotionBtn").addEventListener("click", () => {
 });
 
 reviewButton.addEventListener("click", () => {
+  if (botThinking) return;
   isReviewing = !isReviewing;
   reviewedPly = historyWithFen().length;
   selectedSquare = null;
@@ -858,7 +1016,9 @@ bookMovesElement.addEventListener("click", event => {
 });
 
 document.getElementById("undoBtn").addEventListener("click", () => {
+  if (botThinking) return;
   if (!game.undo()) return;
+  if (!onlineMatch && Number(botLevelSelect.value) > 0 && game.turn() === "b" && game.history().length) game.undo();
   selectedSquare = null;
   legalMoves = [];
   clearAnalysis();
@@ -867,6 +1027,9 @@ document.getElementById("undoBtn").addEventListener("click", () => {
 });
 
 newGameButton.addEventListener("click", () => {
+  cancelBotThinkDelay?.();
+  botGameToken += 1;
+  botThinking = false;
   game.reset();
   chessGameRecorded = false;
   analysisAchievementRecorded = false;
@@ -876,6 +1039,51 @@ newGameButton.addEventListener("click", () => {
   selectedSquare = null;
   legalMoves = [];
   clearAnalysis();
+  renderBoard();
+  renderMoveHistory();
+  setChessBotDialogue("idle");
+});
+
+botLevelSelect.addEventListener("change", () => {
+  cancelBotThinkDelay?.();
+  botGameToken += 1;
+  botThinking = false;
+  game.reset();
+  chessGameRecorded = false;
+  analysisAchievementRecorded = false;
+  isReviewing = false;
+  reviewedPly = 0;
+  selectedSquare = null;
+  legalMoves = [];
+  clearAnalysis();
+  const bot = chessBotProfile();
+  document.getElementById("gamePlayerMode").textContent = bot
+    ? `You as White · ${bot.name} as Black`
+    : "two players · same device";
+  botDialogueRow.hidden = !bot;
+  setChessBotDialogue("idle");
+  renderBoard();
+  renderMoveHistory();
+});
+
+botPersonalitySelect.addEventListener("change", () => {
+  cancelBotThinkDelay?.();
+  botGameToken += 1;
+  botThinking = false;
+  game.reset();
+  chessGameRecorded = false;
+  analysisAchievementRecorded = false;
+  isReviewing = false;
+  reviewedPly = 0;
+  selectedSquare = null;
+  legalMoves = [];
+  clearAnalysis();
+  const bot = chessBotProfile();
+  document.getElementById("gamePlayerMode").textContent = bot
+    ? `You as White · ${bot.name} as Black`
+    : "two players · same device";
+  botDialogueRow.hidden = !bot;
+  setChessBotDialogue("idle");
   renderBoard();
   renderMoveHistory();
 });

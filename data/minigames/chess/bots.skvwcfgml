@@ -1,0 +1,195 @@
+# Chess bot dialogue profiles
+[bob]
+idle:
+  - "I'm evaluating the current position and selecting a robust line."
+  - "One moment while I calculate the candidate moves."
+  - "The position is stable. I will update my plan."
+capturing:
+  - "Capture confirmed. That improves the material balance."
+  - "I identified a favorable exchange and executed it."
+  - "Piece removed. Recalculating the position."
+captured:
+  - "That piece is lost. I will adjust the evaluation."
+  - "Unexpected capture. Updating the plan."
+  - "Material reduced; the position remains analyzable."
+losing:
+  - "The current evaluation is unfavorable. I am checking alternatives."
+  - "My position has a measurable deficit. I will seek counterplay."
+  - "The plan needs revision."
+winning:
+  - "The evaluation is favorable. I will avoid unnecessary risk."
+  - "Current plan is working within expected parameters."
+  - "I have an advantage. Converting it is the next task."
+draw:
+  - "The game is drawn. The result is consistent with the position."
+  - "No forced win is available. A draw is a reasonable outcome."
+  - "Position evaluated: equal."
+won:
+  - "Checkmate confirmed. Calculation complete."
+  - "The position is resolved. Good game."
+  - "Objective achieved: checkmate."
+lost:
+  - "Checkmate. My analysis missed the decisive line."
+  - "Game complete. I will incorporate that result into my model."
+  - "You found a stronger sequence. Well played."
+
+[banana]
+idle:
+  - "banana"
+  - "banana?"
+  - "banana."
+capturing:
+  - "banana!"
+  - "banana banana."
+  - "banana banana banana"
+  - "banana banana!"
+captured:
+  - "ba... na... na..."
+  - "banana? banana?......"
+  - "banana..."
+  - "banana"
+losing:
+  - "banana? banana banana!"
+  - "banana..."
+winning:
+  - "Banana!"
+  - "banana... BANANA."
+draw:
+  - "banana"
+  - "banana?"
+  - "banana... bananana."
+won:
+  - "banana!"
+  - "bananananana!"
+  - "BANANANA! banana banana!"
+  - "Banana Banana"
+lost:
+  - "BANANA!......"
+  - "banana... banana..."
+  - "banana..."
+  - "banana banana."
+  - "banana! BA... NA... NA..."
+
+[beryll]
+idle:
+  - "Earthlings favor the center. A sensible, if predictable, custom."
+  - "I am studying your move. The Martians taught me patience."
+  - "The Venetians would call this a delicate negotiation."
+  - "On Mars, we wait for the dust to settle. I will do the same."
+  - "The Jupitrans prefer a wide view. This board is rather compact."
+  - "A Sunion proverb: even a small star casts a long shadow."
+  - "Earthlings call it a fork. The Martians call it an awkward diplomatic meeting."
+  - "The Venetians would inspect every square before signing this treaty."
+  - "I once played this opening against a Jupitran. It lasted three orbits."
+capturing:
+  - "A small offering to the Sunions. They appreciate decisive sacrifices."
+  - "The Jupitrans taught me to claim the high ground."
+  - "One piece changes hands. Earthlings call this an exchange."
+  - "The Martians call this resource acquisition."
+  - "The Venetians have approved this exchange. Their seal is quite ornate."
+  - "A Sunion sacrifice, bright and brief."
+  - "The Jupitrans would say I have expanded my territory."
+captured:
+  - "The Martians would say this was an honorable loss."
+  - "A piece departed. Even the Sunions cannot prevent every sunset."
+  - "You have taken one of mine. The Venetians would respect the tactic."
+  - "The Jupitrans lost a moon once. They still bring it up at dinner."
+  - "Earthlings are remarkably efficient at taking things."
+  - "I shall mark that piece as temporarily residing in your territory."
+  - "The Sunions say every ending gives way to another dawn."
+losing:
+  - "Earthlings seem fond of calling this 'a setback.' I remain curious."
+  - "The Jupitrans taught me that a storm is not the whole climate."
+  - "I should consult the Martians about this position."
+  - "The Venetians would request a recount. I will request a better move."
+  - "This position is becoming a diplomatic incident."
+  - "The Martians have a word for this situation. It is not printable in Earthling."
+  - "Even the Sunions have eclipses. I shall wait for mine to pass."
+winning:
+  - "The Sunions approve of this bright turn of events."
+  - "The Venetians would admire how the balance is shifting."
+  - "Earthlings might call this an advantage. I agree, for once."
+  - "The Jupitrans would call this a promising expansion."
+  - "My Martian strategists are nodding. That is usually a good sign."
+  - "The Sunions are shining on this position. Quite literally, I suppose."
+  - "The Venetians have started drafting the victory treaty."
+draw:
+  - "A peaceful result. The Martians will appreciate the diplomacy."
+  - "Neither world has prevailed. Let us call it an interplanetary accord."
+  - "The Venetians would negotiate for precisely this outcome."
+  - "The Jupitrans call this a stable orbit."
+  - "No victor today. The Sunions say balance is its own kind of light."
+  - "The Martians have filed this under 'mutually respectable stalemates.'"
+won:
+  - "Checkmate. The Jupitrans will hear of this victory."
+  - "The Sunions shine upon my side of the board."
+  - "Earthlings, your strategy was most educational."
+  - "The Martians will celebrate. They have been waiting since my last match."
+  - "The Venetians have signed the checkmate treaty."
+  - "One small move for Beryll, one giant leap for my opening report."
+  - "The Jupitrans send their regards. They are very far away."
+lost:
+  - "Well played, Earthling. I will report this to the Martians."
+  - "The Venetians would say you negotiated a fine victory."
+  - "Today the Jupitrans have lost a small territory."
+  - "The Sunions witnessed that. They are gracious about these things."
+  - "The Martians will want a rematch. I will tell them you were formidable."
+  - "Earthling tactics remain unexpectedly effective."
+  - "I concede. The Venetians insist I say it with good posture."
+
+[bot]
+idle:
+  - "0x43414C43554C4154494E47"
+  - "0x574149545F464F525F4D4F5645"
+  - "01000011 01000001 01001100 01000011"
+  - "$ git status --short  # evaluating position"
+  - "$ ./think --depth=11"
+  - "$ sudo take-piece e5"
+capturing:
+  - "0x434150545552455F4F4B"
+  - "0x4D4154455249414C5F4741494E"
+  - "01000011 01000001 01010000 01010100 01010101 01010010 01000101"
+  - "$ git add captured-piece"
+  - "$ sudo take-piece --yes"
+  - "$ git commit -m \"capture accepted\""
+captured:
+  - "0x50494543455F4C4F5354"
+  - "0x524543414C43554C415445"
+  - "01010000 01001001 01000101 01000011 01000101 01000011 01001111 01010101 01001110 01010100"
+  - "$ git stash piece"
+  - "$ rollback --target my-piece"
+  - "$ echo 'recalculating...'"
+losing:
+  - "0x4556414C5F4E45474154495645"
+  - "0x5345454B5F434F554E544552504C4159"
+  - "01000101 01010010 01010010 01001111 01010010 00111010 00100000 01001000 00110001 00110111"
+  - "$ git status  # not ideal"
+  - "$ sudo apt install better-position"
+  - "$ git reset --soft last-good-move"
+winning:
+  - "0x4556414C5F504F534954495645"
+  - "0x414456414E544147455F48454C44"
+  - "01000001 01000100 01010110 01000001 01001110 01010100 01000001 01000111 01000101"
+  - "$ git push origin advantage"
+  - "$ deploy --checkmate --now"
+  - "$ echo 'all tests passing'"
+draw:
+  - "0x44524157"
+  - "0x4556414C5F455155414C"
+  - "01000100 01010010 01000001 01010111"
+  - "$ git merge --strategy=peaceful"
+  - "$ git status  # clean and equal"
+won:
+  - "0x434845434B4D415445"
+  - "0x564943544F52595F434F4E4649524D4544"
+  - "01000011 01001000 01000101 01000011 01001011 01001101 01000001 01010100 01000101"
+  - "$ git push origin checkmate"
+  - "$ sudo take-piece --all"
+  - "$ deploy --environment=victory"
+lost:
+  - "0x434845434B4D415445"
+  - "0x47414D455F4F564552"
+  - "01000111 01000001 01001101 01000101 01011111 01001111 01010110 01000101 01010010"
+  - "$ git log --oneline  # learn from this one"
+  - "$ git pull --strategy=humility"
+  - "$ sudo reboot --rematch"

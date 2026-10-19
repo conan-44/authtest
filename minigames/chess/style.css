@@ -65,6 +65,60 @@ button {
     align-items: center;
 }
 
+.bot-dialogue-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    margin-bottom: 14px;
+    padding: 12px;
+}
+
+.bot-dialogue-row[hidden] {
+    display: none;
+}
+
+.bot-icon {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    background-image: url("../../assets/minigames/chess/bots.png");
+    background-repeat: no-repeat;
+    background-size: 96px 24px;
+    image-rendering: pixelated;
+}
+
+.bot-dialogue {
+    align-self: flex-start;
+    width: fit-content;
+    min-width: 0;
+    max-width: calc(100% - 30px);
+    margin: 0;
+    border: 28px solid transparent;
+    border-right-width: 20px;
+    border-bottom-width: 27px;
+    border-image-source: url("../../assets/chat_9x.png");
+    border-image-slice: 8 10 8 8 fill;
+    border-image-width: 24px 30px 23px 24px;
+    border-image-repeat: stretch repeat;
+    padding: 0 4px;
+    color: #000;
+    font-family: "lowsmall", sans-serif;
+    image-rendering: pixelated;
+    isolation: isolate;
+    position: relative;
+    transform: scaleX(-1);
+}
+
+.bot-dialogue > * {
+    transform: scaleX(-1);
+    direction: ltr;
+}
+
+.bot-dialogue .chat-body {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
 .topbar {
     justify-content: space-between;
     gap: 16px;

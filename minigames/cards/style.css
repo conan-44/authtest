@@ -207,6 +207,72 @@ h2, h3 { margin: 0; color: var(--accent); font: normal 1rem "capsmall", sans-ser
     flex-wrap: nowrap;
     scrollbar-width: none;
 }
+
+.bot-level-controls {
+    justify-content: flex-start;
+    align-items: center;
+    margin: 4px 0 12px;
+    border-top: 0;
+    padding-top: 0;
+    color: var(--muted);
+}
+
+.bot-level-controls label { display: flex; align-items: center; gap: 8px; }
+
+.bot-level-controls select {
+    border: 2px solid var(--border);
+    padding: 6px 8px;
+    background: var(--surface);
+    color: inherit;
+    font: inherit;
+}
+
+.bot-level-controls .bot-personality-select { min-width: 100px; }
+
+.dou-dizhu-bot-dialogue-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 12px;
+}
+
+.dou-dizhu-bot-dialogue-row[hidden] { display: none; }
+
+.dou-dizhu-bot-icon {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    background-image: url("../../assets/minigames/bots.png");
+    background-repeat: no-repeat;
+    background-size: 96px 24px;
+    image-rendering: pixelated;
+}
+
+.dou-dizhu-bot-dialogue {
+    align-self: flex-start;
+    width: fit-content;
+    min-width: 0;
+    max-width: calc(100% - 30px);
+    margin: 0;
+    border: 28px solid transparent;
+    border-right-width: 20px;
+    border-bottom-width: 27px;
+    border-image-source: url("../../assets/chat_9x.png");
+    border-image-slice: 8 10 8 8 fill;
+    border-image-width: 24px 30px 23px 24px;
+    border-image-repeat: stretch repeat;
+    padding: 0 4px;
+    color: #000;
+    font-family: "lowsmall", sans-serif;
+    image-rendering: pixelated;
+    isolation: isolate;
+    position: relative;
+    transform: scaleX(-1);
+}
+
+.dou-dizhu-bot-dialogue > * { transform: scaleX(-1); direction: ltr; }
+.dou-dizhu-bot-dialogue .chat-body { display: block; overflow-wrap: anywhere; }
 .own-hand::-webkit-scrollbar { display: none; }
 .own-hand .playing-card { width: clamp(40px, 5vw, 58px); height: clamp(58px, 7vw, 82px); flex: 0 0 clamp(40px, 5vw, 58px); }
 .own-hand .card-value { font-size: clamp(0.85rem, 2vw, 1.1rem); }

@@ -1,3 +1,8 @@
+import { chooseBotLine, loadBotDialogue } from "../bot-dialogue.js";
+import DoudizhuAI from "./vendor/doudizhu/js/ai/engine.js";
+import DoudizhuDifficulty from "./vendor/doudizhu/js/difficulty.js";
+import { TYPE as DoudizhuType } from "./vendor/doudizhu/js/rules.js";
+
 const gameChoices = [...document.querySelectorAll("[data-game-choice]")];
 const blackjackView = document.getElementById("blackjackGame");
 const douDizhuView = document.getElementById("doudizhuGame");
@@ -26,6 +31,37 @@ let handScrollbarDrag = null;
 let onlineMatch = null;
 let onlineUnsubscribe = null;
 let onlineBusy = false;
+const douDizhuBotLevel = document.getElementById("douDizhuBotLevel");
+const douDizhuBotPersonalitySelects = [
+  document.getElementById("leftBotPersonality"),
+  document.getElementById("rightBotPersonality")
+];
+const douDizhuPersonalities = {
+  bob: { name: "Bob", profile: "bob", sprite: 0 },
+  banana: { name: "Banana", profile: "banana", sprite: 1 },
+  beryll: { name: "Beryll", profile: "beryll", sprite: 2 },
+  bot: { name: "Bot", profile: "bot", sprite: 3 }
+};
+const douDizhuBotDialogueRow = document.getElementById("douDizhuBotDialogueRow");
+const douDizhuBotDialogueElement = document.getElementById("douDizhuBotDialogue");
+const douDizhuBotIcon = document.getElementById("douDizhuBotIcon");
+let douDizhuDialogue = null;
+const defaultDouDizhuDialogue = {
+  idle: ["Let's see how this hand goes.", "Ready when you are."],
+  bid: ["I'll take the lead.", "Let's see what this hand can do."],
+  pass: ["I'll wait for a better chance.", "Not this time."],
+  play: ["Your turn.", "Let's keep things moving."],
+  win: ["Good round. Well played!", "That's the round!"],
+  lose: ["You got us this time.", "Nice teamwork."]
+};
+douDizhuDialogue = defaultDouDizhuDialogue;
+
+loadBotDialogue(new URL("../../data/minigames/dou-dizhu/bots.skvwcfgml", import.meta.url), defaultDouDizhuDialogue)
+  .then(dialogue => { douDizhuDialogue = dialogue; })
+  .catch(error => {
+    console.error("Could not load Dou Dizhu bot dialogue.", error);
+    douDizhuDialogue = defaultDouDizhuDialogue;
+  });
 
 function recordCardGameAchievement(game, eventName, details = {}) {
   try {
@@ -747,11 +783,20 @@ function sortedHand(hand) {
 
 function startDouDizhu() {
   resetAnalysis();
+  douDizhuBotDialogueRow.hidden = true;
+  douDizhuBotDialogueElement.textContent = "";
   douDizhu = {
     players: [
       { name: "You", isHuman: true, hand: [] },
-      { name: "Left bot", isHuman: false, hand: [] },
-      { name: "Right bot", isHuman: false, hand: [] }
+      ...douDizhuBotPersonalitySelects.map(select => {
+        const personality = douDizhuPersonalities[select.value];
+        return {
+          name: personality.name,
+          personality: select.value,
+          isHuman: false,
+          hand: []
+        };
+      })
     ],
     stage: "bidding",
     bidTurn: Math.floor(Math.random() * 3),
@@ -773,6 +818,7 @@ function startDouDizhu() {
   });
   douDizhu.bottom = deck;
   renderDouDizhu();
+  setDouDizhuBotDialogue(1 + Math.floor(Math.random() * 2), "idle");
   scheduleBotTurn();
 }
 
@@ -869,96 +915,6 @@ function beats(candidate, current) {
     && candidate.high > current.high;
 }
 
-function takeRankCards(groups, rank, count) {
-  return (groups.get(rank) || []).slice(0, count);
-}
-
-function generateBotCandidates(hand) {
-  const groups = groupByRank(sortedHand(hand));
-  const ranks = [...groups.keys()].sort((a, b) => a - b);
-  const candidates = [];
-  const add = cards => {
-    const combo = classifyCombination(cards);
-    if (combo) candidates.push({ cards, combo });
-  };
-
-  ranks.forEach(rank => {
-    const group = groups.get(rank);
-    add(group.slice(0, 1));
-    if (group.length >= 2) add(group.slice(0, 2));
-    if (group.length >= 3) add(group.slice(0, 3));
-    if (group.length === 4) add(group);
-  });
-  if (groups.has(16) && groups.has(17)) add([groups.get(16)[0], groups.get(17)[0]]);
-
-  ranks.filter(rank => groups.get(rank).length >= 3).forEach(rank => {
-    const triple = takeRankCards(groups, rank, 3);
-    ranks.filter(wing => wing !== rank).forEach(wing => {
-      add([...triple, groups.get(wing)[0]]);
-      if (groups.get(wing).length >= 2) add([...triple, ...takeRankCards(groups, wing, 2)]);
-    });
-  });
-
-  ranks.filter(rank => groups.get(rank).length === 4).forEach(rank => {
-    const quad = groups.get(rank);
-    const otherRanks = ranks.filter(wing => wing !== rank);
-    for (let first = 0; first < otherRanks.length; first += 1) {
-      for (let second = first + 1; second < otherRanks.length; second += 1) {
-        add([...quad, groups.get(otherRanks[first])[0], groups.get(otherRanks[second])[0]]);
-      }
-    }
-    const pairRanks = otherRanks.filter(wing => groups.get(wing).length >= 2);
-    for (let first = 0; first < pairRanks.length; first += 1) {
-      for (let second = first + 1; second < pairRanks.length; second += 1) {
-        add([...quad, ...takeRankCards(groups, pairRanks[first], 2), ...takeRankCards(groups, pairRanks[second], 2)]);
-      }
-    }
-  });
-
-  const addSequences = (minimumLength, copies, type) => {
-    const eligible = ranks.filter(rank => rank <= 14 && groups.get(rank).length >= copies);
-    for (let start = 0; start < eligible.length; start += 1) {
-      for (let end = start + minimumLength; end <= eligible.length; end += 1) {
-        const sequence = eligible.slice(start, end);
-        if (!consecutiveRanks(sequence)) break;
-        add(sequence.flatMap(rank => takeRankCards(groups, rank, copies)));
-        if (type === "triple-sequence") {
-          const core = sequence.flatMap(rank => takeRankCards(groups, rank, 3));
-          const outsideByRank = [...groups.entries()]
-            .filter(([rank]) => !sequence.includes(rank))
-            .flatMap(([, group]) => group);
-          const singleWings = [];
-          const usedWingRanks = new Set();
-          for (const card of outsideByRank) {
-            if (usedWingRanks.has(card.rank)) continue;
-            usedWingRanks.add(card.rank);
-            singleWings.push(card);
-            if (singleWings.length === sequence.length) break;
-          }
-          if (singleWings.length === sequence.length) add([...core, ...singleWings]);
-
-          const pairWings = [...groups.entries()]
-            .filter(([rank, group]) => !sequence.includes(rank) && group.length >= 2)
-            .slice(0, sequence.length)
-            .flatMap(([rank]) => takeRankCards(groups, rank, 2));
-          if (pairWings.length === sequence.length * 2) add([...core, ...pairWings]);
-        }
-      }
-    }
-  };
-  addSequences(5, 1, "straight");
-  addSequences(3, 2, "pair-sequence");
-  addSequences(2, 3, "triple-sequence");
-
-  const seen = new Set();
-  return candidates.filter(candidate => {
-    const signature = `${candidate.combo.type}:${candidate.combo.high}:${candidate.combo.length}:${candidate.cards.map(card => card.id).sort().join(",")}`;
-    if (seen.has(signature)) return false;
-    seen.add(signature);
-    return true;
-  });
-}
-
 function bidStrength(hand) {
   const counts = groupByRank(hand);
   return hand.reduce((score, card) => score
@@ -968,8 +924,22 @@ function bidStrength(hand) {
 
 function botBid(player) {
   const strength = bidStrength(douDizhu.players[player].hand);
-  const target = strength >= 5.2 ? 3 : strength >= 3.7 ? 2 : strength >= 2.2 ? 1 : 0;
+  const thresholdShift = (3 - Number(douDizhuBotLevel.value)) * 0.12;
+  const target = strength >= 5.2 + thresholdShift ? 3
+    : strength >= 3.7 + thresholdShift ? 2
+      : strength >= 2.2 + thresholdShift ? 1 : 0;
   return target > douDizhu.highestBid ? target : 0;
+}
+
+function setDouDizhuBotDialogue(playerIndex, category) {
+  if (playerIndex === 0 || !douDizhu?.players[playerIndex]) return;
+  const personality = douDizhuPersonalities[douDizhu.players[playerIndex].personality];
+  if (!personality) return;
+  const profile = personality.profile;
+  const line = chooseBotLine(douDizhuDialogue, category, Math.random, profile);
+  douDizhuBotDialogueRow.hidden = !line;
+  douDizhuBotDialogueElement.textContent = line;
+  douDizhuBotIcon.style.backgroundPosition = `${-personality.sprite * 24}px 0`;
 }
 
 function takeBid(player, bid) {
@@ -986,6 +956,7 @@ function takeBid(player, bid) {
   } else {
     douDizhu.status = `${douDizhu.players[player].name} passed.`;
   }
+  setDouDizhuBotDialogue(player, bid ? "bid" : "pass");
 
   if (bid === 3 || (douDizhu.landlord !== null && douDizhu.passesAfterBid >= 2)) {
     beginDouDizhuPlay();
@@ -1077,6 +1048,9 @@ function playDouDizhuCards(playerIndex, cards) {
     douDizhu.stage = "finished";
     const landlordWon = playerIndex === douDizhu.landlord;
     douDizhu.status = landlordWon ? "Landlord wins!" : "Farmers win!";
+    douDizhu.players.forEach((roundPlayer, index) => {
+      if (index !== 0) setDouDizhuBotDialogue(index, index === playerIndex ? "win" : "lose");
+    });
     recordCardGameAchievement("dou-dizhu", "round-completed", {
       won: playerIndex === 0,
       humanWasLandlord: douDizhu.landlord === 0,
@@ -1084,6 +1058,7 @@ function playDouDizhuCards(playerIndex, cards) {
     });
   } else {
     douDizhu.currentPlayer = (playerIndex + 1) % 3;
+    setDouDizhuBotDialogue(playerIndex, "play");
   }
   if (combo.type === "rocket") triggerDouDizhuImpact("nuke");
   else if (combo.type === "bomb") triggerDouDizhuImpact("bomb");
@@ -1103,6 +1078,7 @@ function passDouDizhu(playerIndex) {
   resetAnalysis();
   douDizhu.passes += 1;
   douDizhu.status = `${douDizhu.players[playerIndex].name} passed.`;
+  setDouDizhuBotDialogue(playerIndex, "pass");
   if (douDizhu.passes >= 2) {
     douDizhu.currentPlayer = douDizhu.lastPlayer;
     douDizhu.currentTrick = null;
@@ -1116,31 +1092,58 @@ function passDouDizhu(playerIndex) {
   if (onlineMatch && playerIndex === 0) void persistOnlineDouDizhuMove({ type: "pass" });
 }
 
-function sameTeam(playerA, playerB) {
-  return (playerA === douDizhu.landlord) === (playerB === douDizhu.landlord);
-}
-
 function botPlay(playerIndex) {
   const player = douDizhu.players[playerIndex];
-  const candidates = generateBotCandidates(player.hand);
-  if (douDizhu.currentTrick) {
-    const lastCards = douDizhu.players[douDizhu.currentTrick.player].hand.length;
-    if (sameTeam(playerIndex, douDizhu.currentTrick.player) && lastCards > 1) {
-      passDouDizhu(playerIndex);
-      return;
+  const rankCopies = new Map();
+  const cardsByEngineId = new Map();
+  const engineHand = player.hand.map(card => {
+    const rank = card.rank - 3;
+    const engineId = card.rank === 16 ? 52
+      : card.rank === 17 ? 53
+        : rank * 4 + (rankCopies.get(rank) ?? 0);
+    rankCopies.set(rank, (rankCopies.get(rank) ?? 0) + 1);
+    cardsByEngineId.set(engineId, card);
+    return engineId;
+  });
+  const comboTypes = {
+    single: DoudizhuType.SOLO,
+    pair: DoudizhuType.PAIR,
+    triple: DoudizhuType.TRIO,
+    "triple-single": DoudizhuType.TRIO_SOLO,
+    "triple-pair": DoudizhuType.TRIO_PAIR,
+    straight: DoudizhuType.STRAIGHT,
+    "pair-sequence": DoudizhuType.PAIR_STRAIGHT,
+    "triple-sequence": DoudizhuType.PLANE,
+    "airplane-singles": DoudizhuType.PLANE_SOLO,
+    "airplane-pairs": DoudizhuType.PLANE_PAIR,
+    "four-two-singles": DoudizhuType.FOUR_SOLO,
+    "four-two-pairs": DoudizhuType.FOUR_PAIR,
+    bomb: DoudizhuType.BOMB,
+    rocket: DoudizhuType.ROCKET
+  };
+  const lastPlay = douDizhu.currentTrick
+    ? {
+      seat: douDizhu.currentTrick.player,
+      type: comboTypes[douDizhu.currentTrick.combo.type],
+      rank: douDizhu.currentTrick.combo.high - 3,
+      len: douDizhu.currentTrick.combo.length
     }
-    const response = candidates
-      .filter(candidate => beats(candidate.combo, douDizhu.currentTrick.combo))
-      .sort((a, b) => a.cards.length - b.cards.length || a.combo.high - b.combo.high)[0];
-    if (!response) {
-      passDouDizhu(playerIndex);
-      return;
-    }
-    playDouDizhuCards(playerIndex, response.cards);
+    : null;
+  const decision = DoudizhuAI.decide(engineHand, lastPlay, {
+    seat: playerIndex,
+    landlord: douDizhu.landlord,
+    handSizes: douDizhu.players.map(other => other.hand.length),
+    playedCounts: douDizhu.playedCounts,
+    passCount: douDizhu.passes,
+    level: Number(douDizhuBotLevel.value)
+  });
+  const picked = DoudizhuDifficulty.pickMove(decision.candidates, Number(douDizhuBotLevel.value));
+  const chosenCards = picked?.cards?.map(id => cardsByEngineId.get(id)).filter(Boolean);
+  if (!chosenCards?.length) {
+    passDouDizhu(playerIndex);
     return;
   }
-  const lead = candidates.sort((a, b) => a.cards.length - b.cards.length || a.combo.high - b.combo.high)[0];
-  if (lead) playDouDizhuCards(playerIndex, lead.cards);
+  playDouDizhuCards(playerIndex, chosenCards);
 }
 
 function scheduleBotTurn() {
@@ -1182,6 +1185,7 @@ function renderDouDizhu() {
     && (douDizhu.stage === "bidding" ? douDizhu.bidTurn === 0 : douDizhu.currentPlayer === 0);
   const bidding = douDizhu.stage === "bidding";
   const playing = douDizhu.stage === "playing";
+  douDizhuBotLevel.closest(".bot-level-controls").hidden = Boolean(onlineMatch);
   analyzePositionButton.hidden = !playing || !humanTurn;
   document.getElementById("doudizhuStatus").textContent = onlineMatch
     ? allPlayersReady ? (bidding ? "Online bidding" : playing ? "Online play" : "Round over") : "Waiting for players"
@@ -1343,6 +1347,18 @@ document.getElementById("sendGameInviteBtn").addEventListener("click", async eve
   } finally {
     button.disabled = false;
   }
+});
+
+douDizhuBotPersonalitySelects.forEach((select, index) => {
+  select.addEventListener("change", () => {
+    const player = douDizhu?.players[index + 1];
+    const personality = douDizhuPersonalities[select.value];
+    if (!player || !personality || onlineMatch) return;
+    player.personality = select.value;
+    player.name = personality.name;
+    setDouDizhuBotDialogue(index + 1, "idle");
+    renderDouDizhu();
+  });
 });
 
 gameChoices.forEach(button => {

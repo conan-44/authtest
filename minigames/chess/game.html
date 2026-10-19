@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="dark">
     <title>Chess</title>
-    <link rel="stylesheet" href="./style.css?v=game-invites">
+    <link rel="stylesheet" href="./style.css?v=game-bots-6">
 </head>
 <body>
     <main class="chess-app">
@@ -21,6 +21,24 @@
             </div>
         </header>
         <section class="multiplayer-controls" aria-label="Online game">
+            <label>Bot strength
+                <select id="chessBotLevel">
+                    <option value="0">Two players</option>
+                    <option value="1">Beginner</option>
+                    <option value="2">Casual</option>
+                    <option value="3">Club</option>
+                    <option value="4">Expert</option>
+                    <option value="5">Master</option>
+                </select>
+            </label>
+            <label>Personality
+                <select id="chessBotPersonality">
+                    <option value="bob">Bob · Engineer</option>
+                    <option value="banana">Banana · Silly</option>
+                    <option value="beryll">Beryll · Alien diplomat</option>
+                    <option value="bot">Bot · Hexadecimal</option>
+                </select>
+            </label>
             <label>Mode
                 <select id="multiplayerMode">
                     <option value="live">Live</option>
@@ -47,6 +65,12 @@
                         <p id="gameStatus" class="game-status">White to move</p>
                         <p id="gameHint" class="game-hint">choose a piece</p>
                     </div>
+                </div>
+                <div id="botDialogueRow" class="bot-dialogue-row sidebar-card" aria-live="polite" hidden>
+                    <span id="botIcon" class="bot-icon" aria-hidden="true"></span>
+                    <p id="botDialogue" class="bot-dialogue chat-msg chat-msg-other">
+                        <span id="botDialogueText" class="chat-body"></span>
+                    </p>
                 </div>
                 <div class="board-frame">
                     <div id="chessBoard" class="chess-board" role="grid" aria-label="Chess board"></div>
@@ -118,6 +142,6 @@
         </form>
     </dialog>
 
-    <script type="module" src="./game.js?v=game-invites"></script>
+    <script type="module" src="./game.js?v=game-bots-6"></script>
 </body>
 </html>

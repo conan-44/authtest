@@ -1,6 +1,13 @@
 const ENGINE_URL = new URL("./stockfish-19-lite-single.js", import.meta.url);
 const SEARCH_DEPTH = 12;
 const ENGINE_TIMEOUT_MS = 120_000;
+let botWorker = null;
+let botWorkerReady = null;
+globalThis.addEventListener?.("pagehide", () => {
+    botWorker?.terminate();
+    botWorker = null;
+    botWorkerReady = null;
+});
 
 export async function analyzeFens(fens, onProgress = () => {}) {
     const worker = new Worker(ENGINE_URL, { type: "classic" });
@@ -29,6 +36,38 @@ export async function analyzeFens(fens, onProgress = () => {}) {
     }
 
     return evaluations;
+}
+
+export async function chooseBotMove(fen, { depth, skill, multiPv = 3 }) {
+    try {
+        const worker = await getBotWorker();
+        worker.postMessage(`setoption name Skill Level value ${Math.max(0, Math.min(20, skill))}`);
+        worker.postMessage(`setoption name MultiPV value ${Math.max(1, Math.min(5, multiPv))}`);
+        await waitForCommand(worker, "isready", "readyok");
+        worker.postMessage(`position fen ${fen}`);
+        const resultPromise = waitForBestMove(worker);
+        worker.postMessage(`go depth ${Math.max(1, Math.min(14, depth))}`);
+        return await resultPromise;
+    } catch (error) {
+        botWorker?.terminate();
+        botWorker = null;
+        botWorkerReady = null;
+        throw error;
+    }
+}
+
+async function getBotWorker() {
+    if (!botWorker) {
+        botWorker = new Worker(ENGINE_URL, { type: "classic" });
+        botWorkerReady = (async () => {
+            await waitForCommand(botWorker, "uci", "uciok");
+            botWorker.postMessage("setoption name Threads value 1");
+            botWorker.postMessage("setoption name Hash value 16");
+            await waitForCommand(botWorker, "isready", "readyok");
+        })();
+    }
+    await botWorkerReady;
+    return botWorker;
 }
 
 function waitForCommand(worker, command, expected) {
