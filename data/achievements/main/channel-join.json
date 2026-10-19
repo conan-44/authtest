@@ -1,6 +1,7 @@
 {
     "title": "Secluded Area",
     "description": "Join a chat channel using an invite code.",
+    "successors": ["main:channel-host"],
     "rarity": "common",
     "icon": "💬"
 }

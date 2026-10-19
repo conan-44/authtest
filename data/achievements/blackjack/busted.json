@@ -1,6 +1,7 @@
 {
     "title": "Bust",
     "description": "bust during a game of blackjack",
+    "successors": [],
     "rarity": "common",
     "icon": "!"
 }

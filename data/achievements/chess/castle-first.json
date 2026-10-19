@@ -1,0 +1,7 @@
+{
+    "title": "Building a Fortress",
+    "description": "Perform your first castling move.",
+    "successors": ["chess:castle-blunder", "chess:castle-mate"],
+    "rarity": "common",
+    "icon": "♔"
+}

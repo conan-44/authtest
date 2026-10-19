@@ -1,6 +1,7 @@
 {
     "title": "Read the Table",
     "description": "Analyze a Dou Dizhu position.",
+    "successors": ["dou-dizhu:ten-analyses"],
     "rarity": "common",
     "icon": "⌕"
 }

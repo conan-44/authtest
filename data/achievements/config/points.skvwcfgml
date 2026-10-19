@@ -12,3 +12,4 @@ secret_default: 100
 # use namespace:filename
 main:rebirth: 128
 dou-dizhu:landlord-five-streak: 140
+chess:castle-mate: 160

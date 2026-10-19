@@ -41,6 +41,9 @@ window.AchievementLib.createLoaders = function createLoaders(state, config) {
             title: String(item.title || "Untitled Achievement"),
             description: item.description == null ? "" : String(item.description),
             icon: String(item.icon || "??"), rarity,
+            successors: Array.isArray(item.successors)
+                ? [...new Set(item.successors.filter(successor => typeof successor === "string"))]
+                : [],
             points: getAchievementPoints(fullId, rarity)
         };
         state.achievementsMap.set(fullId, achievement);

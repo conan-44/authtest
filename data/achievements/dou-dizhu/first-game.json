@@ -1,6 +1,7 @@
 {
     "title": "First Deal",
     "description": "Finish your first Dou Dizhu game.",
+    "successors": ["dou-dizhu:first-win", "dou-dizhu:first-analysis", "dou-dizhu:bomb", "dou-dizhu:two", "dou-dizhu:joker", "dou-dizhu:five-games"],
     "rarity": "common",
     "icon": "🀄"
 }

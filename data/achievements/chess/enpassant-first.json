@@ -1,0 +1,7 @@
+{
+    "title": "En Passant",
+    "description": "Perform your first en passant move.",
+    "successors": ["chess:enpassant-blunder", "chess:enpassant-great"],
+    "rarity": "rare",
+    "icon": "♟"
+}

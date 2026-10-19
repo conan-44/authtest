@@ -1,6 +1,7 @@
 {
     "title": "Rock Hard",
     "description": "CRACK a code on hard difficulty.",
+    "successors": ["mastermind:master"],
     "rarity": "rare",
     "icon": "🔐"
 }

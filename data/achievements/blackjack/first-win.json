@@ -1,6 +1,7 @@
 {
     "title": "House Edge",
     "description": "Win your first hand of Blackjack.",
+    "successors": ["blackjack:ten-wins", "blackjack:hot-streak"],
     "rarity": "common",
     "icon": "♠"
 }

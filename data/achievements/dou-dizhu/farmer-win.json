@@ -1,6 +1,7 @@
 {
     "title": "People's Champion",
     "description": "Win a game as a farmer.",
+    "successors": [],
     "rarity": "rare",
     "icon": "♟"
 }

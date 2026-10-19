@@ -1,6 +1,7 @@
 {
     "title": "Opening Collector",
     "description": "Discover five different named chess openings.",
+    "successors": [],
     "rarity": "rare",
     "icon": "🗺"
 }

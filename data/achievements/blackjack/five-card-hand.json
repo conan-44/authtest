@@ -1,6 +1,7 @@
 {
     "title": "Card Collector",
     "description": "Finish a Blackjack hand with at least five cards.",
+    "successors": [],
     "rarity": "rare",
     "icon": "5"
 }

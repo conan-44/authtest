@@ -218,6 +218,167 @@
         });
     });
 
+    const gameCards = [...gamesGrid.querySelectorAll('.game-card')];
+    const gamesPagination = document.getElementById('gamesPagination');
+    const pageButtons = [...(gamesPagination?.querySelectorAll('button') || [])];
+    let snapAnimation = null;
+    let isSettling = false;
+    let hoverSnapped = false;
+    let selectedSlide = 0;
+    let selectedVisualCard = gameCards[0];
+
+    function getCarouselAnimation() {
+        return gamesGrid.getAnimations().find(animation => animation.animationName === 'games-carousel-scroll');
+    }
+
+    function updateGamesPagination(index) {
+        selectedSlide = (index + gameCards.length) % gameCards.length;
+        pageButtons.forEach((button, buttonIndex) => {
+            if (buttonIndex === selectedSlide) button.setAttribute('aria-current', 'true');
+            else button.removeAttribute('aria-current');
+        });
+    }
+
+    function getSlideOffset(indexOrCard) {
+        const card = typeof indexOrCard === 'number' ? gameCards[indexOrCard] : indexOrCard;
+        return card.offsetLeft - gameCards[0].offsetLeft;
+    }
+
+    function getCardSlideIndex(card) {
+        return card.classList.contains('game-card-clone') ? 0 : gameCards.indexOf(card);
+    }
+
+    function isCardAligned(card) {
+        const panelBounds = gamesGrid.parentElement.getBoundingClientRect();
+        return Math.abs(card.getBoundingClientRect().left - panelBounds.left) < 1;
+    }
+
+    function isCardEntering(card) {
+        const panelLeft = gamesGrid.parentElement.getBoundingClientRect().left;
+        return card.getBoundingClientRect().left > panelLeft + 1;
+    }
+
+    function setCarouselTime(index, visualCard) {
+        const animation = getCarouselAnimation();
+        if (!animation) return;
+        const duration = Number.parseFloat(getComputedStyle(gamesGrid).animationDuration) * 1000;
+        const isLoopClone = visualCard?.classList.contains('game-card-clone');
+        animation.currentTime = duration * (isLoopClone ? 1 : index / gameCards.length);
+    }
+
+    function resumeCarouselAt(index, visualCard = selectedVisualCard) {
+        isSettling = false;
+        snapAnimation?.cancel();
+        snapAnimation = null;
+        const animation = getCarouselAnimation();
+        if (!animation) return;
+        setCarouselTime(index, visualCard);
+        animation.play();
+    }
+
+    function snapToSlide(index, resumeAfterSnap = false, visualCard = gameCards[index], force = false) {
+        if (!gameCards[index]) return;
+        const animation = getCarouselAnimation();
+        if (resumeAfterSnap) animation?.pause();
+        snapAnimation?.cancel();
+        snapAnimation = null;
+        selectedVisualCard = visualCard;
+        isSettling = true;
+        const currentTransform = new DOMMatrixReadOnly(getComputedStyle(gamesGrid).transform);
+        const fromX = currentTransform.m41;
+        const targetOffset = getSlideOffset(visualCard);
+        const toX = -targetOffset;
+        updateGamesPagination(index);
+        if (Math.abs(fromX - toX) < 0.5) {
+            isSettling = false;
+            setCarouselTime(index, visualCard);
+            if (resumeAfterSnap && !gamesGrid.querySelector('.game-card:hover, .game-card-clone:hover')) {
+                resumeCarouselAt(index, visualCard);
+            }
+            return;
+        }
+        if (!force && isCardAligned(visualCard)) {
+            isSettling = false;
+            return;
+        }
+        snapAnimation = gamesGrid.animate(
+            [{ transform: `translateX(${fromX}px)` }, { transform: `translateX(${toX}px)` }],
+            { duration: 550, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'forwards' }
+        );
+        snapAnimation.onfinish = () => {
+            setCarouselTime(index, visualCard);
+            snapAnimation.cancel();
+            snapAnimation = null;
+            isSettling = false;
+            const hoveredCard = gamesGrid.querySelector('.game-card:hover, .game-card-clone:hover');
+            const hoveredIndex = hoveredCard ? getCardSlideIndex(hoveredCard) : -1;
+            if (hoveredIndex >= 0) {
+                updateGamesPagination(hoveredIndex);
+                selectedVisualCard = hoveredCard;
+                if (!isCardAligned(hoveredCard) && isCardEntering(hoveredCard)) {
+                    snapToSlide(hoveredIndex, false, hoveredCard);
+                }
+            } else if (resumeAfterSnap) {
+                resumeCarouselAt(index, visualCard);
+            }
+        };
+    }
+
+    gamesGrid.addEventListener('pointerover', event => {
+        if (event.pointerType !== 'mouse') return;
+        getCarouselAnimation()?.pause();
+        if (isSettling) return;
+        const card = event.target.closest('.game-card, .game-card-clone');
+        if (!card) return;
+        const index = getCardSlideIndex(card);
+        if (index < 0) return;
+        updateGamesPagination(index);
+        selectedVisualCard = card;
+        hoverSnapped = !isCardAligned(card) && isCardEntering(card);
+        if (hoverSnapped) snapToSlide(index, false, card);
+    });
+    gamesGrid.addEventListener('pointerout', event => {
+        if (event.pointerType !== 'mouse') return;
+        const card = event.target.closest('.game-card, .game-card-clone');
+        if (!card) return;
+        const nextCard = event.relatedTarget?.closest?.('.game-card, .game-card-clone');
+        if (nextCard) {
+            if (nextCard === card) return;
+            const nextIndex = getCardSlideIndex(nextCard);
+            if (nextIndex >= 0) {
+                updateGamesPagination(nextIndex);
+                selectedVisualCard = nextCard;
+                hoverSnapped = !isCardAligned(nextCard) && isCardEntering(nextCard);
+                if (hoverSnapped) snapToSlide(nextIndex, false, nextCard);
+            }
+            return;
+        }
+        if (snapAnimation?.playState === 'running') {
+            snapAnimation.cancel();
+            snapAnimation = null;
+            isSettling = false;
+            getCarouselAnimation()?.play();
+        } else if (hoverSnapped) {
+            resumeCarouselAt(selectedSlide, selectedVisualCard);
+        } else {
+            getCarouselAnimation()?.play();
+        }
+        hoverSnapped = false;
+    });
+    gamesPagination?.addEventListener('click', event => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        const index = pageButtons.indexOf(button);
+        if (index >= 0) snapToSlide(index, true, gameCards[index], true);
+    });
+    window.setInterval(() => {
+        if (snapAnimation?.playState === 'running' || gamesGrid.classList.contains('is-hidden')) return;
+        const animation = getCarouselAnimation();
+        if (!animation || animation.playState !== 'running' || !Number.isFinite(animation.currentTime)) return;
+        const duration = Number.parseFloat(getComputedStyle(gamesGrid).animationDuration) * 1000;
+        if (duration > 0) updateGamesPagination(Math.floor(animation.currentTime / duration * gameCards.length + 0.5));
+    }, 300);
+
     backToGamesBtn.addEventListener('click', closeGame);
 
     _supabase.auth.onAuthStateChange((_event, session) => {

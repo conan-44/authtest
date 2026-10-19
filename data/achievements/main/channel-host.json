@@ -1,6 +1,7 @@
 {
     "title": "Host",
     "description": "Create a chat channel and its invite code.",
+    "successors": [],
     "rarity": "rare",
     "icon": "🏠"
 }

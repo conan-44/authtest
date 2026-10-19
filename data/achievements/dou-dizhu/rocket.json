@@ -1,6 +1,7 @@
 {
     "title": "Nuclear",
     "description": "Play the rocket (both jokers).",
+    "successors": [],
     "rarity": "legendary",
     "icon": "🚀"
 }

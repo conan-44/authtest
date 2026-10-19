@@ -1,6 +1,7 @@
 {
     "title": "Good Fortune",
     "description": "Win a game of Dou Dizhu.",
+    "successors": ["dou-dizhu:landlord-win", "dou-dizhu:farmer-win"],
     "rarity": "common",
     "icon": "★"
 }

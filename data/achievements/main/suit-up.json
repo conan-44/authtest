@@ -1,6 +1,7 @@
 {
 	"title": "Suit Up",
 	"description": "Equip a full set of armor",
+	"successors": ["main:team-fort"],
 	"rarity": "rare",
 	"icon": "SU"
 }

@@ -1,6 +1,7 @@
 {
     "title": "Rent Collector",
     "description": "Win a game as the landlord.",
+    "successors": ["dou-dizhu:landlord-five-streak"],
     "rarity": "rare",
     "icon": "♛"
 }

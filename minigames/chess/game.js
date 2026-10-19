@@ -393,10 +393,14 @@ function clearAnalysis() {
   evaluationBar.setAttribute("aria-valuenow", "0");
 }
 
-function moveQuality(moveIndex) {
-  if (isBookMove(moveIndex)) return "Book";
-  if (evaluations.length !== historyWithFen().length + 1) return "";
-  const move = historyWithFen()[moveIndex];
+function moveQuality(moveIndex, history = historyWithFen()) {
+  if (isBookMove(moveIndex, history)) return "Book";
+  if (
+    evaluations.length !== history.length + 1 ||
+    !evaluations[moveIndex] ||
+    !evaluations[moveIndex + 1]
+  ) return "";
+  const move = history[moveIndex];
   const sign = move.color === "w" ? 1 : -1;
   const before = evaluations[moveIndex];
   const after = evaluations[moveIndex + 1];
@@ -515,6 +519,20 @@ async function analyzeGame() {
     });
     evaluations = results.map((result, index) => whiteEvaluation(result, fens[index]));
     analysisStatus.textContent = `Analysis complete · depth ${results[0]?.depth ?? 12} · move labels are approximate`;
+    const playerColor = onlineMatch
+      ? (onlineMatch.seat === 0 ? "w" : "b")
+      : Number(botLevelSelect.value) > 0 ? "w" : null;
+    history.forEach((move, index) => {
+      if (playerColor && move.color !== playerColor) return;
+      const enPassant = move.isEnPassant();
+      const castling = move.isKingsideCastle() || move.isQueensideCastle();
+      if (!enPassant && !castling) return;
+      recordGameAchievementEvent("special-move-analyzed", {
+        enPassant,
+        castling,
+        quality: moveQuality(index, history)
+      });
+    });
     if (!analysisAchievementRecorded) {
       analysisAchievementRecorded = true;
       recordGameAchievementEvent("analyzed");
@@ -643,6 +661,15 @@ async function makeMove(from, to, promotion = "q") {
       );
       onlineMatch.version = saved.version;
       onlineBusy = false;
+    }
+    const enPassant = move.isEnPassant();
+    const castling = move.isKingsideCastle() || move.isQueensideCastle();
+    if (enPassant || castling) {
+      recordGameAchievementEvent("special-move", {
+        enPassant,
+        castling,
+        checkmate: castling && game.isCheckmate()
+      });
     }
     if (game.isGameOver() && !chessGameRecorded) {
       chessGameRecorded = true;

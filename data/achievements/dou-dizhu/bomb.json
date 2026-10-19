@@ -1,6 +1,7 @@
 {
     "title": "Bomb Squad",
     "description": "Play a bomb.",
+    "successors": ["dou-dizhu:rocket"],
     "rarity": "rare",
     "icon": "💣"
 }

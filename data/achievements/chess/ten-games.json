@@ -1,6 +1,7 @@
 {
     "title": "Addiction",
     "description": "Finish 10 chess games.",
+    "successors": [],
     "rarity": "rare",
     "icon": "♟"
 }

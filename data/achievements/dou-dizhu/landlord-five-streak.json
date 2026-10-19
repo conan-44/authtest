@@ -1,6 +1,7 @@
 {
     "title": "Idle Death Gamble",
     "description": "Win five games in a row as Landlord",
+    "successors": [],
     "rarity": "secret",
     "icon": "5"
 }

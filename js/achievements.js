@@ -70,7 +70,12 @@ const history_file = "./history/achievements.skvwhist";
             gridEl: options.gridElement,
             scoreEl: options.scoreElement,
             popupContainer: options.popupContainer,
-            milestonesGridEl: options.milestonesGridElement
+            milestonesGridEl: options.milestonesGridElement,
+            listViewElement: options.listViewElement,
+            treeViewElement: options.treeViewElement,
+            treeTabsElement: options.treeTabsElement,
+            treeCanvasElement: options.treeCanvasElement,
+            treeToggleElement: options.treeToggleElement
         };
 
         const onRender = typeof options.onRender === "function" ? options.onRender : null;
@@ -214,6 +219,22 @@ const history_file = "./history/achievements.skvwhist";
                     if (gameProgress.chess.openings.length >= 5) {
                         unlockedIds.push("chess:opening-collector");
                     }
+                }
+            } else if (gameName === "chess" && eventName === "special-move") {
+                if (details.castling) {
+                    unlockedIds.push("chess:castle-first");
+                    if (details.checkmate) unlockedIds.push("chess:castle-mate");
+                }
+                if (details.enPassant) unlockedIds.push("chess:enpassant-first");
+            } else if (gameName === "chess" && eventName === "special-move-analyzed") {
+                if (details.castling && details.quality === "Blunder") {
+                    unlockedIds.push("chess:castle-blunder");
+                }
+                if (details.enPassant && details.quality === "Blunder") {
+                    unlockedIds.push("chess:enpassant-blunder");
+                }
+                if (details.enPassant && details.quality === "Great") {
+                    unlockedIds.push("chess:enpassant-great");
                 }
             } else if (gameName === "number-pillars" && eventName === "level-completed") {
                 gameProgress.numberPillars.completed += 1;
@@ -575,6 +596,11 @@ const history_file = "./history/achievements.skvwhist";
     const scoreEl = document.getElementById("scoreTracker");
     const popupEl = document.getElementById("popupStack");
     const milestonesGridEl = document.getElementById("milestonesGrid");
+    const listViewEl = document.getElementById("achievementListView");
+    const treeViewEl = document.getElementById("achievementTreeView");
+    const treeTabsEl = document.getElementById("achievementTreeTabs");
+    const treeCanvasEl = document.getElementById("achievementTreeCanvas");
+    const treeToggleEl = document.getElementById("toggleAchievementTreeBtn");
     const versionEl = document.getElementById("versionIndicator");
 
     async function loadVersionIndicator() {
@@ -612,7 +638,12 @@ const history_file = "./history/achievements.skvwhist";
         gridElement: gridEl,
         scoreElement: scoreEl,
         popupContainer: popupEl,
-        milestonesGridElement: milestonesGridEl
+        milestonesGridElement: milestonesGridEl,
+        listViewElement: listViewEl,
+        treeViewElement: treeViewEl,
+        treeTabsElement: treeTabsEl,
+        treeCanvasElement: treeCanvasEl,
+        treeToggleElement: treeToggleEl
     });
 
     achievements.loadAllFromDirectoryIndex().catch(error => {

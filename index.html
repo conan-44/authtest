@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/gh/Parcoil/cloak@main/src/index.min.js"></script>
     <link rel="icon" type="image/x-icon" href="./assets/test-favicon.png">
-    <link rel="stylesheet" href="./style.css?v=game-invites">
+    <link rel="stylesheet" href="./style.css?v=games-carousel-v9">
 </head>
 <body>
     <main class="page">
@@ -33,11 +33,17 @@
             <div class="panel-header">
                 <h1 id="achievements-heading">Achievements</h1>
                 <div class="panel-header-actions">
-                    <div id="scoreTracker" class="score-tracker">Points: 0 / 0</div>
+                    <button type="button" id="toggleAchievementTreeBtn" aria-pressed="false">Tree view</button>
                 </div>
             </div>
             <div class="panel-body">
-                <div id="achievementsGrid" class="achievements-grid" aria-live="polite"></div>
+                <div id="achievementListView">
+                    <div id="achievementsGrid" class="achievements-grid" aria-live="polite"></div>
+                </div>
+                <nav id="achievementTreeTabs" class="chat-channel-tabs achievement-tree-tabs is-hidden" role="tablist" aria-label="Achievement namespaces"></nav>
+                <div id="achievementTreeView" class="achievement-tree-view is-hidden">
+                    <div id="achievementTreeCanvas" class="achievement-tree-canvas"></div>
+                </div>
             </div>
         </section>
         <section class="panel tab-panel is-hidden" id="chatPanel" aria-labelledby="chat-heading">
@@ -95,58 +101,78 @@
                 <h1 id="games-heading">Games</h1>
             </div>
             <div class="panel-body">
-                <div id="gamesGrid" class="achievements-grid">
+                <div id="gamesGrid" class="games-carousel">
                     <article class="achievement-card rarity-common game-card" data-game="mastermind" data-src="./minigames/mastermind/game.html" tabindex="0" role="button" aria-label="Play Bulls & Cows">
                         <div class="achievement-card-inner">
-                            <div class="achievement-icon">🎯</div>
-                            <div>
+                            <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-bulls" aria-hidden="true"></span></div>
+                            <div class="game-card-copy">
                                 <h3 class="achievement-title rarity-common">Bulls & Cows</h3>
-                                <p class="achievement-description">Crack the secret 4-digit code in this classic logic game.</p>
+                                <p class="achievement-description">Number guessing game like Mastermind.</p>
                             </div>
                         </div>
                     </article>
                     <article class="achievement-card rarity-common game-card" data-game="number-pillars" data-src="./minigames/number-pillars/main.html" tabindex="0" role="button" aria-label="Play Number Pillars">
                         <div class="achievement-card-inner">
-                            <div class="achievement-icon">🧮</div>
-                            <div>
+                            <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-number-pillars" aria-hidden="true"></span></div>
+                            <div class="game-card-copy">
                                 <h3 class="achievement-title rarity-common">Number Pillars</h3>
-                                <p class="achievement-description">Clear number tiles to leave a stack that matches the target.</p>
+                                <p class="achievement-description">Match your sum to the target</p>
                             </div>
                         </div>
                     </article>
                     <article class="achievement-card rarity-common game-card" data-game="chess" data-src="./minigames/chess/game.html" tabindex="0" role="button" aria-label="Play Chess">
                         <div class="achievement-card-inner">
-                            <div class="achievement-icon">♟</div>
-                            <div>
+                            <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-chess" aria-hidden="true"></span></div>
+                            <div class="game-card-copy">
                                 <h3 class="achievement-title rarity-common">Chess</h3>
-                                <p class="achievement-description">A local two-player game with legal moves and full chess rules.</p>
+                                <p class="achievement-description">A 2-player game. Better than checkers</p>
                             </div>
                         </div>
                     </article>
                     <article class="achievement-card rarity-common game-card" data-game="cards" data-src="./minigames/cards/main.html" tabindex="0" role="button" aria-label="Play card games">
                         <div class="achievement-card-inner">
-                            <div class="achievement-icon">🂠</div>
-                            <div>
+                            <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-cards" aria-hidden="true"></span></div>
+                            <div class="game-card-copy">
                                 <h3 class="achievement-title rarity-common">Card Games</h3>
-                                <p class="achievement-description">Play Blackjack or Dou Dizhu with dynamically dealt cards.</p>
+                                <p class="achievement-description">Let's go gambling! Sign your soul away with multiple card games.</p>
                             </div>
                         </div>
                     </article>
-                     <article class="achievement-card rarity-common game-card" data-game="mc" data-src="https://eaglercraft-26-2-u1-cdn.u2471966200.workers.dev/eaglercraft-26.2-u1.html?v=u1-20260930" tabindex="1" role="button" aria-label="Play the will of the Eagles">
+                    <article class="achievement-card rarity-common game-card" data-game="mc" data-src="https://eaglercraft-26-2-u1-cdn.u2471966200.workers.dev/eaglercraft-26.2-u1.html?v=u1-20260930" tabindex="0" role="button" aria-label="Play Minecraft">
                         <div class="achievement-card-inner">
-                            <div class="achievement-icon">🟩</div>
-                            <div>
-                                <h3 class="achievement-title rarity-common">Arr,Mate;s</h3>
-                                <p class="achievement-description">The Eagles hath bestowed upon us the gift of cookies. Loadth from the cookie jar - many updates hath passed and enjoy!</p>
+                            <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-minecraft" aria-hidden="true"></span></div>
+                            <div class="game-card-copy">
+                                <h3 class="achievement-title rarity-common">Minecraft</h3>
+                                <p class="achievement-description">Mine and craft on the latest updates</p>
                             </div>
                         </div>
                     </article>
+                    <div class="achievement-card rarity-common game-card-clone" aria-hidden="true">
+                        <div class="achievement-card-inner">
+                            <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-bulls" aria-hidden="true"></span></div>
+                            <div class="game-card-copy">
+                                <h3 class="achievement-title rarity-common">Bulls & Cows</h3>
+                                <p class="achievement-description">Number guessing game like Mastermind.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div id="gamePlayer" class="game-player is-hidden">
                     <button id="backToGamesBtn" class="game-back-btn"><span class="btn-icon icon-signout"></span>Back to Games</button>
                     <iframe id="gameFrame" class="game-frame" title="Game"></iframe>
                 </div>
             </div>
+            <nav id="gamesPagination" class="games-pagination" aria-label="Game slides">
+                <button type="button" aria-label="Show slide 1" aria-current="true">1</button>
+                <span aria-hidden="true">·</span>
+                <button type="button" aria-label="Show slide 2">2</button>
+                <span aria-hidden="true">·</span>
+                <button type="button" aria-label="Show slide 3">3</button>
+                <span aria-hidden="true">·</span>
+                <button type="button" aria-label="Show slide 4">4</button>
+                <span aria-hidden="true">·</span>
+                <button type="button" aria-label="Show slide 5">5</button>
+            </nav>
         </section>
         <section class="panel tab-panel is-hidden" id="blogPanel" aria-labelledby="blog-heading">
             <div class="panel-header">
@@ -168,6 +194,9 @@
         <section class="panel" id="milestonesPanel" aria-labelledby="milestones-heading">
             <div class="panel-header">
                 <h1 id="milestones-heading">Milestones</h1>
+                <div class="panel-header-actions">
+                    <div id="scoreTracker" class="score-tracker">Points: 0 / 0</div>
+                </div>
             </div>
             <div class="panel-body">
                 <div id="milestonesGrid" class="milestones-grid" aria-live="polite"></div>
@@ -240,13 +269,13 @@
     <script src="./js/loaders.js"></script>
     <!-- core scripts + utils here -->
     <script src="./js/utils.js"></script>
-    <script src="./js/renderers.js?v=achievement-namespaces"></script>
+    <script src="./js/renderers.js?v=achievement-tree-connectors-v7"></script>
     <script src="./js/achievements.js"></script>
     <script src="./js/auth.js"></script>
     <script src="./js/blog.js"></script>
     <script src="./js/tabs.js"></script>
     <script src="./js/settings.js"></script>
-    <script src="./js/games.js?v=game-invites"></script>
+    <script src="./js/games.js?v=games-carousel-v15"></script>
     <script src="./js/tips.js"></script>
     <!-- api config stuff -->
     <script src="./api-config/giphy-config.js"></script>

@@ -1,6 +1,7 @@
 {
 	"title": "Codebreaker",
 	"description": "Crack the secret code in Bulls & Cows",
+	"successors": [],
 	"rarity": "rare",
 	"icon": "CB"
 }

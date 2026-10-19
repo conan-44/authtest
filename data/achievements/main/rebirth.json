@@ -1,6 +1,7 @@
 {
 	"title": "Rebirth",
 	"description": "And so we did.",
+	"successors": ["main:the-end"],
 	"rarity": "secret",
 	"icon": "RE"
 }

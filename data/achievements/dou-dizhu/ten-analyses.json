@@ -1,6 +1,7 @@
 {
     "title": "Strategist",
     "description": "Analyze ten Dou Dizhu positions.",
+    "successors": [],
     "rarity": "epic",
     "icon": "10"
 }

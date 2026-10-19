@@ -22,6 +22,12 @@
   "chess:ten-analyses",
   "chess:first-opening",
   "chess:opening-collector",
+  "chess:castle-first",
+  "chess:castle-blunder",
+  "chess:castle-mate",
+  "chess:enpassant-first",
+  "chess:enpassant-blunder",
+  "chess:enpassant-great",
   // blackjack
   "blackjack:first-hand",
   "blackjack:first-win",

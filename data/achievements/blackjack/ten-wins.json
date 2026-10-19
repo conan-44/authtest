@@ -1,6 +1,7 @@
 {
     "title": "Table Regular",
     "description": "Win ten hands of Blackjack.",
+    "successors": [],
     "rarity": "epic",
     "icon": "10"
 }
