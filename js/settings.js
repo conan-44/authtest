@@ -92,10 +92,8 @@ const APP_THEME_PRESETS = [
                 "--color-panel-header": mixColors("#eeeeee", accent, 0.09),
                 "--color-card": mixColors("#dddddd", secondary, 0.08),
                 "--color-control": mixColors("#eeeeee", accent, 0.04),
-                "--color-rare": secondary,
                 "--color-points": secondary,
                 "--color-points-border": colorWithAlpha(secondary, 0.35),
-                "--color-rarity-rare-border": colorWithAlpha(secondary, 0.75),
                 "--color-score-surface": mixColors("#eef2f4", accent, 0.04),
                 "--color-shadow": colorWithAlpha(accent, 0.18),
                 "--shadow-heading": colorWithAlpha(accent, 0.18)
@@ -106,8 +104,8 @@ const APP_THEME_PRESETS = [
                 "--color-heading", "--color-panel-surface", "--color-panel-header-surface",
                 "--color-panel-body-surface", "--color-card-surface", "--color-control-surface",
                 "--color-panel", "--color-panel-header", "--color-card", "--color-control",
-                "--color-rare", "--color-points", "--color-points-border",
-                "--color-rarity-rare-border", "--color-score-surface", "--color-shadow",
+                "--color-points", "--color-points-border",
+                "--color-score-surface", "--color-shadow",
                 "--shadow-heading"
             ].forEach(name => root.style.removeProperty(name));
         }

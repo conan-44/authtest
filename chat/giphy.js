@@ -15,9 +15,6 @@ let gifSearchRequestId = 0;
 let gifSearchQuery = "";
 let gifSearchPage = 1;
 let gifSearchPageCount = 0;
-const GIF_PICKER_COLLAPSED_KEY = "chat-gif-picker-collapsed";
-const toggleGifPickerBtn = document.getElementById("toggleGifPickerBtn");
-const chatOptionsBody = document.getElementById("chatOptionsBody");
 function parseGifMessage(content) {
   content = parseReplyMessage(content).content;
   const idPrefix = "gif:giphy:";
@@ -435,12 +432,6 @@ async function sendGiphyGif(gif) {
 }
 
 
-toggleGifPickerBtn.addEventListener("click", () => {
-  const isExpanded = toggleGifPickerBtn.getAttribute("aria-expanded") === "true";
-  toggleGifPickerBtn.setAttribute("aria-expanded", String(!isExpanded));
-  chatOptionsBody.hidden = isExpanded;
-  toggleGifPickerBtn.textContent = isExpanded ? "Show GIF picker" : "Minimize GIF picker";
-});
 gifSearchForm.addEventListener("submit", searchGiphyGifs);
 gifSearchPagination.addEventListener("click", event => {
   const button = event.target.closest("button[data-page]");

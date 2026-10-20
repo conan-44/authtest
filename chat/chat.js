@@ -423,9 +423,10 @@ function appendMessageUI(msg) {
   const username = escapeHTML(msg.profiles?.username || 'Player');
   const flair = msg.profiles?.flair ? `<span class="chat-flair">${escapeHTML(msg.profiles.flair)}</span>` : '';
   const timestamp = msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+  const profileUserId = escapeHTML(String(msg.user_id || ""));
 
   // Use a dedicated .chat-body wrapper with data-raw storing unescaped/uncensored raw text
-  div.innerHTML = `<div class="chat-header">${username}${flair}<span class="chat-timestamp">${timestamp}</span><button type="button" class="chat-reply-button" data-message-action="reply" aria-label="Reply"><span class="btn-icon icon-reply" aria-hidden="true"></span></button></div><div class="chat-reply-preview is-hidden"></div><div class="chat-body">${escapeHTML(rawContent)}</div>`;
+  div.innerHTML = `<div class="chat-header"><button type="button" class="chat-profile-link" data-chat-profile-user data-user-id="${profileUserId}" aria-label="View ${username}'s profile">${username}</button>${flair}<span class="chat-timestamp">${timestamp}</span><button type="button" class="chat-reply-button" data-message-action="reply" aria-label="Reply"><span class="btn-icon icon-reply" aria-hidden="true"></span></button></div><div class="chat-reply-preview is-hidden"></div><div class="chat-body">${escapeHTML(rawContent)}</div>`;
 
   const bodyDiv = div.querySelector('.chat-body');
   bodyDiv.setAttribute('data-raw', rawContent);

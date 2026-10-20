@@ -609,6 +609,24 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
+}
+.chat-profile-link {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent !important;
+    color: var(--color-heading);
+    font: inherit;
+    text-align: left;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+.chat-profile-link:hover,
+.chat-profile-link:focus-visible {
+    text-decoration-color: currentColor;
     flex: 0 0 132px;
     font-family: 'lowsmall', sans-serif;
     font-size: 12px;
@@ -762,6 +780,10 @@ body {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
 }
+#chatOptionsPanel.is-minimized {
+    height: auto;
+    grid-template-rows: auto;
+}
 #milestonesPanel > .panel-body,
 #chatOptionsPanel > .panel-body {
   min-height: 0;
@@ -890,6 +912,26 @@ body {
     flex: 1 1 auto;
     gap: var(--card-gap);
     min-height: 0;
+}
+.chat-profile-view {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    gap: var(--card-gap);
+    padding: var(--control-padding);
+    overflow: hidden;
+}
+.chat-profile-view > #chatPublicProfileContent {
+    min-height: 0;
+    overflow-y: auto;
+}
+.chat-profile-back {
+    align-self: flex-start;
+    width: auto;
+    margin: 0;
+    padding: var(--control-padding);
 }
 .chat-conversation {
     display: flex;
@@ -1244,34 +1286,183 @@ body {
     background: var(--color-white);
 }
 .chat-options-body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--card-gap);
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
     min-height: 0;
     overflow: hidden;
 }
 .chat-options-body[hidden] {
     display: none !important;
 }
-.gif-search-form {
+.chat-options-controls {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    gap: var(--card-gap);
+    min-width: 0;
+    flex-wrap: wrap;
+}
+.chat-options-tabs {
+    display: flex;
+    gap: var(--card-gap);
+}
+.chat-options-controls button {
+    width: auto;
+    min-width: 64px;
+    margin: 0;
+    padding: var(--control-padding);
+    color: var(--color-muted);
+}
+.chat-options-controls button[aria-selected="true"] {
+    background: var(--color-control);
+    color: var(--color-heading);
+}
+.chat-options-tab-panels {
+    min-height: 0;
+    overflow: hidden;
+}
+.chat-options-tab-panel {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    flex-direction: column;
+    gap: var(--card-gap);
+    overflow-y: auto;
+}
+.chat-options-tab-panel[hidden] {
+    display: none !important;
+}
+.search-form {
     display: flex;
     align-items: center;
     gap: var(--card-gap);
 }
-.gif-search-form label,
-.gif-search-status,
+.search-form label,
+.search-status,
 .giphy-attribution {
     font-family: 'lowsmall', sans-serif;
 }
-.gif-search-form input {
+.search-form input {
     flex: 1 1 auto;
     min-width: 0;
     padding: var(--control-padding);
 }
-.gif-search-form button {
+.search-form button {
     padding: var(--control-padding);
 }
-.gif-search-status {
+.public-profile-flair,
+.public-profile-error {
+    font-family: 'lowsmall', sans-serif;
+}
+.profile-search-results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--card-gap);
+}
+.profile-search-result {
+    display: flex;
+    width: auto;
+    min-width: 130px;
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 0;
+    padding: var(--control-padding);
+    border: var(--achievement-border-width) solid var(--color-white);
+    background: var(--color-card-surface);
+    text-align: left;
+}
+.profile-search-result span {
+    color: var(--color-muted);
+    font-family: 'lowsmall', sans-serif;
+}
+.public-profile-name {
+    margin: 0;
+    color: var(--color-heading);
+    font-family: 'capsmall', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+}
+.public-profile-flair {
+    margin: 2px 0 var(--card-gap);
+    color: var(--color-muted);
+}
+.public-profile-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--card-gap);
+}
+.public-profile-stat {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+    border: var(--achievement-border-width) solid var(--theme-secondary, var(--color-points));
+    padding: var(--control-padding);
+    background: var(--color-card-surface);
+}
+.public-profile-stat-label {
+    color: var(--color-muted);
+    font-family: 'lowsmall', sans-serif;
+    font-size: 0.9em;
+}
+.public-profile-stat-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-heading);
+    font-family: 'capsmall', sans-serif;
+    font-weight: 400;
+}
+.public-profile-medal-stat .public-profile-stat-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.public-profile-medal-icon {
+    position: relative;
+    right: -16px;
+    width: 16px;
+    height: 24px;
+    transform: scale(2);
+}
+.public-profile-medal-icon .icons_medal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: scale(2);
+    transform-origin: top left;
+}
+.public-profile-rarity-heading {
+    margin: var(--card-gap) 0 0;
+    color: var(--color-heading);
+    font-family: 'capsmall', sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+}
+.public-profile-rarity-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: var(--card-gap);
+    margin: 0;
+}
+.public-profile-rarity {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--card-gap);
+    border: var(--achievement-border-width) solid var(--theme-secondary, var(--color-points));
+    padding: 6px 8px;
+    background: var(--color-card-surface);
+    font-family: 'capsmall', sans-serif;
+}
+.public-profile-rarity dt,
+.public-profile-rarity dd {
+    margin: 0;
+}
+.public-profile-error {
+    margin: 0;
+    color: var(--color-error, #9e2525);
+}
+.search-status {
     margin: 0;
     color: var(--color-muted);
 }

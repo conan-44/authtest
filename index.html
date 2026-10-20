@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/gh/Parcoil/cloak@main/src/index.min.js"></script>
     <link rel="icon" type="image/x-icon" href="./assets/test-favicon.png">
-    <link rel="stylesheet" href="./style.css?v=games-carousel-v9">
+    <link rel="stylesheet" href="./style.css?v=public-profiles-v4">
 </head>
 <body>
     <main class="page">
@@ -85,6 +85,12 @@
                         </div>
                     </aside>
                 </div>
+                <section id="chatProfileView" class="chat-profile-view is-hidden" aria-label="Player profile">
+                    <button type="button" id="chatProfileBackBtn" class="chat-profile-back">
+                        <span class="btn-icon icon-signout" aria-hidden="true"></span>Back to Chat
+                    </button>
+                    <div id="chatPublicProfileContent"></div>
+                </section>
             </div>
         </section>
         <section class="panel tab-panel is-hidden" id="settingsPanel" aria-labelledby="settings-heading">
@@ -205,20 +211,36 @@
         <section class="panel is-hidden" id="chatOptionsPanel" aria-labelledby="chat-options-heading">
             <div class="panel-header">
                 <h1 id="chat-options-heading">Chat Options</h1>
-                <div class="panel-header-actions">
-                    <button type="button" id="toggleGifPickerBtn" aria-expanded="true" aria-controls="chatOptionsBody">Minimize GIF picker</button>
+                <div class="chat-options-controls" role="group" aria-label="Chat options">
+                    <div class="chat-options-tabs" role="tablist" aria-label="Chat option panels">
+                        <button type="button" id="chatOptionsGifsTab" role="tab" aria-selected="true" aria-controls="chatOptionsGifs" data-chat-options-tab="gifs">GIFs</button>
+                        <button type="button" id="chatOptionsPlayersTab" role="tab" aria-selected="false" aria-controls="chatOptionsPlayers" data-chat-options-tab="players" tabindex="-1">Players</button>
+                    </div>
+                    <button type="button" id="minimizeChatOptionsBtn" aria-expanded="true" aria-controls="chatOptionsBody">Minimize</button>
                 </div>
             </div>
             <div class="panel-body chat-options-body" id="chatOptionsBody">
-                <form id="gifSearchForm" class="gif-search-form">
-                    <label for="gifSearchInput">Search GIPHY</label>
-                    <input type="search" id="gifSearchInput" placeholder="Search GIFs..." autocomplete="off">
-                    <button type="submit" id="gifSearchButton">Search</button>
-                </form>
-                <p id="gifSearchStatus" class="gif-search-status" aria-live="polite">Search for a GIF to send it to chat.</p>
-                <div id="gifSearchResults" class="gif-search-results" aria-label="GIF search results"></div>
-                <nav id="gifSearchPagination" class="gif-search-pagination" aria-label="GIF search pages" hidden></nav>
-                <a class="giphy-attribution" href="https://giphy.com/" target="_blank" rel="noopener noreferrer">Powered by GIPHY</a>
+                <div class="chat-options-tab-panels">
+                    <section id="chatOptionsGifs" class="chat-options-tab-panel" role="tabpanel" aria-labelledby="chatOptionsGifsTab">
+                        <form id="gifSearchForm" class="search-form">
+                            <label for="gifSearchInput">Search GIPHY</label>
+                            <input type="search" id="gifSearchInput" placeholder="Search GIFs..." autocomplete="off">
+                            <button type="submit" id="gifSearchButton">Search</button>
+                        </form>
+                        <p id="gifSearchStatus" class="search-status" aria-live="polite">Search for a GIF to send it to chat. <a class="giphy-attribution" href="https://giphy.com/" target="_blank" rel="noopener noreferrer">Powered by GIPHY</a></p>
+                        <div id="gifSearchResults" class="gif-search-results" aria-label="GIF search results"></div>
+                        <nav id="gifSearchPagination" class="gif-search-pagination" aria-label="GIF search pages" hidden></nav>
+                    </section>
+                    <section id="chatOptionsPlayers" class="chat-options-tab-panel is-hidden" role="tabpanel" aria-labelledby="chatOptionsPlayersTab" hidden>
+                        <form id="profileSearchForm" class="search-form">
+                            <label for="profileSearchInput">Search Player</label>
+                            <input type="search" id="profileSearchInput" maxlength="50" placeholder="Search usernames..." autocomplete="off">
+                            <button type="submit">Search</button>
+                        </form>
+                        <p id="profileSearchStatus" class="search-status" aria-live="polite">Search for a username, or select a name in chat to view that profile.</p>
+                        <div id="profileSearchResults" class="profile-search-results" aria-label="Player search results"></div>
+                    </section>
+                </div>
             </div>
         </section>
     </main> 
@@ -246,6 +268,7 @@
                 <button id="addPasswordBtn"><span class="btn-icon icon-signup"></span>Add Password to Account</button>
             </div>
             <hr />
+            <button type="button" id="viewOwnProfileBtn" class="btn-secondary">View My Public Profile</button>
             <input type="text" id="editUsername" placeholder="New Username" />
             <input type="text" id="editFlair" placeholder="New Flair" />
             <button id="updateProfileBtn"><span class="btn-icon icon-save"></span>Save Profile Changes</button>
@@ -281,9 +304,10 @@
     <script src="./api-config/giphy-config.js"></script>
     <script src="./api-config/cloak-config.js?v=main-achievements"></script>
     <!-- chat stuff -->
-    <script src="./chat/chat.js?v=game-invites"></script>
+    <script src="./chat/chat.js?v=public-profiles-v2"></script>
     <script src="./chat/channels.js?v=chat-presence"></script>
     <script src="./chat/actions.js?v=game-invites"></script>
-    <script src="./chat/giphy.js?v=game-invites"></script>
+    <script src="./chat/giphy.js?v=public-profiles-v2"></script>
+    <script src="./chat/profiles.js?v=public-profiles-v5"></script>
 </body>
 </html>
