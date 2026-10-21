@@ -11,6 +11,12 @@ let lastPresenceActivityAt = Date.now();
 let lastPresenceTrackAt = 0;
 let lastPresenceStatus = null;
 let presenceUsername = "Player";
+let presenceAvatar = null;
+const presenceAvatarCache = new Map();
+const presenceAvatarRequests = new Set();
+const profileRankCache = new Map();
+const profileRankRequests = new Set();
+const PROFILE_RANKS = ["BANANA", "TOAST", "MUFFIN", "COOKIE"];
 const messageRecords = new Map();
 const seenChatJoinNotices = new Set();
 window.addEventListener('censoring-setting-changed', () => {
@@ -48,7 +54,7 @@ async function fetchChatHistory(channelId = activeChatChannelId) {
   const loadMessages = async includeChannelId => {
     let query = _supabase
       .from('messages')
-      .select(`id, content, created_at, user_id${includeChannelId ? ", channel_id" : ""}, profiles(username, flair)`)
+      .select(`id, content, created_at, user_id${includeChannelId ? ", channel_id" : ""}, profiles(username, flair, avatar)`)
       .order('created_at', { ascending: false })
       .limit(50);
     if (includeChannelId) {
@@ -67,6 +73,7 @@ async function fetchChatHistory(channelId = activeChatChannelId) {
     return;
   }
 
+  await loadMissingProfileRanks([...new Set((data || []).map(message => message.user_id).filter(Boolean))]);
   (data || []).reverse().forEach(msg => {
     messageRecords.set(String(msg.id), msg);
     appendMessageUI(msg);
@@ -86,13 +93,14 @@ function initRealtimeChat() {
       if (!payload.new.content || (payload.new.channel_id || null) !== activeChatChannelId) return;
       const { data: profile } = await _supabase
         .from('profiles')
-        .select('username, flair')
+        .select('username, flair, avatar')
         .eq('id', payload.new.user_id)
         .single();
 
       const message = { ...payload.new, profiles: profile };
       messageRecords.set(String(message.id), message);
       appendMessageUI(message);
+      if (message.user_id) loadMissingProfileRanks([message.user_id]);
       scrollToBottom();
 
       if (!payload.new.channel_id && chatPanel.classList.contains('is-hidden') && typeof showPopup === "function") {
@@ -123,12 +131,15 @@ function renderChatPresence(state = {}) {
   Object.values(state).flat().forEach(presence => {
     const userId = presence?.user_id;
     if (!userId) return;
+    if (presence.avatar) presenceAvatarCache.set(userId, presence.avatar);
     const existing = members.get(userId);
     if (!existing || presence.status === "active") {
       members.set(userId, {
         username: typeof presence.username === "string" && presence.username.trim()
           ? presence.username.trim()
           : "Player",
+        avatar: presence.avatar || presenceAvatarCache.get(userId) || null,
+        rank: profileRankCache.get(userId) || "BANANA",
         status: presence.status === "active" ? "active" : "idle"
       });
     }
@@ -141,16 +152,24 @@ function renderChatPresence(state = {}) {
   list.replaceChildren(...sortedMembers.map(([, member]) => {
     const item = document.createElement("li");
     item.className = "chat-presence-member";
-    const dot = document.createElement("i");
-    dot.className = `presence-dot is-${member.status}`;
-    dot.setAttribute("aria-hidden", "true");
+    const avatar = makeChatAvatar(member.avatar, "chat-presence-avatar", member.username);
+    avatar.classList.add(`is-${member.status}`);
+    if (["TOAST", "MUFFIN", "COOKIE"].includes(member.rank)) {
+      avatar.classList.add("profile-rank-aura", `rank-${member.rank.toLowerCase()}`);
+    }
+    avatar.title = member.status === "active" ? "Active" : "Idle";
     const name = document.createElement("span");
     name.className = "chat-presence-name";
     name.textContent = member.username;
+    applyChatRank(name, member.rank, { nameOnly: true });
+    const adminBadge = member.rank === "COOKIE" ? makeChatAdminBadge() : null;
     const label = document.createElement("span");
     label.className = "chat-presence-member-status";
     label.textContent = member.status;
-    item.append(dot, name, label);
+    item.append(avatar);
+    item.appendChild(name);
+    if (adminBadge) item.appendChild(adminBadge);
+    item.appendChild(label);
     return item;
   }));
   count.textContent = String(sortedMembers.length);
@@ -159,6 +178,112 @@ function renderChatPresence(state = {}) {
   } else if (chatPresenceChannel) {
     status.textContent = "No members are online yet.";
   }
+  loadMissingPresenceAvatars([...members.keys()]);
+  loadMissingProfileRanks([...members.keys()]);
+}
+
+async function loadMissingPresenceAvatars(userIds) {
+  const missingIds = userIds.filter(userId => (
+    !presenceAvatarCache.has(userId) && !presenceAvatarRequests.has(userId)
+  ));
+  if (!missingIds.length) return;
+  missingIds.forEach(userId => presenceAvatarRequests.add(userId));
+
+  try {
+    const { data, error } = await _supabase
+      .from("public_profiles")
+      .select("id, avatar")
+      .in("id", missingIds);
+    if (error) throw error;
+    (data || []).forEach(profile => {
+      presenceAvatarCache.set(profile.id, profile.avatar || null);
+    });
+    missingIds.forEach(userId => {
+      if (!presenceAvatarCache.has(userId)) presenceAvatarCache.set(userId, null);
+    });
+    if (chatPresenceChannel) renderChatPresence(chatPresenceChannel.presenceState());
+  } catch (error) {
+    console.error("Could not load chat member profile pictures.", error);
+  } finally {
+    missingIds.forEach(userId => presenceAvatarRequests.delete(userId));
+  }
+}
+
+async function loadMissingProfileRanks(userIds) {
+  const missingIds = userIds.filter(userId => (
+    !profileRankCache.has(userId) && !profileRankRequests.has(userId)
+  ));
+  if (!missingIds.length) return;
+  missingIds.forEach(userId => profileRankRequests.add(userId));
+
+  try {
+    const { data, error } = await _supabase.rpc("get_public_profile_ranks", {
+      p_user_ids: missingIds
+    });
+    if (error) throw error;
+    (data || []).forEach(profile => {
+      if (PROFILE_RANKS.includes(profile.rank)) profileRankCache.set(profile.user_id, profile.rank);
+    });
+    missingIds.forEach(userId => {
+      if (!profileRankCache.has(userId)) profileRankCache.set(userId, "BANANA");
+    });
+    missingIds.forEach(refreshChatProfileDecorations);
+    if (chatPresenceChannel) renderChatPresence(chatPresenceChannel.presenceState());
+  } catch (error) {
+    console.error("Could not load chat member ranks.", error);
+  } finally {
+    missingIds.forEach(userId => profileRankRequests.delete(userId));
+  }
+}
+
+function makeChatAdminBadge() {
+  const badge = document.createElement("span");
+  badge.className = "profile-admin-badge chat-admin-badge";
+  badge.setAttribute("aria-label", "Admin");
+  const icon = document.createElement("img");
+  icon.src = "./assets/admin.png";
+  icon.alt = "";
+  icon.setAttribute("aria-hidden", "true");
+  const label = document.createElement("span");
+  label.textContent = "ADMIN";
+  badge.append(icon, label);
+  return badge;
+}
+
+function applyChatRank(element, rank, { nameOnly = false } = {}) {
+  element.classList.remove(
+    "rank-banana",
+    "rank-toast",
+    "rank-muffin",
+    "rank-cookie",
+    "rank-flair-enhanced"
+  );
+  if (PROFILE_RANKS.includes(rank)) element.classList.add(`rank-${rank.toLowerCase()}`);
+  if (!nameOnly && (rank === "MUFFIN" || rank === "COOKIE")) {
+    element.classList.add("rank-flair-enhanced");
+  }
+  if (rank === "COOKIE") element.dataset.text = element.textContent;
+  else delete element.dataset.text;
+}
+
+function refreshChatProfileDecorations(userId) {
+  if (typeof userId !== "string" || !userId) return;
+  const rank = profileRankCache.get(userId) || "BANANA";
+  document.querySelectorAll(`#chatMessages .chat-msg[data-user-id="${CSS.escape(userId)}"]`).forEach(message => {
+    const avatar = message.querySelector(".chat-name-avatar");
+    const profileLink = message.querySelector(".chat-profile-link");
+    const username = message.querySelector(".chat-profile-username");
+    const flair = message.querySelector(".chat-flair");
+    if (avatar && ["TOAST", "MUFFIN", "COOKIE"].includes(rank)) {
+      avatar.classList.add("profile-rank-aura", `rank-${rank.toLowerCase()}`);
+    }
+    if (profileLink) {
+      profileLink.querySelector(".chat-admin-badge")?.remove();
+      if (rank === "COOKIE") profileLink.appendChild(makeChatAdminBadge());
+    }
+    if (username) applyChatRank(username, rank, { nameOnly: true });
+    if (flair) applyChatRank(flair, rank);
+  });
 }
 
 function stopChatPresence() {
@@ -174,6 +299,7 @@ function stopChatPresence() {
   }
   lastPresenceStatus = null;
   lastPresenceTrackAt = 0;
+  presenceAvatar = null;
   renderChatPresence();
 }
 
@@ -197,6 +323,7 @@ async function trackChatPresence(force = false) {
     const result = await channel.track({
       user_id: currentChatUserId,
       username: presenceUsername,
+      avatar: presenceAvatar,
       status,
       last_active_at: new Date(now).toISOString()
     });
@@ -228,12 +355,13 @@ window.setChatPresenceRoom = async function setChatPresenceRoom(channelId) {
   if (status) status.textContent = "Connecting to presence…";
   const { data: profile, error: profileError } = await _supabase
     .from("profiles")
-    .select("username")
+    .select("username, avatar")
     .eq("id", currentChatUserId)
     .maybeSingle();
   if (profileError) console.error("Could not load the chat presence profile.", profileError.message);
   if (generation !== chatPresenceGeneration || !currentChatUserId) return;
   presenceUsername = profile?.username || "Player";
+  presenceAvatar = profile?.avatar || null;
 
   const topic = channelId ? `chat-presence:channel:${channelId}` : "chat-presence:global";
   const channel = _supabase.channel(topic, {
@@ -434,14 +562,21 @@ function appendMessageUI(msg) {
   div.dataset.userId = String(msg.user_id || "");
   div.dataset.username = msg.profiles?.username || "Player";
 
-  const username = escapeHTML(msg.profiles?.username || 'Player');
+  const username = msg.profiles?.username || 'Player';
   const flair = msg.profiles?.flair ? `<span class="chat-flair">${escapeHTML(msg.profiles.flair)}</span>` : '';
   const timestamp = msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
   const profileUserId = escapeHTML(String(msg.user_id || ""));
 
   // Use a dedicated .chat-body wrapper with data-raw storing unescaped/uncensored raw text
-  div.innerHTML = `<div class="chat-header"><button type="button" class="chat-profile-link" data-chat-profile-user data-user-id="${profileUserId}" aria-label="View ${username}'s profile">${username}</button>${flair}<span class="chat-timestamp">${timestamp}</span><button type="button" class="chat-reply-button" data-message-action="reply" aria-label="Reply"><span class="btn-icon icon-reply" aria-hidden="true"></span></button></div><div class="chat-reply-preview is-hidden"></div><div class="chat-body">${escapeHTML(rawContent)}</div>`;
+  div.innerHTML = `<div class="chat-header"><button type="button" class="chat-profile-link" data-chat-profile-user data-user-id="${profileUserId}"></button>${flair}<span class="chat-timestamp">${timestamp}</span><button type="button" class="chat-reply-button" data-message-action="reply" aria-label="Reply"><span class="btn-icon icon-reply" aria-hidden="true"></span></button></div><div class="chat-reply-preview is-hidden"></div><div class="chat-body">${escapeHTML(rawContent)}</div>`;
 
+  const profileLink = div.querySelector(".chat-profile-link");
+  profileLink.setAttribute("aria-label", `View ${username}'s profile`);
+  const usernameText = document.createElement("span");
+  usernameText.className = "chat-profile-username";
+  usernameText.textContent = username;
+  profileLink.append(makeChatAvatar(msg.profiles?.avatar, "chat-name-avatar", username), usernameText);
+  refreshChatProfileDecorations(msg.user_id);
   const bodyDiv = div.querySelector('.chat-body');
   bodyDiv.setAttribute('data-raw', rawContent);
   renderReplyPreview(div, rawContent);
@@ -459,6 +594,23 @@ function appendMessageUI(msg) {
   }
 
   container.appendChild(div);
+}
+
+function makeChatAvatar(avatar, className, username) {
+  if (avatar && window.ProfileAvatars && !window.ProfileAvatars.isDefault(avatar)) {
+    const canvas = document.createElement("canvas");
+    canvas.className = className;
+    canvas.setAttribute("role", "img");
+    canvas.setAttribute("aria-label", `${username || "Player"}'s profile picture`);
+    if (window.ProfileAvatars.draw(canvas, avatar)) return canvas;
+    console.warn("A chat profile picture has an invalid format.", avatar);
+  }
+  const image = document.createElement("img");
+  image.className = className;
+  image.src = "./assets/profile.png";
+  image.alt = "";
+  image.setAttribute("aria-hidden", "true");
+  return image;
 }
 
 function updateMessageUI(msg) {

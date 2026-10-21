@@ -124,7 +124,14 @@
       border: 2px solid var(--color-white);
       background: var(--color-card-surface);
     }
-    .user-header p { margin: 0 0 0 10px; }
+    .user-header p {
+      display: flex;
+      flex: 1 1 auto;
+      align-items: center;
+      min-width: 0;
+      margin: 0 0 0 10px;
+    }
+    .account-admin-badge { margin-left: auto; }
     .box { background: var(--color-panel-surface); padding: 16px; margin-bottom: 16px; }
     @keyframes playSprite { from { background-position-y: 0px; } to { background-position-y: -32px; } }
     button:hover .btn-icon { animation: playSprite 0.5s steps(4); }
@@ -709,6 +716,9 @@ body {
     gap: 6px;
 }
 .chat-profile-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     width: auto;
     margin: 0;
     padding: 0;
@@ -1091,6 +1101,35 @@ body {
     font-family: 'lowsmall', sans-serif;
     font-size: 12px;
 }
+.chat-name-avatar,
+.chat-presence-avatar {
+    display: block;
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    image-rendering: pixelated;
+    object-fit: contain;
+}
+.chat-name-avatar.profile-rank-aura,
+.chat-presence-avatar.profile-rank-aura {
+    outline: 1px solid var(--theme-secondary, var(--color-points));
+    outline-offset: 1px;
+}
+.chat-presence-avatar {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--color-muted);
+    border-radius: 0;
+}
+.chat-presence-avatar.is-active { border-color: #55c879; }
+.chat-presence-avatar.is-idle { border-color: #d7a947; }
+.chat-presence-avatar.profile-rank-aura.rank-muffin,
+.chat-presence-avatar.profile-rank-aura.rank-cookie {
+    outline-color: #477fbd;
+}
+.chat-presence-avatar.profile-rank-aura.rank-cookie {
+    outline-color: #c94a4a;
+}
 .chat-presence-name {
     flex: 1 1 auto;
     overflow: hidden;
@@ -1117,16 +1156,15 @@ body {
     align-items: center;
     gap: 4px;
 }
-.presence-dot {
+.presence-status-key {
     display: inline-block;
-    flex: 0 0 8px;
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--color-muted);
     border-radius: 50%;
-    background: var(--color-muted);
 }
-.presence-dot.is-active { background: #55c879; }
-.presence-dot.is-idle { background: #d7a947; }
+.presence-status-key.is-active { border-color: #55c879; }
+.presence-status-key.is-idle { border-color: #d7a947; }
 #chatPanel > .panel-header {
     flex-wrap: wrap;
 }
@@ -1491,12 +1529,33 @@ body {
 .public-profile-heading {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: var(--card-gap);
 }
 .public-profile-avatar {
     width: 48px;
     height: 48px;
     image-rendering: pixelated;
+}
+.public-profile-avatar.profile-rank-aura {
+    border: 2px solid var(--theme-secondary, var(--color-points));
+    box-shadow: none;
+}
+.public-profile-avatar.profile-rank-aura.rank-muffin {
+    border-color: #477fbd;
+}
+.public-profile-avatar.profile-rank-aura.rank-cookie {
+    border-color: #c94a4a;
+}
+#authProfileAvatar.profile-rank-aura.rank-cookie {
+    border-color: #c94a4a;
+}
+#authProfileAvatar.profile-rank-aura {
+    border-color: var(--theme-secondary, var(--color-points));
+    box-shadow: none;
+}
+#authProfileAvatar.profile-rank-aura.rank-muffin {
+    border-color: #477fbd;
 }
 .public-profile-name {
     margin: 0;
@@ -1509,6 +1568,62 @@ body {
     margin: 2px 0 var(--card-gap);
     color: var(--color-muted);
     font-family: 'capsmall', sans-serif;
+}
+.rank-flair-enhanced.rank-muffin,
+.chat-flair.rank-muffin,
+.public-profile-flair.rank-muffin {
+    filter: hue-rotate(10deg) saturate(1.05);
+}
+.rank-flair-enhanced.rank-cookie,
+.chat-flair.rank-cookie,
+.public-profile-flair.rank-cookie {
+    position: relative;
+    width: fit-content;
+    color: #c94a4a !important;
+}
+.profile-admin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #c94a4a;
+    font-family: 'capsmall', sans-serif;
+    font-size: 0.85rem;
+}
+.profile-admin-badge img {
+    width: 24px;
+    height: 24px;
+    image-rendering: pixelated;
+}
+.chat-admin-badge img {
+    width: 16px;
+    height: 16px;
+}
+.chat-admin-badge {
+    font-size: 0.7rem;
+}
+.chat-profile-username.rank-cookie,
+.chat-presence-name.rank-cookie,
+.public-profile-name.rank-cookie,
+#displayUsername.rank-cookie {
+    color: #c94a4a;
+}
+.rank-effects-disabled .profile-rank-aura {
+    outline-color: var(--color-divider) !important;
+    box-shadow: none !important;
+    animation: none !important;
+}
+.rank-effects-disabled .profile-rank-aura:not(.chat-presence-avatar) {
+    border-color: var(--color-divider) !important;
+}
+.rank-effects-disabled .rank-muffin,
+.rank-effects-disabled .rank-cookie {
+    filter: none !important;
+    color: inherit !important;
+    text-shadow: none !important;
+    animation: none !important;
+}
+.rank-effects-disabled .profile-admin-badge {
+    display: none !important;
 }
 .profile-avatar-editor {
     margin: var(--panel-body-padding) 0;
@@ -1627,10 +1742,11 @@ body {
 }
 .public-profile-medal-icon {
     position: relative;
-    right: -16px;
+    display: inline-block;
+    flex: 0 0 16px;
     width: 16px;
     height: 24px;
-    transform: scale(2);
+    overflow: visible;
 }
 .public-profile-medal-icon .icons_medal {
     position: absolute;
@@ -1639,6 +1755,25 @@ body {
     transform: scale(2);
     transform-origin: top left;
 }
+.public-profile-rank-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.profile-rank-icon {
+    display: inline-block;
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    background-image: url("./assets/ranks.png");
+    background-repeat: no-repeat;
+    background-size: 64px 16px;
+    image-rendering: pixelated;
+}
+.profile-rank-icon.rank-cookie { background-position: 0 0; }
+.profile-rank-icon.rank-muffin { background-position: -16px 0; }
+.profile-rank-icon.rank-toast { background-position: -32px 0; }
+.profile-rank-icon.rank-banana { background-position: -48px 0; }
 .public-profile-rarity-heading {
     margin: var(--card-gap) 0 0;
     color: var(--color-heading);

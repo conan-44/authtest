@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/gh/Parcoil/cloak@main/src/index.min.js"></script>
     <link rel="icon" type="image/x-icon" href="./assets/test-favicon.png">
-    <link rel="stylesheet" href="./style.css?v=profile-default-identity-v5">
+    <link rel="stylesheet" href="./style.css?v=profile-ranks-v4">
 </head>
 <body>
     <main class="page">
@@ -80,8 +80,8 @@
                         <p id="chatPresenceStatus" class="chat-presence-status" aria-live="polite">Sign in to see who's here.</p>
                         <ul id="chatPresenceList" class="chat-presence-list"></ul>
                         <div class="chat-presence-legend" aria-label="Presence status definitions">
-                            <span><i class="presence-dot is-active"></i>Active</span>
-                            <span><i class="presence-dot is-idle"></i>Idle</span>
+                            <span><i class="presence-status-key is-active"></i>Active</span>
+                            <span><i class="presence-status-key is-idle"></i>Idle</span>
                         </div>
                     </aside>
                 </div>
@@ -321,10 +321,6 @@
         <div class="tip-toast-bubble"></div>
         <span class="tip-toast-icon" aria-hidden="true"></span>
     </aside>
-    <p class="build-indicator" aria-label="Build information">
-        <span>programmed by conan</span>
-        <span id="versionIndicator">build unknown</span>
-    </p>
     <!-- data parsers here -->
     <script src="./parsers/metajson.js"></script>
     <script src="./parsers/config.js"></script>
@@ -334,7 +330,7 @@
     <script src="./js/profile-avatars.js?v=profile-pixels-v3"></script>
     <script src="./js/renderers.js?v=achievement-tree-connectors-v7"></script>
     <script src="./js/achievements.js"></script>
-    <script src="./js/auth.js?v=profile-default-identity-v6"></script>
+    <script src="./js/auth.js?v=profile-ranks-v2"></script>
     <script src="./js/blog.js"></script>
     <script src="./js/tabs.js"></script>
     <script src="./js/settings.js"></script>
@@ -344,10 +340,10 @@
     <script src="./api-config/giphy-config.js"></script>
     <script src="./api-config/cloak-config.js?v=main-achievements"></script>
     <!-- chat stuff -->
-    <script src="./chat/chat.js?v=public-profiles-v2"></script>
+    <script src="./chat/chat.js?v=profile-ranks-v2"></script>
     <script src="./chat/channels.js?v=chat-presence"></script>
     <script src="./chat/actions.js?v=game-invites"></script>
     <script src="./chat/giphy.js?v=public-profiles-v2"></script>
-    <script src="./chat/profiles.js?v=profile-default-identity-v6"></script>
+    <script src="./chat/profiles.js?v=profile-ranks-v3"></script>
 </body>
 </html>

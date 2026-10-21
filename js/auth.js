@@ -265,6 +265,45 @@ function renderAccountProfileAvatar(avatar, username) {
   canvas.src = './assets/profile.png';
 }
 
+function applyAccountProfileRank(value) {
+  const ranks = ["BANANA", "TOAST", "MUFFIN", "COOKIE"];
+  const rank = typeof value === "string" && ranks.includes(value) ? value : "BANANA";
+  const username = document.getElementById("displayUsername");
+  const flair = document.getElementById("displayFlair");
+  const avatar = document.getElementById("authProfileAvatar");
+  const usernameRow = username.parentElement;
+
+  username.textContent = username.textContent || "Player";
+  username.classList.remove("rank-banana", "rank-toast", "rank-muffin", "rank-cookie");
+  username.classList.add(`rank-${rank.toLowerCase()}`);
+  username.dataset.text = username.textContent;
+  usernameRow.querySelectorAll(".account-admin-badge").forEach(element => element.remove());
+
+  if (rank === "COOKIE") {
+    const badge = document.createElement("span");
+    badge.className = "profile-admin-badge account-admin-badge";
+    badge.setAttribute("aria-label", "Admin");
+    const icon = document.createElement("img");
+    icon.src = "./assets/admin.png";
+    icon.alt = "";
+    icon.setAttribute("aria-hidden", "true");
+    const label = document.createElement("span");
+    label.textContent = "ADMIN";
+    badge.append(icon, label);
+    usernameRow.appendChild(badge);
+  }
+
+  avatar.classList.remove("profile-rank-aura", "rank-toast", "rank-muffin", "rank-cookie");
+  if (rank !== "BANANA") avatar.classList.add("profile-rank-aura", `rank-${rank.toLowerCase()}`);
+  flair.classList.remove("rank-muffin", "rank-cookie", "rank-flair-enhanced");
+  if (rank === "MUFFIN" || rank === "COOKIE") {
+    flair.classList.add("rank-flair-enhanced", `rank-${rank.toLowerCase()}`);
+    flair.dataset.text = flair.textContent;
+  } else {
+    delete flair.dataset.text;
+  }
+}
+
 // 3. SIGN UP FUNCTION
 document.getElementById('signUpBtn').addEventListener('click', async () => {
   const email = document.getElementById('email').value;
@@ -570,6 +609,15 @@ async function fetchProfile(userId) {
     document.getElementById('displayUsername').textContent = data.username;
     document.getElementById('displayFlair').textContent = data.flair;
     renderAccountProfileAvatar(data.avatar, data.username);
+    const { data: rank, error: rankError } = await _supabase.rpc("get_public_profile_rank", {
+      p_user_id: userId
+    });
+    if (rankError) {
+      console.error("Could not load account profile rank.", rankError);
+      applyAccountProfileRank("BANANA");
+    } else {
+      applyAccountProfileRank(rank);
+    }
     
     document.getElementById('editUsername').value = data.username || '';
     document.getElementById('editFlair').value = data.flair || '';

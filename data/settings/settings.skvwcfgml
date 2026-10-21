@@ -8,6 +8,7 @@ chat popups: true
 [chat]
 censoring: true
 hide GIFs: false
+disable rank effects: false
 [cloak]
 enabled: false
 +cloak:

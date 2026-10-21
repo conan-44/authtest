@@ -1,6 +1,7 @@
 const settingsConfigFile = "./data/settings/settings.skvwcfgml";
 const musicManifestFile = "./assets/audio/music/index.skvwmeta";
 const APP_THEME_STORAGE_KEY = "skvwaffle.theme.v1";
+const RANK_EFFECTS_SETTING_STORAGE_KEY = "skvwaffle.disable-rank-effects.v1";
 const DEFAULT_APP_THEME = { accent: "#2a4d67", secondary: "#8a5a00" };
 const APP_THEME_PRESETS = [
     { name: "Classic", accent: DEFAULT_APP_THEME.accent, secondary: DEFAULT_APP_THEME.secondary },
@@ -21,6 +22,14 @@ const APP_THEME_PRESETS = [
     applyAppTheme();
 
     window.getAppSetting = function getAppSetting(section, key, fallback = false) {
+        if (section === "chat" && key === "disable rank effects") {
+            try {
+                const saved = localStorage.getItem(RANK_EFFECTS_SETTING_STORAGE_KEY);
+                if (saved !== null) return saved === "true";
+            } catch (error) {
+                console.error("Could not read the rank effects preference.", error);
+            }
+        }
         const control = settingsList?.querySelector(
             `.settings-checkbox[data-section="${CSS.escape(section)}"][data-setting="${CSS.escape(key)}"]`
             + `, .settings-select[data-section="${CSS.escape(section)}"][data-setting="${CSS.escape(key)}"]`
@@ -32,6 +41,10 @@ const APP_THEME_PRESETS = [
         if (control.type === "range") return control.valueAsNumber;
         return fallback;
     };
+
+    function applyRankEffectsPreference(disabled) {
+        document.documentElement.classList.toggle("rank-effects-disabled", disabled);
+    }
 
     function settingId(section, key) {
         return `setting-${section}-${key}`.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -557,6 +570,26 @@ const APP_THEME_PRESETS = [
             const response = await fetch(settingsConfigFile, { cache: "no-store" });
             if (!response.ok) throw new Error(`Failed to read ${settingsConfigFile}`);
             renderSettings(window.AchievementLib.parseSettingsConfig(await response.text()));
+            const rankEffectsToggle = settingsList.querySelector(
+                '.settings-checkbox[data-section="chat"][data-setting="disable rank effects"]'
+            );
+            if (rankEffectsToggle) {
+                try {
+                    const saved = localStorage.getItem(RANK_EFFECTS_SETTING_STORAGE_KEY);
+                    if (saved !== null) rankEffectsToggle.checked = saved === "true";
+                } catch (error) {
+                    console.error("Could not load the rank effects preference.", error);
+                }
+                applyRankEffectsPreference(rankEffectsToggle.checked);
+                rankEffectsToggle.addEventListener("change", () => {
+                    try {
+                        localStorage.setItem(RANK_EFFECTS_SETTING_STORAGE_KEY, String(rankEffectsToggle.checked));
+                    } catch (error) {
+                        console.error("Could not save the rank effects preference.", error);
+                    }
+                    applyRankEffectsPreference(rankEffectsToggle.checked);
+                });
+            }
             if (typeof _supabase !== "undefined") {
                 const { data: { session } } = await _supabase.auth.getSession();
                 if (session && typeof window.playMusicOnLogin === "function") window.playMusicOnLogin();

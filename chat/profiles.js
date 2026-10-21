@@ -12,6 +12,8 @@ const chatOptionsBody = document.getElementById("chatOptionsBody");
 const minimizeChatOptionsBtn = document.getElementById("minimizeChatOptionsBtn");
 let profileRequestId = 0;
 
+const profileRanks = ["BANANA", "TOAST", "MUFFIN", "COOKIE"];
+
 async function queryPublicProfiles(buildQuery) {
   const result = await buildQuery("id, username, flair, created_at, avatar, auth_providers");
   if (result.error) throw result.error;
@@ -99,6 +101,31 @@ function makeProfileStat(labelText, valueText, extraClass = "") {
   return item;
 }
 
+function normalizeProfileRank(value) {
+  return typeof value === "string" && profileRanks.includes(value) ? value : null;
+}
+
+function makeProfileRankStat(rank) {
+  const stat = document.createElement("div");
+  stat.className = "public-profile-stat public-profile-rank-stat";
+  const label = document.createElement("span");
+  label.className = "public-profile-stat-label";
+  label.textContent = "Rank";
+  const value = document.createElement("strong");
+  value.className = "public-profile-stat-value public-profile-rank-value";
+  if (rank) {
+    const icon = document.createElement("span");
+    icon.className = `profile-rank-icon rank-${rank.toLowerCase()}`;
+    icon.setAttribute("aria-hidden", "true");
+    icon.title = rank;
+    value.append(icon, document.createTextNode(rank));
+  } else {
+    value.textContent = "Unavailable";
+  }
+  stat.append(label, value);
+  return stat;
+}
+
 function getProfileSearchCountLabel(count) {
   return `${count} player${count === 1 ? "" : "s"} found.`;
 }
@@ -144,17 +171,26 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
     }
 
     await window.achievements.loadAllFromDirectoryIndex();
-    const [{ data: stats, error: statsError }, achievements, milestones] = await Promise.all([
+    const [
+      { data: stats, error: statsError },
+      { data: rawRank, error: rankError },
+      achievements,
+      milestones
+    ] = await Promise.all([
       _supabase
         .from("public_user_stats")
         .select("user_id, achievements")
         .eq("user_id", profile.id)
         .maybeSingle(),
+      _supabase.rpc("get_public_profile_rank", { p_user_id: profile.id }),
       Promise.resolve(window.achievements.getAchievements()),
       Promise.resolve(window.achievements.getMilestones())
     ]);
     if (requestId !== profileRequestId) return;
     if (statsError) console.error("Could not load public profile achievement stats.", statsError);
+    if (rankError) console.error("Could not load the public profile rank.", rankError);
+    const rank = rankError ? null : normalizeProfileRank(rawRank);
+    if (!rankError && !rank) console.error("Supabase returned an invalid public profile rank.", rawRank);
 
     const achievementIds = Array.isArray(stats?.achievements)
       ? [...new Set(stats.achievements.filter(id => typeof id === "string"))]
@@ -192,14 +228,34 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
     const headingRow = document.createElement("div");
     headingRow.className = "public-profile-heading";
     const avatar = makeProfileAvatar(profile.avatar, "public-profile-avatar", profile.username);
-    if (avatar) headingRow.appendChild(avatar);
+    if (avatar) {
+      if (rank === "TOAST" || rank === "MUFFIN" || rank === "COOKIE") {
+        avatar.classList.add("profile-rank-aura", `rank-${rank.toLowerCase()}`);
+      }
+      headingRow.appendChild(avatar);
+    }
     const heading = document.createElement("h2");
     heading.className = "public-profile-name";
     heading.textContent = profile.username || "Player";
+    if (rank) heading.classList.add(`rank-${rank.toLowerCase()}`);
     headingRow.appendChild(heading);
+    if (rank === "COOKIE") {
+      const adminBadge = document.createElement("span");
+      adminBadge.className = "profile-admin-badge";
+      adminBadge.setAttribute("aria-label", "Admin");
+      const adminIcon = document.createElement("img");
+      adminIcon.src = "./assets/admin.png";
+      adminIcon.alt = "";
+      adminIcon.setAttribute("aria-hidden", "true");
+      const adminLabel = document.createElement("span");
+      adminLabel.textContent = "ADMIN";
+      adminBadge.append(adminIcon, adminLabel);
+      headingRow.appendChild(adminBadge);
+    }
     const flair = document.createElement("p");
-    flair.className = "public-profile-flair";
+    flair.className = `public-profile-flair${rank === "MUFFIN" || rank === "COOKIE" ? ` rank-${rank.toLowerCase()}` : ""}`;
     flair.textContent = profile.flair || "No flair";
+    if (rank === "COOKIE") flair.dataset.text = flair.textContent;
     const statsGrid = document.createElement("div");
     statsGrid.className = "public-profile-stats";
     statsGrid.append(
@@ -208,6 +264,7 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
         statsUnavailable ? "Unavailable" : `${completedAchievementCount}/${achievements.length}`
       ),
       makeProfileStat("Points", statsUnavailable ? "Unavailable" : String(points)),
+      makeProfileRankStat(rank),
       makeProfileSignInStat(profile.auth_providers)
     );
 
@@ -219,10 +276,11 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
     if (medal) {
       const medalIconWrap = document.createElement("span");
       medalIconWrap.className = "public-profile-medal-icon";
-      const medalIcon = document.createElement("span");
       const medalClass = String(medal.name).toLowerCase().replace(/[^a-z0-9-]/g, "");
+      const medalIcon = document.createElement("span");
       medalIcon.className = `icons_medal icons_medal-${medalClass}`;
       medalIcon.setAttribute("aria-hidden", "true");
+      medalIcon.title = `${medal.name} milestone medal`;
       medalIconWrap.appendChild(medalIcon);
       medalLabel.appendChild(medalIconWrap);
     }
