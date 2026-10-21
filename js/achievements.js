@@ -101,7 +101,8 @@ const history_file = "./history/achievements.skvwhist";
 
         function loadGameProgress() {
             const emptyProgress = {
-                mastermind: { solves: 0 },
+                main: { messages: 0, profilesViewed: 0 },
+                mastermind: { solves: 0, solvedDifficulties: [] },
                 chess: { games: 0, analyses: 0, openings: [] },
                 numberPillars: { completed: 0, bestStreak: 0, totalXp: 0, customLevels: 0 },
                 blackjack: { hands: 0, wins: 0, naturals: 0, busts: 0, fiveCardHands: 0, winStreak: 0 },
@@ -109,12 +110,21 @@ const history_file = "./history/achievements.skvwhist";
             };
             try {
                 const saved = JSON.parse(localStorage.getItem(gameProgressStorageKey) || "null");
-                if (!saved || ![1, 2, 3].includes(saved.version)) return emptyProgress;
+                if (!saved || ![1, 2, 3, 4].includes(saved.version)) return emptyProgress;
                 return {
+                    main: Object.fromEntries(Object.keys(emptyProgress.main).map(key => [
+                        key,
+                        Number.isInteger(saved.main?.[key]) && saved.main[key] >= 0 ? saved.main[key] : 0
+                    ])),
                     mastermind: {
                         solves: Number.isInteger(saved.mastermind?.solves) && saved.mastermind.solves >= 0
                             ? saved.mastermind.solves
-                            : 0
+                            : 0,
+                        solvedDifficulties: Array.isArray(saved.mastermind?.solvedDifficulties)
+                            ? [...new Set(saved.mastermind.solvedDifficulties.filter(level => (
+                                ["easy", "medium", "hard"].includes(level)
+                            )))]
+                            : []
                     },
                     chess: {
                         games: Number.isInteger(saved.chess?.games) && saved.chess.games >= 0
@@ -163,7 +173,7 @@ const history_file = "./history/achievements.skvwhist";
         function saveGameProgress() {
             try {
                 localStorage.setItem(gameProgressStorageKey, JSON.stringify({
-                    version: 3,
+                    version: 4,
                     ...gameProgress
                 }));
             } catch (error) {
@@ -184,9 +194,24 @@ const history_file = "./history/achievements.skvwhist";
                 unlockedIds.push("main:channel-host");
             } else if (gameName === "main" && eventName === "gif-sent") {
                 unlockedIds.push("main:gif-sender");
+            } else if (gameName === "main" && eventName === "message-sent") {
+                gameProgress.main.messages += 1;
+                unlockedIds.push("main:first-message");
+                if (gameProgress.main.messages >= 25) unlockedIds.push("main:chat-regular");
+            } else if (gameName === "main" && eventName === "profile-viewed") {
+                gameProgress.main.profilesViewed += 1;
+                if (gameProgress.main.profilesViewed >= 10) unlockedIds.push("main:profile-explorer");
             } else if (gameName === "mastermind" && eventName === "solved") {
                 gameProgress.mastermind.solves += 1;
                 unlockedIds.push("mastermind:beginner");
+                if (details.difficulty === "easy") unlockedIds.push("mastermind:easy-solve");
+                if (["easy", "medium", "hard"].includes(details.difficulty)
+                    && !gameProgress.mastermind.solvedDifficulties.includes(details.difficulty)) {
+                    gameProgress.mastermind.solvedDifficulties.push(details.difficulty);
+                }
+                if (gameProgress.mastermind.solvedDifficulties.length === 3) {
+                    unlockedIds.push("mastermind:all-difficulties");
+                }
                 if (Number.isInteger(details.guesses) && details.guesses <= 5) {
                     unlockedIds.push("mastermind:codebreaker");
                 }
@@ -195,6 +220,9 @@ const history_file = "./history/achievements.skvwhist";
                 }
                 if (gameProgress.mastermind.solves >= 10) {
                     unlockedIds.push("mastermind:master");
+                }
+                if (gameProgress.mastermind.solves >= 25) {
+                    unlockedIds.push("mastermind:twenty-five");
                 }
             } else if (gameName === "chess" && eventName === "completed") {
                 gameProgress.chess.games += 1;
@@ -250,6 +278,15 @@ const history_file = "./history/achievements.skvwhist";
                 }
                 if (gameProgress.numberPillars.totalXp >= 100) {
                     unlockedIds.push("number-pillars:xp-hundred");
+                }
+                if (gameProgress.numberPillars.completed >= 10) {
+                    unlockedIds.push("number-pillars:ten-levels");
+                }
+                if (gameProgress.numberPillars.bestStreak >= 10) {
+                    unlockedIds.push("number-pillars:streak-ten");
+                }
+                if (details.difficulty === "hard") {
+                    unlockedIds.push("number-pillars:hard-clear");
                 }
             } else if (gameName === "number-pillars" && eventName === "custom-level-played") {
                 gameProgress.numberPillars.customLevels += 1;

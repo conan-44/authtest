@@ -1,7 +1,7 @@
 {
     "title": "Amateur",
     "description": "Crack your first Bulls & Cows code.",
-    "successors": ["mastermind:codebreaker", "mastermind:hard-mode"],
+    "successors": ["mastermind:codebreaker", "mastermind:hard-mode", "mastermind:easy-solve"],
     "rarity": "common",
     "icon": "🎯"
 }

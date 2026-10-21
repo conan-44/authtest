@@ -8,6 +8,45 @@
     const gamePlayer = document.getElementById('gamePlayer');
     const gameFrame = document.getElementById('gameFrame');
     const backToGamesBtn = document.getElementById('backToGamesBtn');
+    function syncGameTheme() {
+        if (!gameFrame.src) return;
+        try {
+            if (new URL(gameFrame.src, window.location.href).origin !== window.location.origin) return;
+            const parentRoot = document.documentElement;
+            const gameRoot = gameFrame.contentDocument?.documentElement;
+            if (!gameRoot) return;
+            const parentStyles = window.getComputedStyle(parentRoot);
+            const isCustomTheme = parentRoot.dataset.colorTheme === 'custom';
+            const themedProperties = Array.from(gameRoot.style)
+                .filter(property => property.startsWith('--color-') || property.startsWith('--theme-')
+                    || property.startsWith('--shadow-'));
+
+            themedProperties.forEach(property => {
+                if (property !== '--theme-secondary' || isCustomTheme) {
+                    gameRoot.style.removeProperty(property);
+                }
+            });
+            for (let index = 0; isCustomTheme && index < parentStyles.length; index += 1) {
+                const property = parentStyles[index];
+                if (!property.startsWith('--color-') && !property.startsWith('--theme-')
+                    && !property.startsWith('--shadow-')) continue;
+                const value = parentStyles.getPropertyValue(property).trim();
+                if (value) gameRoot.style.setProperty(property, value);
+            }
+            if (!isCustomTheme) {
+                const secondary = parentStyles.getPropertyValue('--theme-secondary').trim();
+                if (secondary) gameRoot.style.setProperty('--theme-secondary', secondary);
+            }
+        } catch (error) {
+            console.warn('Could not sync the game theme.', error);
+        }
+    }
+    gameFrame.addEventListener('load', syncGameTheme);
+    const gameThemeObserver = new MutationObserver(syncGameTheme);
+    gameThemeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['style', 'data-color-theme']
+    });
     let gameInviteChannel = null;
     let gameInviteUserId = null;
     let gameInviteSubscriptionGeneration = 0;

@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/gh/Parcoil/cloak@main/src/index.min.js"></script>
     <link rel="icon" type="image/x-icon" href="./assets/test-favicon.png">
-    <link rel="stylesheet" href="./style.css?v=public-profiles-v4">
+    <link rel="stylesheet" href="./style.css?v=profile-default-identity-v5">
 </head>
 <body>
     <main class="page">
@@ -97,7 +97,14 @@
             <div class="panel-header">
                 <h1 id="settings-heading">Settings</h1>
             </div>
-            <div class="panel-body">
+            <div id="settingsWorkspace" class="panel-body settings-workspace">
+                <div class="settings-profile-picture-entry">
+                    <div>
+                        <h2>Profile Picture</h2>
+                        <p>create your own profile picture.</p>
+                    </div>
+                    <button type="button" id="openProfileAvatarEditorBtn">Edit Profile Picture</button>
+                </div>
                 <div id="settingsList" class="settings-list" aria-live="polite"></div>
                 <p class="main-menu-welcome">Year 6 Maths Mate Answers</p>
                 <iframe
@@ -108,6 +115,31 @@
   allow="autoplay"
 ></iframe>
             </div>
+            <section id="profileAvatarView" class="profile-avatar-view is-hidden" aria-label="Profile picture editor">
+                <button type="button" id="profileAvatarBackBtn" class="chat-profile-back">
+                    <span class="btn-icon icon-signout" aria-hidden="true"></span>Back to Settings
+                </button>
+                <section class="profile-avatar-editor" aria-labelledby="profile-avatar-heading">
+                    <h2 id="profile-avatar-heading">Profile Picture Creator</h2>
+                    <label class="profile-avatar-size-label" for="profileAvatarSize">Picture size</label>
+                    <select id="profileAvatarSize">
+                        <option value="16">16×16 · 8 colors</option>
+                        <option value="8">8×8 · 16 colors</option>
+                    </select>
+                    <p>Choose a palette color, then paint or fill connected pixels.</p>
+                    <div class="profile-avatar-tools" role="group" aria-label="Drawing tools">
+                        <button type="button" id="profileAvatarPencilBtn" aria-pressed="true">Pencil</button>
+                        <button type="button" id="profileAvatarFillBtn" aria-pressed="false">Fill</button>
+                    </div>
+                    <canvas id="profileAvatarCanvas" width="16" height="16" aria-label="Profile picture pixel editor"></canvas>
+                    <div id="profileAvatarPalette" class="profile-avatar-palette" role="group" aria-label="Profile picture color palette"></div>
+                    <p id="profileAvatarStatus" class="profile-avatar-status" aria-live="polite"></p>
+                    <div class="profile-avatar-actions">
+                        <button type="button" id="saveProfileAvatarBtn"><span class="btn-icon icon-save"></span>Save</button>
+                        <button type="button" id="clearProfileAvatarBtn" class="btn-secondary"><span class="btn-icon icon-delete"></span>Remove</button>
+                    </div>
+                </section>
+            </section>
         </section>
         <section class="panel tab-panel is-hidden" id="gamesPanel" aria-labelledby="games-heading">
             <div class="panel-header">
@@ -265,7 +297,7 @@
 
         <div id="profileSection" class="box" style="display:none;">
             <div class="user-header">
-                <span id="authBadge" class="btn-icon"></span>
+                <img id="authProfileAvatar" src="./assets/profile.png" alt="">
                 <p><span id="displayUsername" class="user-stuffs">Loading...</span></p>
             </div>
             <p><span id="displayFlair" class="user-stuffs">Loading...</span></p>
@@ -299,13 +331,14 @@
     <script src="./js/loaders.js"></script>
     <!-- core scripts + utils here -->
     <script src="./js/utils.js"></script>
+    <script src="./js/profile-avatars.js?v=profile-pixels-v3"></script>
     <script src="./js/renderers.js?v=achievement-tree-connectors-v7"></script>
     <script src="./js/achievements.js"></script>
-    <script src="./js/auth.js"></script>
+    <script src="./js/auth.js?v=profile-default-identity-v6"></script>
     <script src="./js/blog.js"></script>
     <script src="./js/tabs.js"></script>
     <script src="./js/settings.js"></script>
-    <script src="./js/games.js?v=games-carousel-v15"></script>
+    <script src="./js/games.js?v=games-carousel-v16"></script>
     <script src="./js/tips.js"></script>
     <!-- api config stuff -->
     <script src="./api-config/giphy-config.js"></script>
@@ -315,6 +348,6 @@
     <script src="./chat/channels.js?v=chat-presence"></script>
     <script src="./chat/actions.js?v=game-invites"></script>
     <script src="./chat/giphy.js?v=public-profiles-v2"></script>
-    <script src="./chat/profiles.js?v=public-profiles-v5"></script>
+    <script src="./chat/profiles.js?v=profile-default-identity-v6"></script>
 </body>
 </html>

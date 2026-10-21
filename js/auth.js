@@ -225,35 +225,44 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
   }));
 });
 
-// Helper: Detect Provider Badges & Password Capability
+// Detect linked sign-in providers and whether the account can add a password.
 function updateAuthBadgesAndProviders(user) {
-  const badgeEl = document.getElementById('authBadge');
   const addPwContainer = document.getElementById('addPasswordContainer');
 
   const providers = user.app_metadata?.providers || [];
   const hasGoogle = providers.includes('google');
   const hasEmail = providers.includes('email');
 
-  // Reset badge classes
-  badgeEl.classList.remove('badge-gmail', 'badge-google', 'badge-mail', 'btn-icon');
-  badgeEl.classList.add('btn-icon');
-
   if (hasGoogle && hasEmail) {
-    // google + email&pass
-    badgeEl.classList.add('badge-gmail');
     addPwContainer.style.display = 'none';
-    printLog("Provider Detected: Google + Password (badge-gmail)");
+    printLog("Provider Detected: Google and email sign-in");
   } else if (hasGoogle) {
-    // google. just google oauth
-    badgeEl.classList.add('badge-google');
     addPwContainer.style.display = 'block';
-    printLog("Provider Detected: Pure Google OAuth (badge-google)");
+    printLog("Provider Detected: Google sign-in");
   } else {
-    // email&pass
-    badgeEl.classList.add('badge-mail');
     addPwContainer.style.display = 'none';
-    printLog("Provider Detected: Standard Email (badge-mail)");
+    printLog("Provider Detected: Email sign-in");
   }
+}
+
+function renderAccountProfileAvatar(avatar, username) {
+  const canvas = document.getElementById('authProfileAvatar');
+  canvas.alt = `${username || 'Player'}'s profile picture`;
+  if (!avatar || window.ProfileAvatars.isDefault(avatar)) {
+    canvas.src = './assets/profile.png';
+    return;
+  }
+  const decoded = window.ProfileAvatars.decode(avatar);
+  if (decoded) {
+    const renderer = document.createElement('canvas');
+    if (!window.ProfileAvatars.draw(renderer, avatar)) {
+      canvas.src = './assets/profile.png';
+      return;
+    }
+    canvas.src = renderer.toDataURL('image/png');
+    return;
+  }
+  canvas.src = './assets/profile.png';
 }
 
 // 3. SIGN UP FUNCTION
@@ -318,11 +327,237 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
 });
 
 // 5. FETCH PROFILE FROM DATABASE
+const PROFILE_AVATAR_DEFAULT_PALETTE = window.ProfileAvatars.defaultPalette;
+const profileAvatarCanvas = document.getElementById('profileAvatarCanvas');
+const profileAvatarPaletteEl = document.getElementById('profileAvatarPalette');
+const profileAvatarStatus = document.getElementById('profileAvatarStatus');
+const profileAvatarSizeSelect = document.getElementById('profileAvatarSize');
+let profileAvatarSize = 16;
+let profileAvatarPalette = PROFILE_AVATAR_DEFAULT_PALETTE.slice(0, 8);
+let profileAvatarPixels = new Uint8Array(profileAvatarSize * profileAvatarSize);
+let activeProfileAvatarColor = 0;
+let paintingProfileAvatar = false;
+let profileAvatarTool = 'pencil';
+const profileAvatarPencilBtn = document.getElementById('profileAvatarPencilBtn');
+const profileAvatarFillBtn = document.getElementById('profileAvatarFillBtn');
+const settingsWorkspace = document.getElementById('settingsWorkspace');
+const profileAvatarView = document.getElementById('profileAvatarView');
+const openProfileAvatarEditorBtn = document.getElementById('openProfileAvatarEditorBtn');
+const profileAvatarBackBtn = document.getElementById('profileAvatarBackBtn');
+
+function setProfileAvatarTool(tool) {
+  profileAvatarTool = tool;
+  profileAvatarPencilBtn.setAttribute('aria-pressed', String(tool === 'pencil'));
+  profileAvatarFillBtn.setAttribute('aria-pressed', String(tool === 'fill'));
+  profileAvatarCanvas.dataset.tool = tool;
+}
+
+function openProfileAvatarEditor() {
+  settingsWorkspace.classList.add('is-hidden');
+  profileAvatarView.classList.remove('is-hidden');
+  profileAvatarBackBtn.focus();
+}
+
+function closeProfileAvatarEditor() {
+  profileAvatarView.classList.add('is-hidden');
+  settingsWorkspace.classList.remove('is-hidden');
+  openProfileAvatarEditorBtn.focus();
+}
+
+function drawProfileAvatarEditor() {
+  const encoded = window.ProfileAvatars.encode(profileAvatarSize, profileAvatarPalette, profileAvatarPixels);
+  window.ProfileAvatars.draw(profileAvatarCanvas, encoded);
+}
+
+function getPaletteLimit(size) {
+  return window.ProfileAvatars.paletteLimits[size];
+}
+
+function colorDistance(first, second) {
+  const firstChannels = first.slice(1).match(/.{2}/g).map(channel => parseInt(channel, 16));
+  const secondChannels = second.slice(1).match(/.{2}/g).map(channel => parseInt(channel, 16));
+  return firstChannels.reduce((distance, channel, index) => distance + (channel - secondChannels[index]) ** 2, 0);
+}
+
+function resizeProfileAvatar(nextSize) {
+  if (nextSize === profileAvatarSize) return;
+  const previousSize = profileAvatarSize;
+  const previousPalette = profileAvatarPalette;
+  const previousPixels = profileAvatarPixels;
+  const nextPaletteLimit = getPaletteLimit(nextSize);
+  const nextPalette = PROFILE_AVATAR_DEFAULT_PALETTE.slice(0, nextPaletteLimit);
+  previousPalette.slice(0, nextPaletteLimit).forEach((color, index) => {
+    nextPalette[index] = color;
+  });
+
+  const nextPixels = new Uint8Array(nextSize * nextSize);
+  for (let y = 0; y < nextSize; y += 1) {
+    for (let x = 0; x < nextSize; x += 1) {
+      const sourceX = Math.min(previousSize - 1, Math.floor((x + 0.5) * previousSize / nextSize));
+      const sourceY = Math.min(previousSize - 1, Math.floor((y + 0.5) * previousSize / nextSize));
+      const sourceColorIndex = previousPixels[sourceY * previousSize + sourceX];
+      const sourceColor = previousPalette[sourceColorIndex];
+      if (sourceColorIndex < nextPaletteLimit) {
+        nextPixels[y * nextSize + x] = sourceColorIndex;
+        continue;
+      }
+      let nearestIndex = 0;
+      for (let paletteIndex = 1; paletteIndex < nextPaletteLimit; paletteIndex += 1) {
+        if (colorDistance(sourceColor, nextPalette[paletteIndex])
+          < colorDistance(sourceColor, nextPalette[nearestIndex])) {
+          nearestIndex = paletteIndex;
+        }
+      }
+      nextPixels[y * nextSize + x] = nearestIndex;
+    }
+  }
+
+  profileAvatarSize = nextSize;
+  profileAvatarPalette = nextPalette;
+  profileAvatarPixels = nextPixels;
+  profileAvatarCanvas.width = nextSize;
+  profileAvatarCanvas.height = nextSize;
+  activeProfileAvatarColor = 0;
+  initializeProfileAvatarPalette();
+  drawProfileAvatarEditor();
+  profileAvatarStatus.textContent = `Resized to ${nextSize}×${nextSize}. Save to apply the change.`;
+}
+
+function selectProfileAvatarColor(index) {
+  activeProfileAvatarColor = index;
+  profileAvatarPaletteEl.querySelectorAll('.profile-avatar-color-select').forEach((button, buttonIndex) => {
+    button.setAttribute('aria-pressed', String(buttonIndex === index));
+  });
+}
+
+function initializeProfileAvatarPalette() {
+  profileAvatarPaletteEl.replaceChildren();
+  profileAvatarPalette.forEach((color, index) => {
+    const slot = document.createElement('div');
+    slot.className = 'profile-avatar-color-slot';
+    const select = document.createElement('button');
+    select.type = 'button';
+    select.className = 'profile-avatar-color-select';
+    select.setAttribute('aria-label', `Select color ${index + 1}`);
+    select.setAttribute('aria-pressed', String(index === activeProfileAvatarColor));
+    const preview = document.createElement('span');
+    preview.className = 'profile-avatar-color-preview';
+    preview.style.backgroundColor = color;
+    select.appendChild(preview);
+    select.addEventListener('click', () => selectProfileAvatarColor(index));
+
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.value = color;
+    input.setAttribute('aria-label', `Change color ${index + 1}`);
+    input.addEventListener('input', () => {
+      profileAvatarPalette[index] = input.value;
+      preview.style.backgroundColor = input.value;
+      drawProfileAvatarEditor();
+    });
+    slot.append(select, input);
+    profileAvatarPaletteEl.appendChild(slot);
+  });
+}
+
+function loadProfileAvatarEditor(avatar) {
+  profileAvatarSize = 16;
+  profileAvatarPalette = PROFILE_AVATAR_DEFAULT_PALETTE.slice(0, 8);
+  profileAvatarPixels = new Uint8Array(profileAvatarSize * profileAvatarSize);
+  const decoded = window.ProfileAvatars.decode(avatar);
+  if (avatar && decoded) {
+    profileAvatarSize = decoded.size;
+    profileAvatarPalette = decoded.palette;
+    profileAvatarPixels = decoded.pixels;
+    profileAvatarStatus.textContent = `Loaded saved ${decoded.size}×${decoded.size} profile picture.`;
+  } else {
+    profileAvatarStatus.textContent = avatar
+      ? 'Saved picture was invalid; edit and save a new one.'
+      : 'Draw a 16×16 picture using up to eight colors.';
+    if (avatar) console.warn('Could not load the saved profile picture.', avatar);
+  }
+  profileAvatarSizeSelect.value = String(profileAvatarSize);
+  profileAvatarCanvas.width = profileAvatarSize;
+  profileAvatarCanvas.height = profileAvatarSize;
+  activeProfileAvatarColor = 0;
+  initializeProfileAvatarPalette();
+  drawProfileAvatarEditor();
+}
+
+function paintProfileAvatar(event) {
+  const bounds = profileAvatarCanvas.getBoundingClientRect();
+  const x = Math.floor((event.clientX - bounds.left - profileAvatarCanvas.clientLeft) * profileAvatarSize / profileAvatarCanvas.clientWidth);
+  const y = Math.floor((event.clientY - bounds.top - profileAvatarCanvas.clientTop) * profileAvatarSize / profileAvatarCanvas.clientHeight);
+  if (x < 0 || x >= profileAvatarSize || y < 0 || y >= profileAvatarSize) return;
+  const startIndex = y * profileAvatarSize + x;
+  if (profileAvatarTool === 'fill') {
+    fillProfileAvatar(startIndex);
+    return;
+  }
+  profileAvatarPixels[startIndex] = activeProfileAvatarColor;
+  drawProfileAvatarEditor();
+}
+
+function fillProfileAvatar(startIndex) {
+  const targetColor = profileAvatarPixels[startIndex];
+  if (targetColor === activeProfileAvatarColor) return;
+
+  const pending = new Uint16Array(profileAvatarPixels.length);
+  let readIndex = 0;
+  let writeIndex = 1;
+  pending[0] = startIndex;
+  profileAvatarPixels[startIndex] = activeProfileAvatarColor;
+
+  while (readIndex < writeIndex) {
+    const index = pending[readIndex++];
+    const x = index % 16;
+    const neighbors = [];
+    if (x > 0) neighbors.push(index - 1);
+    if (x < profileAvatarSize - 1) neighbors.push(index + 1);
+    if (index >= profileAvatarSize) neighbors.push(index - profileAvatarSize);
+    if (index < profileAvatarSize * (profileAvatarSize - 1)) neighbors.push(index + profileAvatarSize);
+
+    neighbors.forEach(neighbor => {
+      if (profileAvatarPixels[neighbor] !== targetColor) return;
+      profileAvatarPixels[neighbor] = activeProfileAvatarColor;
+      pending[writeIndex++] = neighbor;
+    });
+  }
+  drawProfileAvatarEditor();
+}
+
+profileAvatarCanvas.addEventListener('pointerdown', event => {
+  if (profileAvatarTool === 'fill') {
+    paintProfileAvatar(event);
+    return;
+  }
+  paintingProfileAvatar = true;
+  profileAvatarCanvas.setPointerCapture(event.pointerId);
+  paintProfileAvatar(event);
+});
+profileAvatarCanvas.addEventListener('pointermove', event => {
+  if (paintingProfileAvatar) paintProfileAvatar(event);
+});
+profileAvatarCanvas.addEventListener('pointerup', () => {
+  paintingProfileAvatar = false;
+});
+profileAvatarCanvas.addEventListener('pointercancel', () => {
+  paintingProfileAvatar = false;
+});
+profileAvatarPencilBtn.addEventListener('click', () => setProfileAvatarTool('pencil'));
+profileAvatarFillBtn.addEventListener('click', () => setProfileAvatarTool('fill'));
+profileAvatarSizeSelect.addEventListener('change', () => resizeProfileAvatar(Number(profileAvatarSizeSelect.value)));
+openProfileAvatarEditorBtn.addEventListener('click', openProfileAvatarEditor);
+profileAvatarBackBtn.addEventListener('click', closeProfileAvatarEditor);
+setProfileAvatarTool('pencil');
+initializeProfileAvatarPalette();
+drawProfileAvatarEditor();
+
 async function fetchProfile(userId) {
   printLog("Fetching profile row from SQL table...");
   const { data, error } = await _supabase
     .from('profiles')
-    .select('username, flair')
+    .select('username, flair, avatar')
     .eq('id', userId)
     .maybeSingle();
 
@@ -334,9 +569,11 @@ async function fetchProfile(userId) {
   } else {
     document.getElementById('displayUsername').textContent = data.username;
     document.getElementById('displayFlair').textContent = data.flair;
+    renderAccountProfileAvatar(data.avatar, data.username);
     
     document.getElementById('editUsername').value = data.username || '';
     document.getElementById('editFlair').value = data.flair || '';
+    loadProfileAvatarEditor(data.avatar);
     
     printLog("✅ Profile loaded: " + JSON.stringify(data));
     showPopup("All data was loaded successfully", 'success');
@@ -377,6 +614,56 @@ document.getElementById('updateProfileBtn').addEventListener('click', async () =
   }
 });
 
+document.getElementById('saveProfileAvatarBtn').addEventListener('click', async () => {
+  const button = document.getElementById('saveProfileAvatarBtn');
+  button.disabled = true;
+  try {
+    const { data: { user }, error: authError } = await _supabase.auth.getUser();
+    if (authError) throw authError;
+    if (!user) throw new Error('Sign in before saving a profile picture.');
+    const avatar = window.ProfileAvatars.encode(profileAvatarSize, profileAvatarPalette, profileAvatarPixels);
+    const { error } = await _supabase
+      .from('profiles')
+      .update({ avatar })
+      .eq('id', user.id);
+    if (error) throw error;
+    renderAccountProfileAvatar(avatar, document.getElementById('displayUsername').textContent);
+    profileAvatarStatus.textContent = 'Profile picture saved.';
+    showPopup('Profile picture saved.', 'success');
+  } catch (error) {
+    console.error('Could not save the profile picture.', error);
+    profileAvatarStatus.textContent = 'Could not save the profile picture.';
+    showPopup(error.message || 'Could not save the profile picture.', 'error');
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById('clearProfileAvatarBtn').addEventListener('click', async () => {
+  const button = document.getElementById('clearProfileAvatarBtn');
+  button.disabled = true;
+  try {
+    const { data: { user }, error: authError } = await _supabase.auth.getUser();
+    if (authError) throw authError;
+    if (!user) throw new Error('Sign in before removing a profile picture.');
+    const { error } = await _supabase
+      .from('profiles')
+      .update({ avatar: null })
+      .eq('id', user.id);
+    if (error) throw error;
+    loadProfileAvatarEditor(null);
+    renderAccountProfileAvatar(null, document.getElementById('displayUsername').textContent);
+    profileAvatarStatus.textContent = 'Profile picture removed.';
+    showPopup('Profile picture removed.', 'success');
+  } catch (error) {
+    console.error('Could not remove the profile picture.', error);
+    profileAvatarStatus.textContent = 'Could not remove the profile picture.';
+    showPopup(error.message || 'Could not remove the profile picture.', 'error');
+  } finally {
+    button.disabled = false;
+  }
+});
+
 // 7. ADD PASSWORD TO GOOGLE ACCOUNT
 document.getElementById('addPasswordBtn')?.addEventListener('click', async () => {
   const newPassword = document.getElementById('newPasswordInput').value;
@@ -395,7 +682,7 @@ document.getElementById('addPasswordBtn')?.addEventListener('click', async () =>
   } else {
     printLog("✅ Password attached! Your account can now sign in with Email + Password.");
     showPopup("Password added successfully", 'success');
-    // Refresh user state to upgrade badge from badge-google to badge-gmail
+    // Refresh provider state after adding email/password sign-in.
     const { data: { user } } = await _supabase.auth.getUser();
     if (user) updateAuthBadgesAndProviders(user);
   }

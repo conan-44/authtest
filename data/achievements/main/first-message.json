@@ -1,0 +1,7 @@
+{
+  "title": "Hello, World!",
+  "description": "Send your first chat message.",
+  "successors": ["main:chat-regular"],
+  "rarity": "common",
+  "icon": "💬"
+}

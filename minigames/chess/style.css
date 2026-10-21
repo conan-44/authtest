@@ -1,17 +1,18 @@
 :root {
     color-scheme: light;
     font-family: "lowsmall", sans-serif;
-    background: #ffffff;
-    color: #000000;
+    background: var(--color-page, #ffffff);
+    color: var(--color-text, #000000);
     font-synthesis: none;
-    --surface: #e9ebed;
-    --surface-raised: #cfcfcf;
-    --border: #ffffff;
-    --muted: #444444;
-    --accent: #2a4d67;
-    --light-square: #e9ebed;
-    --dark-square: #77889a;
-    --highlight: #e9d46a;
+    --surface: var(--color-panel-body-surface, #e9ebed);
+    --surface-raised: var(--color-card-surface, #cfcfcf);
+    --border: var(--color-button-border, #ffffff);
+    --muted: var(--color-muted, #444444);
+    --accent: var(--color-heading, #2a4d67);
+    --secondary: var(--theme-secondary, #e9d46a);
+    --light-square: var(--color-panel-body-surface, #e9ebed);
+    --dark-square: color-mix(in srgb, var(--color-heading, #2a4d67) 20%, #77889a);
+    --highlight: color-mix(in srgb, var(--secondary) 52%, transparent);
 }
 
 @font-face {
@@ -38,13 +39,14 @@ body {
     min-height: 100vh;
     margin: 0;
     padding: clamp(12px, 3vw, 28px);
-    background: #ffffff;
-    color: #000000;
+    background: var(--color-page, #ffffff);
+    color: var(--color-text, #000000);
 }
 
 button {
     color: inherit;
     font: inherit;
+    border: 0;
 }
 
 .chess-app {
@@ -135,7 +137,7 @@ button {
 
 h1 {
     margin: 0;
-    color: #2a4d67;
+    color: var(--accent);
     font-family: "lowbig", sans-serif;
     font-size: clamp(1.6rem, 4vw, 2.2rem);
     font-weight: normal;
@@ -170,8 +172,8 @@ h1 {
     border: 2px solid var(--border);
     border-radius: 0;
     padding: 3px 6px;
-    background: #ffffff;
-    color: #000000;
+    background: var(--color-control-surface, #ffffff);
+    color: var(--color-text, #000000);
     font: inherit;
 }
 
@@ -193,7 +195,6 @@ h1 {
 .quiet-button,
 .text-button {
     min-height: 40px;
-    border: 4px solid var(--border);
     border-radius: 0;
     padding: 0 10px;
     background: var(--surface-raised);
@@ -206,17 +207,17 @@ h1 {
 }
 
 .primary-button {
-    background: #cfcfcf;
-    color: #000000;
+    background: var(--surface-raised);
+    color: var(--color-text, #000000);
 }
 
 .quiet-button:hover,
 .text-button:hover:not(:disabled) {
-    background: #ffffff;
+    background: var(--color-control-pressed, #ffffff);
 }
 
 button:focus-visible {
-    outline: 3px solid #2a4d67;
+    outline: 3px solid var(--accent);
     outline-offset: 2px;
 }
 
@@ -233,7 +234,7 @@ button:focus-visible {
 
 .turn-card,
 .sidebar-card {
-    border: 4px solid #ffffff;
+    border: 4px solid var(--border);
     border-radius: 0;
     background: var(--surface);
     box-shadow: inset 0 0 0 2px rgb(0 0 0 / 8%);
@@ -275,9 +276,9 @@ button:focus-visible {
     width: min(100%, calc(100vh - 185px), 680px);
     margin: 0 auto;
     overflow: hidden;
-    border: 6px solid #ffffff;
+    border: 6px solid var(--secondary);
     border-radius: 0;
-    background: #cfcfcf;
+    background: var(--surface-raised);
     box-shadow: inset 0 0 0 2px rgb(0 0 0 / 15%);
 }
 
@@ -309,11 +310,11 @@ button:focus-visible {
 }
 
 .square.last-move {
-    background-image: linear-gradient(rgb(233 205 91 / 52%), rgb(233 205 91 / 52%));
+    background-image: linear-gradient(var(--highlight), var(--highlight));
 }
 
 .square.selected {
-    background-image: linear-gradient(rgb(238 208 91 / 78%), rgb(238 208 91 / 78%));
+    background-image: linear-gradient(color-mix(in srgb, var(--secondary) 78%, transparent), color-mix(in srgb, var(--secondary) 78%, transparent));
 }
 
 .square.in-check {
@@ -322,7 +323,7 @@ button:focus-visible {
 
 .square:focus-visible {
     z-index: 2;
-    outline: 3px solid #2a4d67;
+    outline: 3px solid var(--accent);
     outline-offset: -4px;
 }
 
@@ -382,7 +383,7 @@ button:focus-visible {
 .text-button {
     min-height: 34px;
     padding: 0 10px;
-    color: #000000;
+    color: var(--color-text, #000000);
     font-size: 0.82rem;
 }
 
@@ -403,7 +404,7 @@ button:focus-visible {
 
 .opening-card h2 {
     margin: 0;
-    color: #2a4d67;
+    color: var(--accent);
     font-family: "capsmall", sans-serif;
     font-size: 1rem;
     font-weight: normal;
@@ -436,7 +437,7 @@ button:focus-visible {
     align-content: center;
     justify-items: start;
     gap: 2px;
-    border: 3px solid #ffffff;
+    border: 0;
     border-radius: 0;
     padding: 4px 6px;
     background: var(--surface-raised);
@@ -445,7 +446,7 @@ button:focus-visible {
 }
 
 .book-move:hover:not(:disabled) {
-    background: #ffffff;
+    background: var(--color-control-pressed, #ffffff);
 }
 
 .book-move:disabled {
@@ -454,7 +455,7 @@ button:focus-visible {
 }
 
 .book-move-san {
-    color: #2a4d67;
+    color: var(--secondary);
     font-family: "capsmall", sans-serif;
 }
 
@@ -498,7 +499,7 @@ button:focus-visible {
 
 .evaluation-score {
     min-width: 38px;
-    color: #2a4d67;
+    color: var(--accent);
     font-family: "capsmall", sans-serif;
     text-align: right;
 }
@@ -508,7 +509,7 @@ button:focus-visible {
     height: 20px;
     flex: 1;
     overflow: hidden;
-    border: 2px solid #000000;
+    border: 2px solid var(--border);
     background: #111111;
 }
 
@@ -526,7 +527,7 @@ button:focus-visible {
 
 .sidebar-card h2 {
     margin: 0;
-    color: #2a4d67;
+    color: var(--secondary);
     font-family: "capsmall", sans-serif;
     font-weight: normal;
     font-size: 1rem;
@@ -632,7 +633,7 @@ button:focus-visible {
 }
 
 .reviewed-move {
-    outline: 2px solid #2a4d67;
+    outline: 2px solid var(--secondary);
     outline-offset: -2px;
 }
 
@@ -713,8 +714,8 @@ button:focus-visible {
 }
 
 .latest-move {
-    background: #dfe4ea;
-    color: #2a4d67;
+    background: var(--color-panel-header-surface, #dfe4ea);
+    color: var(--secondary);
     font-family: "capsmall", sans-serif;
 }
 
@@ -730,11 +731,11 @@ button:focus-visible {
 
 .promotion-dialog {
     width: min(330px, calc(100% - 32px));
-    border: 4px solid #ffffff;
+    border: 4px solid var(--border);
     border-radius: 0;
     padding: 20px;
     background: var(--surface);
-    color: #000000;
+    color: var(--color-text, #000000);
     box-shadow: 0 8px 0 rgb(26 37 49 / 18%);
 }
 
@@ -744,7 +745,7 @@ button:focus-visible {
 
 .promotion-dialog form > p {
     margin: 0 0 14px;
-    color: #2a4d67;
+    color: var(--accent);
     font-family: "capsmall", sans-serif;
     text-align: center;
 }
@@ -758,7 +759,7 @@ button:focus-visible {
 
 .promotion-choices button {
     aspect-ratio: 1;
-    border: 4px solid #ffffff;
+    border: 0;
     border-radius: 0;
     background-color: var(--surface-raised);
     background-image: url("../../assets/minigames/chess/pieces.png");
@@ -768,7 +769,7 @@ button:focus-visible {
 }
 
 .promotion-choices button:hover {
-    background-color: #ffffff;
+    background-color: var(--color-control-pressed, #ffffff);
 }
 
 #cancelPromotionBtn {

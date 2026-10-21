@@ -297,6 +297,17 @@ async function recordChatRoomFirstJoin(channelId = activeChatChannelId) {
 }
 
 // 3. SEND MESSAGE
+function recordChatAchievement(eventName) {
+  const recorder = window.achievements?.recordGameEvent;
+  if (typeof recorder !== "function") {
+    console.error("Achievement tracker is unavailable for chat activity.");
+    return;
+  }
+  recorder("main", eventName).catch(error => {
+    console.error("Could not record chat activity achievement.", error);
+  });
+}
+
 async function sendMessage() {
   const input = document.getElementById('chatInput');
   const content = input.value.trim();
@@ -316,6 +327,7 @@ async function sendMessage() {
     console.error("Error sending message:", error.message);
     return;
   }
+  recordChatAchievement("message-sent");
   clearReplyTarget();
 }
 
@@ -365,6 +377,7 @@ window.shareGameToChat = async function shareGameToChat(game, data) {
   const { error } = await _supabase.from("messages").insert([message]);
   if (error) throw new Error(`Could not share the game: ${error.message}`);
 
+  recordChatAchievement("message-sent");
   clearReplyTarget();
   playSendIconAnimation();
 };
@@ -385,6 +398,7 @@ window.shareGameInviteToChat = async function shareGameInviteToChat(game, invite
 
   const { error } = await _supabase.from("messages").insert([message]);
   if (error) throw new Error(`Could not share the game invite: ${error.message}`);
+  recordChatAchievement("message-sent");
   clearReplyTarget();
   playSendIconAnimation();
 };

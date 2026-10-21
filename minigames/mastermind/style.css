@@ -1,16 +1,17 @@
 :root {
     color-scheme: light;
     font-family: "lowsmall", sans-serif;
-    background: #ffffff;
-    color: #000000;
+    background: var(--color-page, #ffffff);
+    color: var(--color-text, #000000);
     font-synthesis: none;
-    --surface: #e9ebed;
-    --surface-raised: #cfcfcf;
-    --border: #ffffff;
-    --muted: #444444;
-    --accent: #2a4d67;
-    --bull: #2a4d67;
-    --cow: #b58c19;
+    --surface: var(--color-panel-body-surface, #e9ebed);
+    --surface-raised: var(--color-card-surface, #cfcfcf);
+    --border: var(--color-button-border, #ffffff);
+    --muted: var(--color-muted, #444444);
+    --accent: var(--color-heading, #2a4d67);
+    --secondary: var(--theme-secondary, #b58c19);
+    --bull: var(--accent);
+    --cow: var(--secondary);
 }
 
 @font-face {
@@ -37,8 +38,8 @@ body {
     min-height: 100vh;
     margin: 0;
     padding: clamp(12px, 3vw, 28px);
-    background: #ffffff;
-    color: #000000;
+    background: var(--color-page, #ffffff);
+    color: var(--color-text, #000000);
 }
 
 button,
@@ -49,6 +50,7 @@ input {
 
 button {
     cursor: pointer;
+    border: 0;
 }
 
 button:focus-visible,
@@ -116,7 +118,6 @@ h2 {
 .text-button,
 .option-button {
     min-height: 40px;
-    border: 4px solid var(--border);
     border-radius: 0;
     padding: 0 10px;
     background: var(--surface-raised);
@@ -126,11 +127,11 @@ h2 {
 .primary-button:hover,
 .text-button:hover,
 .option-button:hover {
-    background: #ffffff;
+    background: var(--color-control-pressed, #ffffff);
 }
 
 .primary-button {
-    color: #000000;
+    color: var(--color-text, #000000);
 }
 
 .text-button {
@@ -157,7 +158,7 @@ h2 {
 .turn-card,
 .sidebar-card {
     min-width: 0;
-    border: 4px solid #ffffff;
+    border: 4px solid var(--border);
     border-radius: 0;
     background: var(--surface);
     box-shadow: inset 0 0 0 2px rgb(0 0 0 / 8%);
@@ -187,7 +188,7 @@ h2 {
 
 .turn-mark i:nth-child(2),
 .turn-mark i:nth-child(3) {
-    background: #77889a;
+    background: var(--color-panel-surface, #77889a);
 }
 
 .game-status,
@@ -243,10 +244,10 @@ h2 {
     width: 100%;
     min-width: 0;
     min-height: 48px;
-    border: 4px solid #ffffff;
+    border: 4px solid var(--border);
     border-radius: 0;
     padding: 6px 10px;
-    background: #ffffff;
+    background: var(--color-control-surface, #ffffff);
     box-shadow: inset 0 0 0 2px rgb(0 0 0 / 8%);
     font-family: "capsmall", sans-serif;
     font-size: 1.2rem;
@@ -283,9 +284,9 @@ h2 {
     min-height: 58px;
     flex: 1;
     gap: 9px;
-    border: 3px solid #ffffff;
+    border: 3px solid var(--secondary);
     padding: 7px 9px;
-    background: rgb(255 255 255 / 48%);
+    background: color-mix(in srgb, var(--color-control-pressed, #ffffff) 48%, transparent);
 }
 
 .stat-mark,
@@ -293,7 +294,7 @@ h2 {
     width: 12px;
     height: 12px;
     flex: 0 0 12px;
-    border: 2px solid #ffffff;
+    border: 2px solid var(--border);
     border-radius: 50%;
     background: var(--bull);
     box-shadow: 1px 1px 0 rgb(0 0 0 / 28%);
@@ -359,10 +360,9 @@ h2 {
 }
 
 .option-button.pressed {
-    border-color: #ffffff;
     background: var(--accent);
-    color: #ffffff;
-    box-shadow: inset 0 0 0 2px rgb(255 255 255 / 24%);
+    color: var(--color-page, #ffffff);
+    box-shadow: inset 0 -3px 0 var(--secondary), inset 0 0 0 2px var(--color-divider-highlight, rgb(255 255 255 / 24%));
 }
 
 .game-sidebar {
@@ -391,7 +391,7 @@ h2 {
     justify-content: space-between;
     gap: 10px;
     margin-top: 16px;
-    border-bottom: 2px solid rgb(0 0 0 / 14%);
+    border-bottom: 2px solid var(--color-divider, rgb(0 0 0 / 14%));
     padding: 0 4px 7px;
     color: var(--muted);
     font-family: "capsmall", sans-serif;
@@ -415,9 +415,9 @@ h2 {
     justify-content: space-between;
     gap: 12px;
     min-height: 48px;
-    border: 3px solid #ffffff;
+    border: 3px solid var(--secondary);
     padding: 5px 8px;
-    background: rgb(255 255 255 / 48%);
+    background: color-mix(in srgb, var(--color-control-pressed, #ffffff) 48%, transparent);
     animation: guess-arrive 180ms steps(3, end);
 }
 
@@ -440,7 +440,7 @@ h2 {
     width: 30px;
     height: 30px;
     place-items: center;
-    border: 3px solid #ffffff;
+    border: 3px solid var(--border);
     background: var(--surface-raised);
     box-shadow: 1px 1px 0 rgb(0 0 0 / 18%);
     color: var(--accent);
@@ -474,10 +474,10 @@ h2 {
 }
 
 .secret-reveal-item {
-    border: 3px solid #ffffff;
+    border: 3px solid var(--secondary);
     padding: 10px;
     background: var(--accent);
-    color: #ffffff;
+    color: var(--color-page, #ffffff);
     font-family: "capsmall", sans-serif;
     font-size: 0.85rem;
     text-align: center;
@@ -513,7 +513,7 @@ h2 {
     display: grid;
     width: min(100%, 390px);
     gap: 12px;
-    border: 4px solid #ffffff;
+    border: 4px solid var(--border);
     padding: 20px;
     background: var(--surface);
     box-shadow: 0 8px 0 rgb(26 37 49 / 18%);

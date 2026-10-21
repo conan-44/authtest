@@ -425,6 +425,9 @@ async function sendGiphyGif(gif) {
   if (typeof recorder !== "function") {
     console.error("Game achievement tracker is unavailable for GIF progress.");
   } else {
+    recorder("main", "message-sent").catch(error => {
+      console.error("Could not record chat message achievement.", error);
+    });
     recorder("main", "gif-sent").catch(error => {
       console.error("Could not record GIF achievement.", error);
     });

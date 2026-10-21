@@ -90,12 +90,12 @@
       image-rendering: pixelated;
       image-rendering: crisp-edges;
     }
-    .badge-gmail       { background-position-x: -00px;    }
-    .badge-mail          { background-position-x: -08px;    }
-    .badge-google  { background-position-x: -16px;    }
      .icon-signup       { background-position-x: -24px;    } 
     .icon-signin          { background-position-x: -32px;    }  
     .icon-google        { background-position-x: -40px;    }
+    .badge-gmail       { background-position-x: 0; }
+    .badge-mail        { background-position-x: -8px; }
+    .badge-google      { background-position-x: -16px; }
     .icon-signout      { background-position-x: -48px;    } 
     .icon-delete         { background-position-x: -56px;    }  
     .icon-refresh    { background-position-x: -64px;    } 
@@ -115,6 +115,15 @@
     }
     #displayUsername { font-family: 'lowsmall'; margin-top: 4px; }
     .user-header  { display: flex; align-items: center; }
+    #authProfileAvatar {
+      display: block;
+      width: 32px;
+      height: 32px;
+      flex: 0 0 32px;
+      image-rendering: pixelated;
+      border: 2px solid var(--color-white);
+      background: var(--color-card-surface);
+    }
     .user-header p { margin: 0 0 0 10px; }
     .box { background: var(--color-panel-surface); padding: 16px; margin-bottom: 16px; }
     @keyframes playSprite { from { background-position-y: 0px; } to { background-position-y: -32px; } }
@@ -303,6 +312,11 @@ body {
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
 }
+#settingsPanel > #settingsWorkspace,
+#settingsPanel > #profileAvatarView {
+    grid-column: 1;
+    grid-row: 2;
+}
 #milestonesPanel,
 #chatOptionsPanel {
     grid-column: 1;
@@ -442,6 +456,90 @@ body {
     display: grid;
     gap: var(--card-gap);
     margin-bottom: var(--card-gap);
+}
+.settings-profile-picture-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--card-gap);
+    margin-bottom: var(--card-gap);
+    border: var(--card-border-width) solid var(--color-white);
+    padding: var(--control-padding);
+    background: var(--color-panel-surface);
+}
+.settings-profile-picture-entry h2 {
+    margin: 0;
+    color: var(--color-heading);
+    font-family: 'capsmall', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+}
+.settings-profile-picture-entry p {
+    margin: 3px 0 0;
+    color: var(--color-muted);
+    font-family: 'lowsmall', sans-serif;
+}
+.settings-profile-picture-entry button {
+    width: auto;
+    flex: 0 0 auto;
+    margin: 0;
+}
+.profile-avatar-view {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    gap: var(--card-gap);
+    padding: var(--panel-body-padding);
+    overflow-y: auto;
+    background: var(--color-panel-body-surface);
+}
+.profile-avatar-editor {
+    margin: 0;
+    border: 0;
+    padding: 0;
+}
+.profile-avatar-editor h2 {
+    margin: 0 0 4px;
+    color: var(--color-heading);
+    font-family: 'capsmall', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+}
+.profile-avatar-size-label {
+    display: block;
+    margin: 0 0 4px;
+    color: var(--color-muted);
+    font-family: 'lowsmall', sans-serif;
+}
+#settingsPanel #profileAvatarSize {
+    width: auto;
+    min-width: 210px;
+    margin: 0 0 var(--control-bottom-margin);
+    padding: var(--control-padding);
+    border: 2px solid var(--color-white);
+    background: var(--color-control-surface);
+    color: var(--color-text);
+    font-family: 'lowsmall', sans-serif;
+}
+.profile-avatar-tools,
+.profile-avatar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--card-gap);
+    margin-bottom: var(--control-bottom-margin);
+}
+.profile-avatar-tools button,
+.profile-avatar-actions button {
+    width: auto;
+    margin: 0;
+    padding: var(--control-padding);
+}
+.profile-avatar-tools button[aria-pressed="true"] {
+    background: var(--color-control-pressed);
+    color: var(--color-heading);
+    outline: 2px solid var(--color-heading);
+    outline-offset: 1px;
 }
 .settings-section-heading {
     display: flex;
@@ -1350,7 +1448,6 @@ body {
 .search-form button {
     padding: var(--control-padding);
 }
-.public-profile-flair,
 .public-profile-error {
     font-family: 'lowsmall', sans-serif;
 }
@@ -1362,29 +1459,129 @@ body {
 .profile-search-result {
     display: flex;
     width: auto;
-    min-width: 130px;
-    flex-direction: column;
-    align-items: flex-start;
+    min-width: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--card-gap);
     margin: 0;
-    padding: var(--control-padding);
-    border: var(--achievement-border-width) solid var(--color-white);
-    background: var(--color-card-surface);
+    border: 0;
+    padding: 4px;
+    background: transparent;
     text-align: left;
 }
-.profile-search-result span {
-    color: var(--color-muted);
-    font-family: 'lowsmall', sans-serif;
+.chat-options-body .profile-search-result {
+    background: transparent;
+    border: 0;
+}
+.profile-search-result:hover,
+.profile-search-result:focus-visible {
+    background: var(--color-control-surface);
+}
+.profile-search-username {
+    color: var(--color-heading);
+    font-family: 'capsmall', sans-serif;
+    font-weight: 400;
+}
+.profile-search-avatar {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    image-rendering: pixelated;
+}
+.public-profile-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--card-gap);
+}
+.public-profile-avatar {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
 }
 .public-profile-name {
     margin: 0;
     color: var(--color-heading);
-    font-family: 'capsmall', sans-serif;
+    font-family: 'lowsmall', sans-serif;
     font-size: 1.3rem;
     font-weight: 400;
 }
 .public-profile-flair {
     margin: 2px 0 var(--card-gap);
     color: var(--color-muted);
+    font-family: 'capsmall', sans-serif;
+}
+.profile-avatar-editor {
+    margin: var(--panel-body-padding) 0;
+    border: var(--achievement-border-width) solid var(--color-divider);
+    padding: var(--control-padding);
+}
+.profile-avatar-editor h3 {
+    margin: 0 0 4px;
+    color: var(--color-heading);
+    font-family: 'capsmall', sans-serif;
+    font-weight: 400;
+}
+.profile-avatar-editor > p {
+    margin: 0 0 var(--control-bottom-margin);
+    color: var(--color-muted);
+    font-family: 'lowsmall', sans-serif;
+}
+#profileAvatarCanvas {
+    display: block;
+    width: min(100%, 256px);
+    height: auto;
+    aspect-ratio: 1;
+    margin: 0 0 var(--control-bottom-margin);
+    border: var(--achievement-border-width) solid var(--color-white);
+    background: var(--color-card-surface);
+    image-rendering: pixelated;
+    touch-action: none;
+    cursor: crosshair;
+}
+#profileAvatarCanvas[data-tool="fill"] {
+    cursor: cell;
+}
+.profile-avatar-palette {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--card-gap);
+    margin-bottom: var(--control-bottom-margin);
+}
+.profile-avatar-color-slot {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+#settingsPanel .profile-avatar-color-select {
+    display: grid;
+    min-width: 0;
+    height: 30px;
+    place-items: center;
+    margin: 0;
+    border: 2px solid var(--color-divider);
+    padding: 3px;
+    background: var(--color-control-surface);
+}
+#settingsPanel .profile-avatar-color-select[aria-pressed="true"] {
+    outline: 2px solid var(--color-heading);
+    outline-offset: 1px;
+}
+.profile-avatar-color-preview {
+    width: 100%;
+    height: 100%;
+}
+#settingsPanel .profile-avatar-color-slot input[type="color"] {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    margin: 0;
+    border: 0;
+    padding: 2px;
+}
+.profile-avatar-status {
+    min-height: 1.2em;
 }
 .public-profile-stats {
     display: grid;
@@ -1412,6 +1609,16 @@ body {
     color: var(--color-heading);
     font-family: 'capsmall', sans-serif;
     font-weight: 400;
+}
+.public-profile-provider-value {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+.public-profile-provider-icon {
+    flex: 0 0 8px;
+    margin: 0 8px 0 4px;
+    transform: scale(2);
 }
 .public-profile-medal-stat .public-profile-stat-label {
     display: flex;

@@ -1,7 +1,7 @@
 {
     "title": "Amateur",
     "description": "Complete a level.",
-    "successors": ["number-pillars:streak-five", "number-pillars:xp-hundred", "number-pillars:custom-level"],
+    "successors": ["number-pillars:streak-five", "number-pillars:xp-hundred", "number-pillars:custom-level", "number-pillars:ten-levels", "number-pillars:hard-clear"],
     "rarity": "common",
     "icon": "🧮"
 }

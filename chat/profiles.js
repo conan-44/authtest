@@ -13,9 +13,60 @@ const minimizeChatOptionsBtn = document.getElementById("minimizeChatOptionsBtn")
 let profileRequestId = 0;
 
 async function queryPublicProfiles(buildQuery) {
-  const result = await buildQuery("id, username, flair, created_at");
+  const result = await buildQuery("id, username, flair, created_at, avatar, auth_providers");
   if (result.error) throw result.error;
   return result.data;
+}
+
+function makeProfileSignInStat(providers) {
+  const stat = document.createElement("div");
+  stat.className = "public-profile-stat";
+  const label = document.createElement("span");
+  label.className = "public-profile-stat-label";
+  label.textContent = "Can sign in via";
+  const value = document.createElement("strong");
+  value.className = "public-profile-stat-value public-profile-provider-value";
+
+  const providerNames = new Map([
+    ["google", ["Google", "badge-google"]],
+    ["email", ["Email", "badge-mail"]]
+  ]);
+  const knownProviders = [...new Set(Array.isArray(providers) ? providers : [])]
+    .filter(provider => providerNames.has(provider));
+  if (!knownProviders.length) {
+    value.textContent = "Unavailable";
+  } else {
+    const bothMethods = knownProviders.includes("google") && knownProviders.includes("email");
+    const icon = document.createElement("span");
+    icon.className = `btn-icon public-profile-provider-icon ${bothMethods ? "badge-gmail" : providerNames.get(knownProviders[0])[1]}`;
+    icon.setAttribute("aria-hidden", "true");
+    const methodText = document.createElement("span");
+    methodText.textContent = bothMethods
+      ? "Google and Email"
+      : providerNames.get(knownProviders[0])[0];
+    value.append(icon, methodText);
+  }
+  stat.append(label, value);
+  return stat;
+}
+
+function makeProfileAvatar(avatar, className, username) {
+  if (!avatar || window.ProfileAvatars.isDefault(avatar)) {
+    const image = document.createElement("img");
+    image.src = "./assets/profile.png";
+    image.className = className;
+    image.alt = `${username || "Player"}'s profile picture`;
+    return image;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.className = className;
+  canvas.setAttribute("role", "img");
+  canvas.setAttribute("aria-label", `${username || "Player"}'s profile picture`);
+  if (!window.ProfileAvatars.draw(canvas, avatar)) {
+    console.warn("A public profile picture has an invalid format.", avatar);
+    return makeProfileAvatar(null, className, username);
+  }
+  return canvas;
 }
 
 function activateChatOptionsTab(name) {
@@ -83,6 +134,14 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
       profileSearchStatus.textContent = "";
       return;
     }
+    const recordAchievement = window.achievements?.recordGameEvent;
+    if (typeof recordAchievement === "function") {
+      recordAchievement("main", "profile-viewed").catch(error => {
+        console.error("Could not record profile-view achievement.", error);
+      });
+    } else {
+      console.error("Achievement tracker is unavailable for profile views.");
+    }
 
     await window.achievements.loadAllFromDirectoryIndex();
     const [{ data: stats, error: statsError }, achievements, milestones] = await Promise.all([
@@ -130,9 +189,14 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
       ? null
       : milestones.filter(item => points >= item.points).at(-1) || null;
 
+    const headingRow = document.createElement("div");
+    headingRow.className = "public-profile-heading";
+    const avatar = makeProfileAvatar(profile.avatar, "public-profile-avatar", profile.username);
+    if (avatar) headingRow.appendChild(avatar);
     const heading = document.createElement("h2");
     heading.className = "public-profile-name";
     heading.textContent = profile.username || "Player";
+    headingRow.appendChild(heading);
     const flair = document.createElement("p");
     flair.className = "public-profile-flair";
     flair.textContent = profile.flair || "No flair";
@@ -143,7 +207,8 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
         "Achievements",
         statsUnavailable ? "Unavailable" : `${completedAchievementCount}/${achievements.length}`
       ),
-      makeProfileStat("Points", statsUnavailable ? "Unavailable" : String(points))
+      makeProfileStat("Points", statsUnavailable ? "Unavailable" : String(points)),
+      makeProfileSignInStat(profile.auth_providers)
     );
 
     const medalStat = document.createElement("div");
@@ -186,7 +251,7 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
       rarityList.appendChild(row);
     });
 
-    chatPublicProfileContent.replaceChildren(heading, flair, statsGrid, rarityHeading, rarityList);
+    chatPublicProfileContent.replaceChildren(headingRow, flair, statsGrid, rarityHeading, rarityList);
     profileSearchStatus.textContent = statsUnavailable
       ? "Profile loaded, but achievement stats are unavailable."
       : `Viewing ${profile.username || "Player"}'s profile.`;
@@ -229,11 +294,12 @@ async function searchChatProfiles(event) {
       button.type = "button";
       button.className = "profile-search-result";
       button.dataset.userId = profile.id;
+      const avatar = makeProfileAvatar(profile.avatar, "profile-search-avatar", profile.username);
       const username = document.createElement("strong");
+      username.className = "profile-search-username";
       username.textContent = profile.username || "Player";
-      const flair = document.createElement("span");
-      flair.textContent = profile.flair || "";
-      button.append(username, flair);
+      if (avatar) button.appendChild(avatar);
+      button.appendChild(username);
       profileSearchResults.appendChild(button);
     });
     profileSearchStatus.textContent = getProfileSearchCountLabel(profiles.length);

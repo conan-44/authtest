@@ -30,6 +30,7 @@
     --border: var(--color-button-border);
     --muted: var(--color-text);
     --accent: var(--color-heading);
+    --secondary: var(--theme-secondary, #8a5a00);
     --highlight: var(--color-notification-warning);
 }
 
@@ -69,6 +70,7 @@ input {
 
 button {
     cursor: pointer;
+    border: 0;
 }
 
 button:focus-visible,
@@ -161,7 +163,6 @@ h3 {
 .option-button,
 .modal-tab {
     min-height: 40px;
-    border: 4px solid var(--color-button-border);
     border-radius: 0;
     padding: 0 10px;
     background: var(--surface-raised);
@@ -312,6 +313,11 @@ button:disabled {
     font-size: 1.55rem;
 }
 
+.score-sum strong {
+    color: var(--secondary);
+    font-size: 1.55rem;
+}
+
 .run-container {
     flex-wrap: wrap;
     gap: 14px;
@@ -343,7 +349,6 @@ button:disabled {
 }
 
 .option-button.difficulty-selected {
-    border-color: var(--color-button-border);
     background: var(--accent);
     color: var(--color-page);
     box-shadow: inset 0 0 0 2px var(--color-divider-highlight);
@@ -402,7 +407,7 @@ button:disabled {
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    border: 3px solid var(--color-button-border);
+    border: 3px solid var(--secondary);
     border-radius: 0;
     background: var(--surface-raised);
     box-shadow: 1px 1px 0 var(--color-divider);
@@ -611,7 +616,6 @@ input::placeholder {
 }
 
 .modal-tab.active {
-    border-color: var(--color-button-border);
     background: var(--accent);
     color: var(--color-page);
     box-shadow: inset 0 0 0 2px var(--color-divider-highlight);
