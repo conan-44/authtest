@@ -1,7 +1,7 @@
 {
   "title": "Chatter Box",
   "description": "Send 25 chat messages.",
-  "successors": [],
+  "successors": ["main:channel-join", "main:gif-sender"],
   "rarity": "rare",
   "icon": "🗨️"
 }

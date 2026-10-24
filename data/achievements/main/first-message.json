@@ -1,7 +1,7 @@
 {
   "title": "Hello, World!",
   "description": "Send your first chat message.",
-  "successors": ["main:beginning", "main:chat-regular"],
+  "successors": ["main:beginning", "main:chat-regular", "main:poll-participant", "main:idea-person"],
   "rarity": "common",
   "icon": "💬"
 }
