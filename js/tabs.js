@@ -29,6 +29,7 @@
 
         if (tabName === 'chat' && typeof window.initChatTab === 'function') window.initChatTab();
         if (tabName === 'blog' && typeof window.initBlogTab === 'function') window.initBlogTab();
+        if (tabName === 'blog' && typeof window.initBlogCommunity === 'function') window.initBlogCommunity();
         if (tabName === 'experimental') {
             showPopup("Redirecting to Experiments...", "info");
             window.location.href = "https://skybase-cookie.duckdns.org";

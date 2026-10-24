@@ -1,7 +1,7 @@
 {
   "title": "Bull Dozer",
   "description": "Crack 25 Bulls & Cows codes.",
-  "successors": [],
+  "successors": ["mastermind:code-collector"],
   "rarity": "epic",
   "icon": "🧠"
 }

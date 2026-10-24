@@ -1,7 +1,7 @@
 {
     "title": "Now You See Me",
     "description": "Enable the invisibility cloak in Settings.",
-    "successors": ["main:channel-join", "main:channel-host", "main:gif-sender", "main:first-message", "main:profile-explorer"],
+    "successors": ["main:channel-join", "main:channel-host", "main:gif-sender", "main:profile-explorer", "main:poll-participant", "main:idea-person", "main:eight-options", "main:poll-regular"],
     "rarity": "common",
     "icon": "👁"
 }

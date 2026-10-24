@@ -1,7 +1,7 @@
 {
     "title": "Amateur",
     "description": "finish a hand of blackjack",
-    "successors": ["blackjack:first-win", "blackjack:busted", "blackjack:natural", "blackjack:five-card-hand"],
+    "successors": ["blackjack:first-win", "blackjack:busted", "blackjack:natural", "blackjack:five-card-hand", "blackjack:five-hands"],
     "rarity": "common",
     "icon": "🃏"
 }

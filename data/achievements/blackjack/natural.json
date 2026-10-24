@@ -1,7 +1,7 @@
 {
     "title": "Natural",
     "description": "Get a natural Blackjack.",
-    "successors": [],
+    "successors": ["blackjack:five-naturals"],
     "rarity": "rare",
     "icon": "A"
 }

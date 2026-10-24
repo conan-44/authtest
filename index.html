@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/gh/Parcoil/cloak@main/src/index.min.js"></script>
     <link rel="icon" type="image/x-icon" href="./assets/test-favicon.png">
-    <link rel="stylesheet" href="./style.css?v=profile-ranks-v4">
+    <link rel="stylesheet" href="./style.css?v=chiseled-tab-order-v1">
 </head>
 <body>
     <main class="page">
@@ -222,10 +222,53 @@
         <section class="panel tab-panel is-hidden" id="blogPanel" aria-labelledby="blog-heading">
             <div class="panel-header">
                 <h1 id="blog-heading">Blog</h1>
+                <div class="blog-section-tabs" role="tablist" aria-label="Blog sections">
+                    <button type="button" id="blogPostsTab" class="blog-section-tab is-active" data-blog-section="posts" role="tab" aria-selected="true" aria-controls="blogPostsPanel">Posts</button>
+                    <button type="button" id="blogPollsTab" class="blog-section-tab" data-blog-section="polls" role="tab" aria-selected="false" aria-controls="blogPollsPanel">Polls</button>
+                    <button type="button" id="blogSuggestionsTab" class="blog-section-tab" data-blog-section="suggestions" role="tab" aria-selected="false" aria-controls="blogSuggestionsPanel">Suggestions</button>
+                </div>
             </div>
             <div class="panel-body">
-                <div id="blogPosts" class="blog-posts" aria-live="polite">
-                    <p class="blog-status">Loading blog posts...</p>
+                <div id="blogPostsPanel" class="blog-section-panel" role="tabpanel" aria-labelledby="blogPostsTab">
+                    <div id="blogPosts" class="blog-posts" aria-live="polite">
+                        <p class="blog-status">Loading blog posts...</p>
+                    </div>
+                </div>
+                <div id="blogPollsPanel" class="blog-section-panel is-hidden" role="tabpanel" aria-labelledby="blogPollsTab" hidden>
+                    <section class="blog-community-create">
+                        <h2>Create a poll</h2>
+                        <form id="createBlogPollForm" class="blog-community-form">
+                            <label for="blogPollTitle">Poll question</label>
+                            <input id="blogPollTitle" name="title" type="text" maxlength="120" required placeholder="What should we decide?">
+                            <fieldset id="blogPollOptionsFieldset">
+                                <legend>Options (2–8)</legend>
+                                <label>Option 1<input name="option" type="text" maxlength="100" required></label>
+                                <label>Option 2<input name="option" type="text" maxlength="100" required></label>
+                            </fieldset>
+                            <button type="button" id="addBlogPollOptionBtn">Add option</button>
+                            <button type="submit">Publish poll</button>
+                            <p id="blogPollCreateStatus" class="blog-status" aria-live="polite"></p>
+                        </form>
+                    </section>
+                    <div id="blogPollList" class="blog-community-list" aria-live="polite">
+                        <p class="blog-status">Loading polls...</p>
+                    </div>
+                </div>
+                <div id="blogSuggestionsPanel" class="blog-section-panel is-hidden" role="tabpanel" aria-labelledby="blogSuggestionsTab" hidden>
+                    <section class="blog-community-create">
+                        <h2>Share a suggestion</h2>
+                        <form id="createBlogSuggestionForm" class="blog-community-form">
+                            <label for="blogSuggestionTitle">Title</label>
+                            <input id="blogSuggestionTitle" name="title" type="text" maxlength="120" required placeholder="A short summary">
+                            <label for="blogSuggestionBody">Suggestion</label>
+                            <textarea id="blogSuggestionBody" name="body" maxlength="2000" rows="4" required placeholder="What would you like to see?"></textarea>
+                            <button type="submit">Post suggestion</button>
+                            <p id="blogSuggestionCreateStatus" class="blog-status" aria-live="polite"></p>
+                        </form>
+                    </section>
+                    <div id="blogSuggestionList" class="blog-community-list" aria-live="polite">
+                        <p class="blog-status">Loading suggestions...</p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -329,19 +372,20 @@
     <script src="./js/utils.js"></script>
     <script src="./js/profile-avatars.js?v=profile-pixels-v3"></script>
     <script src="./js/renderers.js?v=achievement-tree-connectors-v7"></script>
-    <script src="./js/achievements.js"></script>
+    <script src="./js/achievements.js?v=exact-2000-points-v1"></script>
     <script src="./js/auth.js?v=profile-ranks-v2"></script>
     <script src="./js/blog.js"></script>
+    <script src="./js/blog-community.js?v=exact-2000-points-v1"></script>
     <script src="./js/tabs.js"></script>
-    <script src="./js/settings.js"></script>
+    <script src="./js/settings.js?v=tab-icon-choice-v1"></script>
     <script src="./js/games.js?v=games-carousel-v16"></script>
     <script src="./js/tips.js"></script>
     <!-- api config stuff -->
     <script src="./api-config/giphy-config.js"></script>
     <script src="./api-config/cloak-config.js?v=main-achievements"></script>
     <!-- chat stuff -->
-    <script src="./chat/chat.js?v=profile-ranks-v2"></script>
-    <script src="./chat/channels.js?v=chat-presence"></script>
+    <script src="./chat/chat.js?v=community-tabs-v1"></script>
+    <script src="./chat/channels.js?v=community-tabs-v1"></script>
     <script src="./chat/actions.js?v=game-invites"></script>
     <script src="./chat/giphy.js?v=public-profiles-v2"></script>
     <script src="./chat/profiles.js?v=profile-ranks-v3"></script>

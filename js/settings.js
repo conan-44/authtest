@@ -2,6 +2,7 @@ const settingsConfigFile = "./data/settings/settings.skvwcfgml";
 const musicManifestFile = "./assets/audio/music/index.skvwmeta";
 const APP_THEME_STORAGE_KEY = "skvwaffle.theme.v1";
 const RANK_EFFECTS_SETTING_STORAGE_KEY = "skvwaffle.disable-rank-effects.v1";
+const TAB_ICON_STYLE_STORAGE_KEY = "skvwaffle.tab-icon-style.v1";
 const DEFAULT_APP_THEME = { accent: "#2a4d67", secondary: "#8a5a00" };
 const APP_THEME_PRESETS = [
     { name: "Classic", accent: DEFAULT_APP_THEME.accent, secondary: DEFAULT_APP_THEME.secondary },
@@ -20,6 +21,7 @@ const APP_THEME_PRESETS = [
     let musicAutoplayRequested = false;
     let appTheme = loadAppTheme();
     applyAppTheme();
+    applyTabIconStyle(loadTabIconStyle());
 
     window.getAppSetting = function getAppSetting(section, key, fallback = false) {
         if (section === "chat" && key === "disable rank effects") {
@@ -44,6 +46,29 @@ const APP_THEME_PRESETS = [
 
     function applyRankEffectsPreference(disabled) {
         document.documentElement.classList.toggle("rank-effects-disabled", disabled);
+    }
+
+    function loadTabIconStyle() {
+        try {
+            return localStorage.getItem(TAB_ICON_STYLE_STORAGE_KEY) === "chiseled" ? "chiseled" : "classic";
+        } catch (error) {
+            console.error("Could not read the tab icon preference.", error);
+            return "classic";
+        }
+    }
+
+    function applyTabIconStyle(style) {
+        document.documentElement.dataset.tabIconStyle = style;
+    }
+
+    function saveTabIconStyle(style) {
+        applyTabIconStyle(style);
+        try {
+            localStorage.setItem(TAB_ICON_STYLE_STORAGE_KEY, style);
+        } catch (error) {
+            console.error("Could not save the tab icon preference.", error);
+            if (typeof showPopup === "function") showPopup("Your tab icon choice could not be saved on this device.", "error");
+        }
     }
 
     function settingId(section, key) {
@@ -161,6 +186,29 @@ const APP_THEME_PRESETS = [
         description.className = "settings-appearance-description";
         description.textContent = "choose your colors";
 
+        const tabIconLabel = document.createElement("label");
+        tabIconLabel.className = "settings-select-label settings-tab-icon-select";
+        tabIconLabel.htmlFor = "setting-tab-icon-style";
+        const tabIconLabelText = document.createElement("span");
+        tabIconLabelText.className = "settings-toggle-label";
+        tabIconLabelText.textContent = "-  Tab Icons";
+        const tabIconSelect = document.createElement("select");
+        tabIconSelect.className = "settings-select";
+        tabIconSelect.id = "setting-tab-icon-style";
+        tabIconSelect.setAttribute("aria-label", "Tab icon style");
+        [
+            ["classic", "Classic (animated)"],
+            ["chiseled", "Chiseled (static)"]
+        ].forEach(([value, label]) => {
+            const option = document.createElement("option");
+            option.value = value;
+            option.textContent = label;
+            tabIconSelect.appendChild(option);
+        });
+        tabIconSelect.value = loadTabIconStyle();
+        tabIconSelect.addEventListener("change", () => saveTabIconStyle(tabIconSelect.value));
+        tabIconLabel.append(tabIconLabelText, tabIconSelect);
+
         const colorControls = document.createElement("div");
         colorControls.className = "settings-color-controls";
         const inputs = {};
@@ -215,7 +263,7 @@ const APP_THEME_PRESETS = [
                 updateThemePresetSelection(presetButtons);
             });
         });
-        section.append(description, colorControls, presetHeading, presets);
+        section.append(description, tabIconLabel, colorControls, presetHeading, presets);
         settingsList.appendChild(section);
         updateThemePresetSelection(presetButtons);
     }

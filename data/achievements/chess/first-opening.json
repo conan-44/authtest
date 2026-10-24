@@ -1,7 +1,7 @@
 {
     "title": "Opening Explorer",
     "description": "Play through a named opening from the chess opening book.",
-    "successors": ["chess:opening-collector"],
+    "successors": ["chess:opening-collector", "chess:opening-student"],
     "rarity": "common",
     "icon": "📚"
 }

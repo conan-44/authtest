@@ -19,8 +19,27 @@ const history_file = "./history/achievements.skvwhist";
         };
         const gameProgressStorageKey = "skvwaffle.game-achievement-progress.v1";
         let gameProgress = loadGameProgress();
+        let mastermindSessionSolves = loadMastermindSessionSolves();
         let achievementsLoadPromise = null;
         let unlockSyncQueue = Promise.resolve();
+
+        function loadMastermindSessionSolves() {
+            try {
+                const saved = Number(sessionStorage.getItem("skvwaffle.mastermind-session-solves.v1"));
+                return Number.isInteger(saved) && saved >= 0 ? saved : 0;
+            } catch (error) {
+                console.warn("Could not load this session's Bulls & Cows progress.", error);
+                return 0;
+            }
+        }
+
+        function saveMastermindSessionSolves() {
+            try {
+                sessionStorage.setItem("skvwaffle.mastermind-session-solves.v1", String(mastermindSessionSolves));
+            } catch (error) {
+                console.warn("Could not save this session's Bulls & Cows progress.", error);
+            }
+        }
 
         function loadCompletionMap() {
             try {
@@ -101,7 +120,7 @@ const history_file = "./history/achievements.skvwhist";
 
         function loadGameProgress() {
             const emptyProgress = {
-                main: { messages: 0, profilesViewed: 0 },
+                main: { messages: 0, profilesViewed: 0, pollVotes: 0 },
                 mastermind: { solves: 0, solvedDifficulties: [] },
                 chess: { games: 0, analyses: 0, openings: [] },
                 numberPillars: { completed: 0, bestStreak: 0, totalXp: 0, customLevels: 0 },
@@ -201,8 +220,18 @@ const history_file = "./history/achievements.skvwhist";
             } else if (gameName === "main" && eventName === "profile-viewed") {
                 gameProgress.main.profilesViewed += 1;
                 if (gameProgress.main.profilesViewed >= 10) unlockedIds.push("main:profile-explorer");
+            } else if (gameName === "main" && eventName === "poll-voted") {
+                gameProgress.main.pollVotes += 1;
+                unlockedIds.push("main:poll-participant");
+                if (gameProgress.main.pollVotes >= 5) unlockedIds.push("main:poll-regular");
+            } else if (gameName === "main" && eventName === "poll-created") {
+                if (details.optionCount === 8) unlockedIds.push("main:eight-options");
+            } else if (gameName === "main" && eventName === "suggestion-created") {
+                unlockedIds.push("main:idea-person");
             } else if (gameName === "mastermind" && eventName === "solved") {
                 gameProgress.mastermind.solves += 1;
+                mastermindSessionSolves += 1;
+                saveMastermindSessionSolves();
                 unlockedIds.push("mastermind:beginner");
                 if (details.difficulty === "easy") unlockedIds.push("mastermind:easy-solve");
                 if (["easy", "medium", "hard"].includes(details.difficulty)
@@ -223,6 +252,9 @@ const history_file = "./history/achievements.skvwhist";
                 }
                 if (gameProgress.mastermind.solves >= 25) {
                     unlockedIds.push("mastermind:twenty-five");
+                }
+                if (mastermindSessionSolves >= 5) {
+                    unlockedIds.push("mastermind:code-collector");
                 }
             } else if (gameName === "chess" && eventName === "completed") {
                 gameProgress.chess.games += 1;
@@ -246,6 +278,9 @@ const history_file = "./history/achievements.skvwhist";
                     unlockedIds.push("chess:first-opening");
                     if (gameProgress.chess.openings.length >= 5) {
                         unlockedIds.push("chess:opening-collector");
+                    }
+                    if (gameProgress.chess.openings.length >= 3) {
+                        unlockedIds.push("chess:opening-student");
                     }
                 }
             } else if (gameName === "chess" && eventName === "special-move") {
@@ -279,6 +314,9 @@ const history_file = "./history/achievements.skvwhist";
                 if (gameProgress.numberPillars.totalXp >= 100) {
                     unlockedIds.push("number-pillars:xp-hundred");
                 }
+                if (gameProgress.numberPillars.totalXp >= 500) {
+                    unlockedIds.push("number-pillars:five-hundred-xp");
+                }
                 if (gameProgress.numberPillars.completed >= 10) {
                     unlockedIds.push("number-pillars:ten-levels");
                 }
@@ -297,6 +335,9 @@ const history_file = "./history/achievements.skvwhist";
                 if (details.status === "blackjack") {
                     gameProgress.blackjack.naturals += 1;
                     unlockedIds.push("blackjack:natural");
+                    if (gameProgress.blackjack.naturals >= 5) {
+                        unlockedIds.push("blackjack:five-naturals");
+                    }
                 }
                 if (details.status === "bust") {
                     gameProgress.blackjack.busts += 1;
@@ -305,6 +346,9 @@ const history_file = "./history/achievements.skvwhist";
                 if (Number.isInteger(details.playerCards) && details.playerCards >= 5) {
                     gameProgress.blackjack.fiveCardHands += 1;
                     unlockedIds.push("blackjack:five-card-hand");
+                }
+                if (gameProgress.blackjack.hands >= 5) {
+                    unlockedIds.push("blackjack:five-hands");
                 }
                 if (details.status === "win" || details.status === "blackjack") {
                     gameProgress.blackjack.wins += 1;
@@ -319,6 +363,7 @@ const history_file = "./history/achievements.skvwhist";
                 gameProgress.douDizhu.games += 1;
                 unlockedIds.push("dou-dizhu:first-game");
                 if (gameProgress.douDizhu.games >= 5) unlockedIds.push("dou-dizhu:five-games");
+                if (gameProgress.douDizhu.games >= 25) unlockedIds.push("dou-dizhu:twenty-five-games");
                 if (details.won) {
                     gameProgress.douDizhu.wins += 1;
                     unlockedIds.push("dou-dizhu:first-win");

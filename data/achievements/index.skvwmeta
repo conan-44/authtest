@@ -7,6 +7,10 @@
   "main:first-message",
   "main:chat-regular",
   "main:profile-explorer",
+  "main:poll-participant",
+  "main:idea-person",
+  "main:eight-options",
+  "main:poll-regular",
   // bulls & cows
   "mastermind:beginner",
   "mastermind:codebreaker",
@@ -15,6 +19,7 @@
   "mastermind:easy-solve",
   "mastermind:all-difficulties",
   "mastermind:twenty-five",
+  "mastermind:code-collector",
   // number pillars
   "number-pillars:first-win",
   "number-pillars:streak-five",
@@ -23,6 +28,7 @@
   "number-pillars:ten-levels",
   "number-pillars:streak-ten",
   "number-pillars:hard-clear",
+  "number-pillars:five-hundred-xp",
   // chess
   "chess:first-game",
   "chess:ten-games",
@@ -37,6 +43,7 @@
   "chess:enpassant-first",
   "chess:enpassant-blunder",
   "chess:enpassant-great",
+  "chess:opening-student",
   // blackjack
   "blackjack:first-hand",
   "blackjack:first-win",
@@ -45,6 +52,8 @@
   "blackjack:five-card-hand",
   "blackjack:ten-wins",
   "blackjack:hot-streak",
+  "blackjack:five-hands",
+  "blackjack:five-naturals",
   // dou dizhu
   "dou-dizhu:first-game",
   "dou-dizhu:five-games",
@@ -57,5 +66,6 @@
   "dou-dizhu:two",
   "dou-dizhu:joker",
   "dou-dizhu:first-analysis",
-  "dou-dizhu:ten-analyses"
+  "dou-dizhu:ten-analyses",
+  "dou-dizhu:twenty-five-games"
 ]
