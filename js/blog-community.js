@@ -12,9 +12,11 @@
     const suggestionForm = document.getElementById("createBlogSuggestionForm");
     const suggestionList = document.getElementById("blogSuggestionList");
     const suggestionCreateStatus = document.getElementById("blogSuggestionCreateStatus");
+    const suggestionSortButtons = [...document.querySelectorAll(".blog-suggestion-sort")];
     let currentUserId = null;
     let pollsLoaded = false;
     let suggestionsLoaded = false;
+    let suggestionSort = "newest";
 
     function setStatus(element, message, isError = false) {
         element.textContent = message;
@@ -44,6 +46,21 @@
         return Number.isNaN(date.getTime())
             ? ""
             : date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    }
+
+    function formatExactDate(value) {
+        const date = new Date(value);
+        return Number.isNaN(date.getTime())
+            ? ""
+            : date.toLocaleString(undefined, {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                second: "2-digit",
+                timeZoneName: "short"
+            });
     }
 
     function activateSection(sectionName) {
@@ -288,11 +305,45 @@
         card.className = "blog-community-card";
         const heading = document.createElement("h3");
         heading.textContent = suggestion.title;
-        const meta = document.createElement("span");
+        const author = document.createElement("span");
+        author.className = "blog-suggestion-author";
+        author.textContent = `Suggested by ${suggestion.author_name || "Player"}`;
+        const meta = document.createElement("time");
         meta.className = "blog-community-meta";
-        meta.textContent = `Suggestion · ${formatDate(suggestion.created_at)}`;
+        meta.dateTime = suggestion.created_at;
+        meta.textContent = formatExactDate(suggestion.created_at);
         const body = makeMessage("blog-community-body", suggestion.body);
-        card.append(heading, meta, body);
+        card.append(heading, author, meta, body);
+
+        const voteControls = document.createElement("div");
+        voteControls.className = "blog-suggestion-votes";
+        const score = document.createElement("span");
+        score.className = "blog-suggestion-score";
+        const upvotes = Number(suggestion.upvotes || 0);
+        const downvotes = Number(suggestion.downvotes || 0);
+        score.textContent = String(upvotes - downvotes);
+        score.setAttribute("aria-label", `Score ${upvotes - downvotes}, ${upvotes} upvotes, ${downvotes} downvotes`);
+        const selectedVote = Number(suggestion.my_vote || 0);
+
+        if (currentUserId) {
+            const upvote = document.createElement("button");
+            upvote.type = "button";
+            upvote.textContent = `▲ ${upvotes}`;
+            upvote.setAttribute("aria-label", "Upvote suggestion");
+            upvote.setAttribute("aria-pressed", String(selectedVote === 1));
+            upvote.addEventListener("click", () => voteSuggestion(suggestion.id, 1, upvote, downvote));
+
+            const downvote = document.createElement("button");
+            downvote.type = "button";
+            downvote.textContent = `▼ ${downvotes}`;
+            downvote.setAttribute("aria-label", "Downvote suggestion");
+            downvote.setAttribute("aria-pressed", String(selectedVote === -1));
+            downvote.addEventListener("click", () => voteSuggestion(suggestion.id, -1, upvote, downvote));
+            voteControls.append(upvote, score, downvote);
+        } else {
+            voteControls.append(score, makeMessage("blog-community-meta", "Sign in to vote."));
+        }
+        card.appendChild(voteControls);
         return card;
     }
 
@@ -301,11 +352,9 @@
         suggestionsLoaded = true;
         suggestionList.replaceChildren(makeMessage("blog-status", "Loading suggestions..."));
         try {
-            const { data, error } = await _supabase
-                .from("blog_suggestions")
-                .select("id, title, body, created_at")
-                .order("created_at", { ascending: false })
-                .limit(100);
+            const { data, error } = await _supabase.rpc("get_blog_suggestions", {
+                p_sort: suggestionSort
+            });
             if (error) throw error;
             if (!data?.length) {
                 suggestionList.replaceChildren(makeMessage("blog-community-empty", "No suggestions yet. Share the first one."));
@@ -317,8 +366,31 @@
             suggestionsLoaded = false;
             suggestionList.replaceChildren(makeMessage(
                 "blog-community-error",
-                `Could not load suggestions. Apply supabase/blog_community.sql in the Supabase SQL Editor. ${error.message || ""}`
+                `Could not load suggestions. Apply supabase/blog_suggestion_votes.sql in the Supabase SQL Editor. ${error.message || ""}`
             ));
+        }
+    }
+
+    async function voteSuggestion(suggestionId, vote, upvoteButton, downvoteButton) {
+        const currentVote = upvoteButton.getAttribute("aria-pressed") === "true" ? 1
+            : downvoteButton.getAttribute("aria-pressed") === "true" ? -1
+            : 0;
+        const nextVote = currentVote === vote ? null : vote;
+        upvoteButton.disabled = true;
+        downvoteButton.disabled = true;
+        try {
+            const { error } = await _supabase.rpc("set_blog_suggestion_vote", {
+                p_suggestion_id: suggestionId,
+                p_vote: nextVote
+            });
+            if (error) throw error;
+            suggestionsLoaded = false;
+            await loadSuggestions();
+        } catch (error) {
+            console.error("Could not vote on suggestion.", error);
+            upvoteButton.disabled = false;
+            downvoteButton.disabled = false;
+            setStatus(suggestionCreateStatus, `Could not save your vote: ${error.message || "please try again."}`, true);
         }
     }
 
@@ -360,6 +432,18 @@
     sectionTabs.forEach(tab => {
         tab.addEventListener("click", () => activateSection(tab.dataset.blogSection));
     });
+    suggestionSortButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            suggestionSort = button.dataset.suggestionSort;
+            suggestionSortButtons.forEach(sortButton => {
+                const selected = sortButton === button;
+                sortButton.classList.toggle("is-active", selected);
+                sortButton.setAttribute("aria-pressed", String(selected));
+            });
+            suggestionsLoaded = false;
+            loadSuggestions();
+        });
+    });
     document.getElementById("addBlogPollOptionBtn").addEventListener("click", () => {
         if (getPollOptions().length >= 8) return;
         addPollOption();
@@ -373,6 +457,8 @@
         showSignedInStatus();
         pollsLoaded = false;
         if (!sectionPanels.polls.hidden) loadPolls();
+        suggestionsLoaded = false;
+        if (!sectionPanels.suggestions.hidden) loadSuggestions();
     });
 
     currentUserId = null;

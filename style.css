@@ -479,7 +479,8 @@ html[data-tab-icon-style="chiseled"] .tab-btn:hover .btn-icon {
     font-size: 13px;
 }
 .blog-community-form button:disabled,
-.blog-poll-vote:disabled {
+.blog-poll-vote:disabled,
+.blog-suggestion-votes button:disabled {
     cursor: not-allowed;
     opacity: 0.6;
 }
@@ -497,6 +498,49 @@ html[data-tab-icon-style="chiseled"] .tab-btn:hover .btn-icon {
 .blog-community-list {
     display: grid;
     gap: var(--card-gap);
+}
+.blog-suggestion-sorts {
+    display: flex;
+    gap: 6px;
+    margin-bottom: var(--card-gap);
+}
+.blog-suggestion-sort {
+    width: auto;
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 12px;
+}
+.blog-suggestion-sort.is-active {
+    background: var(--color-control-pressed);
+    color: var(--color-heading);
+}
+.blog-suggestion-author {
+    color: var(--color-points);
+    font-family: 'lowsmall', sans-serif;
+    font-size: 12px;
+}
+.blog-suggestion-votes {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.blog-suggestion-votes button {
+    width: auto;
+    margin: 0;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+.blog-suggestion-votes button[aria-pressed="true"] {
+    background: var(--color-control-pressed);
+    color: var(--color-heading);
+    outline: 2px solid var(--color-points);
+}
+.blog-suggestion-score {
+    min-width: 36px;
+    color: var(--color-points);
+    font-family: 'lowsmall', sans-serif;
+    font-size: 13px;
+    text-align: center;
 }
 .blog-community-card p {
     margin: 0;
