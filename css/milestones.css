@@ -1,0 +1,81 @@
+.milestone-chip.has-medal { padding-right: var(--milestone-side-space); }
+
+.milestone-chip.is-unlocked { border-color: var(--color-points); }
+
+.milestone-name { margin: 0; font-size: calc(0.95rem * var(--font-multiplier)); font-family: 'capsmall', sans-serif; }
+
+.milestone-req { margin: 0; font-size: 14px; font-family: 'lowsmall', sans-serif; color: var(--color-muted); }
+
+.milestone-status { position: absolute; right: var(--milestone-status-right); bottom: var(--milestone-status-bottom); width: var(--milestone-status-size); height: var(--milestone-status-size); margin: 0; overflow: visible; font-size: calc(0.78rem * var(--font-multiplier)); color: var(--color-points); text-transform: uppercase; letter-spacing: 0.4px; }
+
+.milestone-chip:not(.has-medal) .milestone-status { right: var(--milestone-no-medal-right); }
+
+.milestone-medal { position: absolute; top: 0; right: var(--milestone-medal-right); width: var(--milestone-medal-width); height: var(--milestone-medal-height); overflow: hidden; }
+
+.milestones-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--milestone-min-width)), 1fr)); gap: var(--card-gap); }
+
+.paragon-milestone-chip {
+    grid-column: 1 / -1;
+    padding-right: var(--milestone-padding);
+}
+
+.paragon-milestone-heading { margin-bottom: 4px; }
+
+.paragon-milestone-tiers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--card-gap);
+}
+
+.paragon-tier {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 150px;
+    padding: 12px;
+    background: var(--color-panel-surface);
+}
+
+.paragon-badge {
+    position: relative;
+    display: inline-block;
+    flex: 0 0 32px;
+    width: 32px;
+    height: 48px;
+}
+
+.paragon-badge-number {
+    position: absolute;
+    z-index: 0;
+    top: 25px;
+    left: 0;
+    width: 32px;
+    color: #ffffff;
+    font-family: 'capsmall', sans-serif;
+    font-size: 12px;
+    line-height: 1;
+    text-align: center;
+}
+
+.paragon-tier-details {
+    display: grid;
+    gap: 3px;
+}
+
+.paragon-tier-name {
+    font-family: 'capsmall', sans-serif;
+}
+
+.milestone-chip {
+    position: relative;
+    min-width: 0;
+    border: var(--achievement-border-width) solid var(--color-points);
+    border-radius: var(--card-radius);
+    background: var(--color-card-surface);
+    padding: var(--milestone-padding);
+    display: grid;
+    gap: var(--milestone-gap);
+    overflow: hidden;
+    transition: border-color var(--motion-fast) ease, opacity var(--motion-fast) ease;
+    box-shadow: inset 0 0 0 2px var(--color-inset);
+}

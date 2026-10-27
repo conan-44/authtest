@@ -7,4 +7,13 @@
 250: Gold
 500: Diamond
 1000: Platinum
-2000: Mythical
+1800: Mythical
+
+# paragons
+2200: Paragon I
+2700: Paragon II
+3200: Paragon III
+## paragon names
+1: Nebula
+2: Celeste
+3: Void

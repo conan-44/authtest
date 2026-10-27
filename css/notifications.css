@@ -1,0 +1,158 @@
+.notification-count {
+      display: none;
+      margin-left: 4px;
+      font-size: 11px;
+      line-height: 1;
+      vertical-align: super;
+    }
+
+.notification-count-visible { display: inline; }
+
+.popup-stack, .notification-stack {
+    position: fixed;
+    top: var(--popup-top);
+    left: var(--popup-left);
+    right: auto;
+    bottom: auto;
+    z-index: 1000;
+    display: grid;
+    gap: var(--notification-gap);
+    width: min(var(--popup-width), calc(100vw - (var(--popup-left) * 2)));
+    pointer-events: none;
+}
+
+.notification {
+    display: flex;
+    align-items: center;
+    gap: var(--panel-header-gap);
+    padding: var(--notification-padding);
+    background: var(--notification-surface);
+    color: var(--notification-text);
+    font-family: 'capsmall', sans-serif;
+    font-size: 16px;
+    line-height: 1.2;
+    box-sizing: border-box;
+    animation: notification-in 0.25s ease-out;
+}
+
+.notification-error { background: var(--notification-error); }
+
+.notification-success { background: var(--notification-success); }
+
+.notification-warning { background: var(--notification-warning); }
+
+.notification-info { background: var(--notification-info); }
+
+.notification-achievement { background: var(--notification-achievement); }
+
+.notification-chat { background: var(--notification-chat); }
+
+.notification-music { background: var(--notification-info); }
+
+.notification-out {
+    animation: notification-out 0.35s ease-in-out forwards;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+@keyframes notification-in {
+    from { opacity: 0; transform: translateX(-16px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes notification-out {
+    0% {
+        opacity: 1;
+        transform: translateX(0);
+        max-height: 120px;
+        padding-top: var(--popup-padding);
+        padding-bottom: var(--popup-padding);
+        margin-bottom: 0;
+    }
+    40% {
+        opacity: 0;
+        transform: translateX(-24px);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-24px);
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        margin-bottom: -8px;
+    }
+}
+
+.notification-label {
+    flex: 0 0 8px;
+    width: 8px;
+    height: 8px;
+    background-image: url('../assets/icons.png');
+    background-repeat: no-repeat;
+    background-position-y: -24px;
+    transform: scale(var(--sprite-icon-scale));
+    transform-origin: center;
+    margin: var(--notification-icon-margin);
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    animation: notification-label-play 0.5s steps(4) 1;
+}
+
+.tip-toast {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 1100;
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    max-width: min(300px, calc(100vw - 32px));
+    opacity: 0;
+    transform: translateX(calc(100% + 24px));
+    pointer-events: none;
+    transition: opacity 280ms ease, transform 280ms ease;
+}
+
+.tip-toast.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.tip-toast-bubble {
+    max-width: 240px;
+    padding: 0 2px 16px;
+    border: 16px solid transparent;
+    border-right-width: 20px;
+    border-image-source: url("../assets/chat_9x.png");
+    border-image-slice: 8 10 8 8 fill;
+    border-image-width: 24px 30px 24px 24px;
+    border-image-repeat: stretch repeat;
+    background: var(--color-white);
+    color: var(--color-text);
+    font-family: 'lowsmall', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    overflow-wrap: anywhere;
+    image-rendering: pixelated;
+}
+
+.notification-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--notification-content-gap);
+    overflow: hidden;
+}
+
+.notification-title {
+    font-family: 'capsmall', sans-serif;
+    font-size: 16px;
+    color: var(--notification-text);
+    line-height: 1.1;
+}
+
+.notification-subtitle {
+    font-family: 'lowsmall', sans-serif;
+    font-size: 14px;
+    color: var(--color-subtitle);
+    line-height: 1.1;
+}

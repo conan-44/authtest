@@ -1,0 +1,360 @@
+.btn-icon {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      min-width: 8px;
+      min-height: 8px;
+      background-image: url('../assets/icons.png');
+      background-repeat: no-repeat;
+      background-position-y: -24px;
+      transform: scale(4);
+      transform-origin: center;
+      margin: 8px 14px 4px 8px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+.icon-signup       { background-position-x: -24px;    }
+
+.icon-signin          { background-position-x: -32px;    }
+
+.icon-google        { background-position-x: -40px;    }
+
+.badge-gmail       { background-position-x: 0; }
+
+.badge-mail        { background-position-x: -8px; }
+
+.badge-google      { background-position-x: -16px; }
+
+.icon-signout      { background-position-x: -48px;    }
+
+.icon-delete         { background-position-x: -56px;    }
+
+.icon-refresh    { background-position-x: -64px;    }
+
+.icon-save             { background-position-x: -72px;    }
+
+.icon-reply            { background-position-x: -272px;    }
+
+.icon-send             { background-position-x: -176px;    }
+
+.icon-trash            { background-position-x: -256px;    }
+
+.icon-edit             { background-position-x: -264px;    }
+
+.icon-send.is-sending { animation: playSprite 0.5s steps(4); }
+
+.label-error        { background-position-x: -80px;    }
+
+.label-warn           { background-position-x: -88px;    }
+
+.label-success  { background-position-x: -96px;    }
+
+.label-info              { background-position-x: -104px; }
+
+@keyframes playSprite { from { background-position-y: 0px; } to { background-position-y: -32px; } }
+
+button:hover .btn-icon { animation: playSprite 0.5s steps(4); }
+
+.tab-btn .btn-icon {
+    margin: 0 8px 0 0;
+}
+
+html[data-tab-icon-style="chiseled"] .tab-btn .btn-icon {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    background-image: url("../assets/tabcons-16xchisled.png");
+    background-position-y: 0;
+    transform: scale(2);
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+html[data-tab-icon-style="chiseled"] .tabcon-chat { background-position-x: 0; }
+
+html[data-tab-icon-style="chiseled"] .tabcon-achievements { background-position-x: -16px; }
+
+html[data-tab-icon-style="chiseled"] .tabcon-settings { background-position-x: -32px; }
+
+html[data-tab-icon-style="chiseled"] .tabcon-games { background-position-x: -48px; }
+
+html[data-tab-icon-style="chiseled"] .tabcon-home { background-position-x: -64px; }
+
+html[data-tab-icon-style="chiseled"] .tabcon-experimental { background-position-x: -80px; }
+
+html[data-tab-icon-style="chiseled"] .tabcon-blog { background-position-x: -96px; }
+
+html[data-tab-icon-style="chiseled"] .tab-btn:hover .btn-icon {
+    animation: none;
+}
+
+.settings-toggle-icon {
+    flex: 0 0 8px;
+    width: 8px;
+    height: 8px;
+    background-image: url('../assets/icons.png');
+    background-repeat: no-repeat;
+    background-position: -80px -24px;
+    transform: scale(var(--sprite-icon-scale));
+    transform-origin: center;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+.settings-checkbox:checked ~ .settings-toggle-icon {
+    background-position-x: -96px;
+}
+
+.settings-toggle-icon.is-playing {
+    animation: notification-label-play 0.4s steps(4) 1;
+}
+
+.settings-checkbox:focus-visible ~ .settings-toggle-icon {
+    outline: 2px solid var(--color-points);
+    outline-offset: 2px;
+}
+
+.chat-reply-button .btn-icon,
+.chat-message-actions .btn-icon {
+    margin: 0;
+}
+
+.profile-rank-icon {
+    display: inline-block;
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    background-image: url("../assets/ranks.png");
+    background-repeat: no-repeat;
+    background-size: 64px 16px;
+    image-rendering: pixelated;
+}
+
+.profile-rank-icon.rank-cookie { background-position: 0 0; }
+
+.profile-rank-icon.rank-muffin { background-position: -16px 0; }
+
+.profile-rank-icon.rank-toast { background-position: -32px 0; }
+
+.profile-rank-icon.rank-banana { background-position: -48px 0; }
+
+.game-card-icon {
+    display: block;
+    width: 8px;
+    height: 8px;
+    transform: scale(32);
+    image-rendering: pixelated;
+    background-image: url("../assets/minigames/games.png");
+    background-repeat: no-repeat;
+}
+
+.game-back-btn .btn-icon {
+    margin: 0 8px 0 0;
+    transform: scale(4) rotate(180deg);
+}
+
+.paragon-badge .icons_medal {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.tip-toast-icon {
+    flex: 0 0 8px;
+    width: 8px;
+    height: 8px;
+    margin: 0 12px 12px 0;
+    background-image: url("../assets/icons.png");
+    background-repeat: no-repeat;
+    background-position: -280px 0;
+    transform: scale(4);
+    transform-origin: center;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+.tip-toast-icon.is-animating {
+    animation: tip-icon-play 0.5s steps(4) 1;
+}
+
+@keyframes tip-icon-play {
+    from { background-position-y: 0; }
+    to { background-position-y: -32px; }
+}
+
+.label-error   { background-position-x: -80px; }
+
+.label-warn    { background-position-x: -88px; }
+
+.label-success { background-position-x: -96px; }
+
+.label-info    { background-position-x: -104px; }
+
+.label-achievement { background-position-x: -168px; }
+
+.label-chat    { background-position-x: -160px; }
+
+.label-music { background-position-x: -240px; }
+
+.tabcon-chat { background-position-x: -184px; }
+
+.tabcon-achievements { background-position-x: -192px; }
+
+.tabcon-settings { background-position-x: -200px; }
+
+.tabcon-games { background-position-x: -208px; }
+
+.tabcon-home { background-position-x: -216px; }
+
+.tabcon-experimental { background-position-x: -232px; }
+
+.tabcon-blog { background-position-x: -248px; }
+
+@keyframes notification-label-play {
+    from { background-position-y: 0; }
+    to { background-position-y: -32px; }
+}
+
+.achievement-popup-icon {
+    flex: 0 0 8px;
+    width: 8px;
+    height: 8px;
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    margin: var(--notification-icon-margin);
+    transform: scale(calc(var(--sprite-icon-scale) * 0.625));
+    transform-origin: center;
+}
+
+.icons_rarity-common { background-position: 0 0; }
+
+.icons_rarity-rare { background-position: -8px 0; }
+
+.icons_rarity-epic { background-position: 0 -8px; }
+
+.icons_rarity-legendary { background-position: -8px -8px; }
+
+.icons_rarity {
+    display: inline-block;
+    image-rendering: pixelated;
+    width: 8px;  
+    height: 8px;  
+    transform: scale(var(--sprite-icon-scale));
+    transform-origin: top left;
+    background-image: url('../assets/achievements/rarity-icons.png');
+    background-repeat: no-repeat;
+}
+
+.icons_status-locked {
+    background-position: -112px 0;
+    animation: lockStatusLoop 1.5s steps(1, end) infinite paused;
+}
+
+.icons_status-unlocked {
+    background-position: -136px 0;
+    animation: unlockedStatusLoop 1.5s steps(1, end) infinite paused;
+}
+
+.icons_status {
+    display: inline-block;
+    image-rendering: pixelated;
+    width: 8px;
+    height: 8px;
+    transform: scale(var(--sprite-icon-scale));
+    transform-origin: top left;
+    background-image: url('../assets/icons.png');
+    background-repeat: no-repeat;
+}
+
+.achievement-card:hover .icons_status-locked,
+.milestone-chip:hover .icons_status-locked {
+    animation-play-state: running;
+}
+
+@keyframes lockStatusLoop {
+    0%, 9.09% { background-position: -112px 0; }
+    9.091%, 18.181% { background-position: -112px -8px; }
+    18.182%, 27.272% { background-position: -112px -16px; }
+    27.273%, 36.363% { background-position: -112px -24px; }
+    36.364%, 45.454% { background-position: -120px 0; }
+    45.455%, 54.545% { background-position: -120px -8px; }
+    54.546%, 63.636% { background-position: -120px -16px; }
+    63.637%, 72.727% { background-position: -120px -24px; }
+    72.728%, 81.818% { background-position: -128px 0; }
+    81.819%, 90.909% { background-position: -128px -8px; }
+    90.91%, 100% { background-position: -128px -16px; }
+
+}
+
+.achievement-card:hover .icons_status-unlocked,
+.milestone-chip:hover .icons_status-unlocked {
+    animation-play-state: running;
+}
+
+@keyframes unlockedStatusLoop {
+    0%, 9.09% { background-position: -136px 0; }
+    9.091%, 18.181% { background-position: -136px -8px; }
+    18.182%, 27.272% { background-position: -136px -16px; }
+    27.273%, 36.363% { background-position: -136px -24px; }
+    36.364%, 45.454% { background-position: -144px 0; }
+    45.455%, 54.545% { background-position: -144px -8px; }
+    54.546%, 63.636% { background-position: -144px -16px; }
+    63.637%, 72.727% { background-position: -144px -24px; }
+    72.728%, 81.818% { background-position: -152px 0; }
+    81.819%, 90.909% { background-position: -152px -8px; }
+    90.91%, 100% { background-position: -152px -16px; }
+}
+
+.icons_medal-silver { background-position: 0 0; }
+
+.icons_medal-gold { background-position: -8px 0; }
+
+.icons_medal-diamond { background-position: -16px 0; }
+
+.icons_medal-platinum { background-position: -24px 0; }
+
+.icons_medal-mythical { background-position: -32px 0; }
+
+.icons_medal-paragon-1 { background-position: -40px 0; }
+
+.icons_medal-paragon-2 { background-position: -48px 0; }
+
+.icons_medal-paragon-3 { background-position: -56px 0; }
+
+.icons_medal {
+    display: inline-block;
+    image-rendering: pixelated;
+    width: 8px;
+    height: 12px;
+    transform: scale(var(--sprite-medal-scale));
+    transform-origin: top left;
+    background-image: url('../assets/achievements/medalsheet-8x.png');
+    background-repeat: no-repeat;
+}
+
+.banners-common { background-position: 0 0; }
+
+.banners-rare { background-position: 0 -8px; }
+
+.banners-epic { background-position: 0 -16px; }
+
+.banners-legendary { background-position: 0 -24px; }
+
+.banners {
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    margin: 0;
+    z-index: 1;
+    display: inline-block;
+    image-rendering: pixelated;
+    width: 12px;  
+    height: 8px;
+    transform: scale(5);
+    transform-origin: bottom left;
+    background-image: url('../assets/achievements/bar-8x.png');
+    background-repeat: no-repeat;
+}

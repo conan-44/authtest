@@ -436,7 +436,12 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
         if (!elements.milestonesGridEl) return;
         const unlockedPoints = getSummary(state).unlockedPoints;
         elements.milestonesGridEl.innerHTML = "";
+        const paragonMilestones = [];
         state.milestones.forEach(milestone => {
+            if (/^Paragon\s+/i.test(milestone.name)) {
+                paragonMilestones.push(milestone);
+                return;
+            }
             const unlocked = unlockedPoints >= milestone.points;
             const chip = document.createElement("article");
             const tier = milestone.name.toLowerCase();
@@ -453,6 +458,44 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
             chip.append(name, req, status);
             elements.milestonesGridEl.append(chip);
         });
+        if (paragonMilestones.length) {
+            const card = document.createElement("article");
+            const hasUnlockedParagon = paragonMilestones.some(milestone => unlockedPoints >= milestone.points);
+            card.className = "milestone-chip paragon-milestone-chip" + (hasUnlockedParagon ? " is-unlocked" : "");
+            const heading = document.createElement("h3");
+            heading.className = "milestone-name paragon-milestone-heading";
+            heading.textContent = "Paragon";
+            const tiers = document.createElement("div");
+            tiers.className = "paragon-milestone-tiers";
+            paragonMilestones.forEach((milestone, index) => {
+                const unlocked = unlockedPoints >= milestone.points;
+                const tier = document.createElement("div");
+                tier.className = `paragon-tier ${unlocked ? "is-unlocked" : "is-locked"}`;
+                const badge = document.createElement("span");
+                badge.className = "paragon-badge";
+                const medal = document.createElement("span");
+                medal.className = `icons_medal icons_medal-paragon-${index + 1}`;
+                medal.setAttribute("aria-hidden", "true");
+                const number = document.createElement("span");
+                number.className = "paragon-badge-number";
+                number.textContent = String(index + 1);
+                badge.append(medal, number);
+                const details = document.createElement("span");
+                details.className = "paragon-tier-details";
+                const name = document.createElement("span");
+                name.className = "paragon-tier-name";
+                const tierName = milestone.name.match(/^Paragon\s+([IVXLCDM]+)$/i)?.[1];
+                name.textContent = `${tierName || index + 1} - ${milestone.paragonName || milestone.name}`;
+                const req = document.createElement("span");
+                req.className = "milestone-req";
+                req.textContent = `${milestone.points}p`;
+                details.append(name, req);
+                tier.append(badge, details);
+                tiers.append(tier);
+            });
+            card.append(heading, tiers);
+            elements.milestonesGridEl.append(card);
+        }
     }
 
     function showPopup(titleText, subtitleText, type = "achievement") {

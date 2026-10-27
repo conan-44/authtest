@@ -8,7 +8,18 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/gh/Parcoil/cloak@main/src/index.min.js"></script>
     <link rel="icon" type="image/x-icon" href="./assets/test-favicon.png">
-    <link rel="stylesheet" href="./style.css?v=chiseled-tab-order-v1">
+    <link rel="stylesheet" href="./css/variables.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/base.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/blog.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/settings.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/chat.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/profiles.css?v=milestone-profile-v3">
+    <link rel="stylesheet" href="./css/achievements.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/games.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/milestones.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/notifications.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/sheet.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/responsive.css?v=css-split-v1">
 </head>
 <body>
     <main class="page">
@@ -192,6 +203,15 @@
                             </div>
                         </div>
                     </article>
+                    <article class="achievement-card rarity-common game-card" data-game="street-fighter" data-src="./minigames/street-fighter/game.html" tabindex="0" role="button" aria-label="Play Street Fighter">
+                        <div class="achievement-card-inner">
+                            <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-street-fighter" aria-hidden="true"></span></div>
+                            <div class="game-card-copy">
+                                <h3 class="achievement-title rarity-common">Wafflr</h3>
+                                <p class="achievement-description">Fight your opponents</p>
+                            </div>
+                        </div>
+                    </article>
                     <div class="achievement-card rarity-common game-card-clone" aria-hidden="true">
                         <div class="achievement-card-inner">
                             <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-bulls" aria-hidden="true"></span></div>
@@ -217,6 +237,8 @@
                 <button type="button" aria-label="Show slide 4">4</button>
                 <span aria-hidden="true">·</span>
                 <button type="button" aria-label="Show slide 5">5</button>
+                <span aria-hidden="true">·</span>
+                <button type="button" aria-label="Show slide 6">6</button>
             </nav>
         </section>
         <section class="panel tab-panel is-hidden" id="blogPanel" aria-labelledby="blog-heading">
@@ -370,28 +392,28 @@
     </aside>
     <!-- data parsers here -->
     <script src="./parsers/metajson.js"></script>
-    <script src="./parsers/config.js"></script>
+    <script src="./parsers/config.js?v=milestone-profile-v1"></script>
     <script src="./js/loaders.js"></script>
     <!-- core scripts + utils here -->
     <script src="./js/utils.js"></script>
     <script src="./js/profile-avatars.js?v=profile-pixels-v3"></script>
-    <script src="./js/renderers.js?v=achievement-tree-connectors-v7"></script>
+    <script src="./js/renderers.js?v=milestone-profile-v1"></script>
     <script src="./js/achievements.js?v=exact-2000-points-v1"></script>
-    <script src="./js/auth.js?v=profile-ranks-v2"></script>
+    <script src="./js/auth.js?v=cookie-rank-badges-v1"></script>
     <script src="./js/blog.js"></script>
     <script src="./js/blog-community.js?v=exact-2000-points-v1"></script>
     <script src="./js/tabs.js"></script>
     <script src="./js/settings.js?v=tab-icon-choice-v1"></script>
-    <script src="./js/games.js?v=games-carousel-v16"></script>
+    <script src="./js/games.js?v=games-carousel-v17"></script>
     <script src="./js/tips.js"></script>
     <!-- api config stuff -->
     <script src="./api-config/giphy-config.js"></script>
     <script src="./api-config/cloak-config.js?v=main-achievements"></script>
     <!-- chat stuff -->
-    <script src="./chat/chat.js?v=community-tabs-v1"></script>
+    <script src="./chat/chat.js?v=cookie-rank-badges-v1"></script>
     <script src="./chat/channels.js?v=community-tabs-v1"></script>
     <script src="./chat/actions.js?v=game-invites"></script>
     <script src="./chat/giphy.js?v=public-profiles-v2"></script>
-    <script src="./chat/profiles.js?v=profile-ranks-v3"></script>
+    <script src="./chat/profiles.js?v=milestone-profile-v2"></script>
 </body>
 </html>

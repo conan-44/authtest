@@ -12,7 +12,7 @@ const chatOptionsBody = document.getElementById("chatOptionsBody");
 const minimizeChatOptionsBtn = document.getElementById("minimizeChatOptionsBtn");
 let profileRequestId = 0;
 
-const profileRanks = ["BANANA", "TOAST", "MUFFIN", "COOKIE"];
+const profileRanks = ["BANANA", "TOAST", "MUFFIN", "COOKIE", "ADMIN"];
 
 async function queryPublicProfiles(buildQuery) {
   const result = await buildQuery("id, username, flair, created_at, avatar, auth_providers");
@@ -115,7 +115,8 @@ function makeProfileRankStat(rank) {
   value.className = "public-profile-stat-value public-profile-rank-value";
   if (rank) {
     const icon = document.createElement("span");
-    icon.className = `profile-rank-icon rank-${rank.toLowerCase()}`;
+    const styleRank = rank === "ADMIN" ? "COOKIE" : rank;
+    icon.className = `profile-rank-icon rank-${styleRank.toLowerCase()}`;
     icon.setAttribute("aria-hidden", "true");
     icon.title = rank;
     value.append(icon, document.createTextNode(rank));
@@ -221,41 +222,47 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
       }
     });
     const statsUnavailable = Boolean(statsError || !stats);
-    const medal = statsUnavailable
+    const currentMilestone = statsUnavailable
       ? null
       : milestones.filter(item => points >= item.points).at(-1) || null;
 
     const headingRow = document.createElement("div");
     headingRow.className = "public-profile-heading";
     const avatar = makeProfileAvatar(profile.avatar, "public-profile-avatar", profile.username);
+    const styleRank = rank === "ADMIN" ? "COOKIE" : rank;
     if (avatar) {
-      if (rank === "TOAST" || rank === "MUFFIN" || rank === "COOKIE") {
-        avatar.classList.add("profile-rank-aura", `rank-${rank.toLowerCase()}`);
+      if (styleRank === "TOAST" || styleRank === "MUFFIN" || styleRank === "COOKIE") {
+        avatar.classList.add("profile-rank-aura", `rank-${styleRank.toLowerCase()}`);
       }
       headingRow.appendChild(avatar);
     }
     const heading = document.createElement("h2");
     heading.className = "public-profile-name";
     heading.textContent = profile.username || "Player";
-    if (rank) heading.classList.add(`rank-${rank.toLowerCase()}`);
+    if (rank) heading.classList.add(`rank-${styleRank.toLowerCase()}`);
     headingRow.appendChild(heading);
-    if (rank === "COOKIE") {
+    if (rank === "COOKIE" || rank === "ADMIN") {
       const adminBadge = document.createElement("span");
-      adminBadge.className = "profile-admin-badge";
-      adminBadge.setAttribute("aria-label", "Admin");
-      const adminIcon = document.createElement("img");
-      adminIcon.src = "./assets/admin.png";
-      adminIcon.alt = "";
-      adminIcon.setAttribute("aria-hidden", "true");
-      const adminLabel = document.createElement("span");
-      adminLabel.textContent = "ADMIN";
-      adminBadge.append(adminIcon, adminLabel);
+      const isAdmin = rank === "ADMIN";
+      adminBadge.className = `profile-admin-badge ${isAdmin ? "rank-admin" : "rank-cookie"}`;
+      adminBadge.setAttribute("aria-label", isAdmin ? "Admin" : "Cookie rank");
+      const badgeIcon = document.createElement(isAdmin ? "img" : "span");
+      if (isAdmin) {
+        badgeIcon.src = "./assets/admin.png";
+        badgeIcon.alt = "";
+      } else {
+        badgeIcon.className = "profile-rank-icon rank-cookie";
+      }
+      badgeIcon.setAttribute("aria-hidden", "true");
+      const badgeLabel = document.createElement("span");
+      badgeLabel.textContent = rank;
+      adminBadge.append(badgeIcon, badgeLabel);
       headingRow.appendChild(adminBadge);
     }
     const flair = document.createElement("p");
-    flair.className = `public-profile-flair${rank === "MUFFIN" || rank === "COOKIE" ? ` rank-${rank.toLowerCase()}` : ""}`;
+    flair.className = `public-profile-flair${styleRank === "MUFFIN" || styleRank === "COOKIE" ? ` rank-${styleRank.toLowerCase()}` : ""}`;
     flair.textContent = profile.flair || "No flair";
-    if (rank === "COOKIE") flair.dataset.text = flair.textContent;
+    if (styleRank === "COOKIE") flair.dataset.text = flair.textContent;
     const statsGrid = document.createElement("div");
     statsGrid.className = "public-profile-stats";
     statsGrid.append(
@@ -268,24 +275,37 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
       makeProfileSignInStat(profile.auth_providers)
     );
 
-    const medalStat = document.createElement("div");
-    medalStat.className = "public-profile-stat public-profile-medal-stat";
-    const medalLabel = document.createElement("span");
-    medalLabel.className = "public-profile-stat-label";
-    medalLabel.textContent = "Milestone Medal";
-    if (medal) {
-      const medalIconWrap = document.createElement("span");
-      medalIconWrap.className = "public-profile-medal-icon";
-      const medalClass = String(medal.name).toLowerCase().replace(/[^a-z0-9-]/g, "");
+    const milestoneStat = document.createElement("div");
+    milestoneStat.className = "public-profile-stat public-profile-milestone-stat";
+    const milestoneLabel = document.createElement("span");
+    milestoneLabel.className = "public-profile-stat-label";
+    milestoneLabel.textContent = "Milestone";
+    const milestoneValue = document.createElement("strong");
+    milestoneValue.className = "public-profile-stat-value public-profile-milestone-value";
+    if (statsUnavailable) {
+      milestoneValue.textContent = "Unavailable";
+    } else if (currentMilestone) {
+      const paragonTier = currentMilestone.name.match(/^Paragon\s+([IVXLCDM]+)$/i)?.[1];
+      const paragonNumber = { I: 1, II: 2, III: 3 }[paragonTier?.toUpperCase()];
+      const medalClass = paragonTier
+        ? `paragon-${paragonNumber}`
+        : currentMilestone.name.toLowerCase().replace(/[^a-z0-9-]/g, "");
       const medalIcon = document.createElement("span");
-      medalIcon.className = `icons_medal icons_medal-${medalClass}`;
+      medalIcon.className = "public-profile-current-medal";
       medalIcon.setAttribute("aria-hidden", "true");
-      medalIcon.title = `${medal.name} milestone medal`;
-      medalIconWrap.appendChild(medalIcon);
-      medalLabel.appendChild(medalIconWrap);
+      medalIcon.title = `${currentMilestone.name} milestone medal`;
+      const medalSprite = document.createElement("span");
+      medalSprite.className = `icons_medal icons_medal-${medalClass}`;
+      medalSprite.setAttribute("aria-hidden", "true");
+      medalIcon.appendChild(medalSprite);
+      const milestoneName = document.createElement("span");
+      milestoneName.textContent = currentMilestone.name;
+      milestoneValue.append(medalIcon, milestoneName);
+    } else {
+      milestoneValue.textContent = "None";
     }
-    medalStat.appendChild(medalLabel);
-    statsGrid.appendChild(medalStat);
+    milestoneStat.append(milestoneLabel, milestoneValue);
+    statsGrid.appendChild(milestoneStat);
 
     const joined = profile.created_at ? new Date(profile.created_at) : null;
     const joinedText = joined && Number.isFinite(joined.getTime())

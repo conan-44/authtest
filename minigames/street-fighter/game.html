@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Street Fighter</title>
+    <link rel="stylesheet" href="./game.css">
+</head>
+<body>
+    <main>
+        <header>
+            <h1>Street Fighter</h1>
+            <div class="header-actions">
+                <p id="gameStatus" class="status" aria-live="polite">Click Start Battle to play</p>
+                <button id="startBattleBtn" type="button" disabled>Start Battle</button>
+            </div>
+        </header>
+        <section class="arena" aria-label="Fighting arena">
+            <canvas id="gameCanvas" width="720" height="300" tabindex="0" aria-label="A controllable fighter in a training arena. Start Battle, then use the keyboard to play."></canvas>
+            <div class="health-ui" aria-hidden="true">
+                <span id="playerHealthText" class="health-value player-health-value">PLAYER 10 / 10</span>
+                <span id="dummyHealthText" class="health-value dummy-health-value">DUMMY 10 / 10</span>
+                <span id="comboText" class="combo-text"></span>
+            </div>
+            <div id="impactFlash" class="impact-flash" aria-hidden="true" hidden></div>
+            <div id="mobileControls" class="mobile-controls" aria-label="Touch controls" hidden>
+                <div class="mobile-movement">
+                    <button type="button" data-move="left" aria-label="Move left, A or left arrow"><span class="mobile-key">A</span><span>←</span></button>
+                    <button type="button" data-move="right" aria-label="Move right, D or right arrow"><span class="mobile-key">D</span><span>→</span></button>
+                </div>
+                <div class="mobile-actions">
+                    <button type="button" data-action="jump" aria-label="Jump, Space or W"><span class="mobile-key">SPACE / W</span><span>JUMP</span></button>
+                    <button type="button" data-action="punch" aria-label="Punch, J"><span class="mobile-key">J</span><span>PUNCH</span></button>
+                </div>
+            </div>
+            <section id="debugMenu" class="debug-menu" aria-label="Street Fighter debug menu" hidden>
+                <div class="debug-info">
+                    <h2 class="debug-title">FIGHTER DEBUG</h2>
+                    <p>Street Fighter build 0.1</p>
+                    <p id="debugPosition">Position: X 0 · Y 0</p>
+                    <p id="debugState">State: idle</p>
+                    <p id="debugFacing">Facing: right</p>
+                    <p id="debugFrame">Sprite: row 0 · frame 0</p>
+                    <p id="debugBattle">Battle: waiting</p>
+                    <p class="debug-muted">Close: Esc · Console: streetfighter("debug")</p>
+                </div>
+                <div class="debug-controls">
+                    <h2 class="debug-title">CONTROLS</h2>
+                    <h3 class="debug-section-title">Movement</h3>
+                    <div class="debug-button-row">
+                        <button type="button" data-move="left" aria-label="Move left">←</button>
+                        <button type="button" data-move="right" aria-label="Move right">→</button>
+                    </div>
+                    <h3 class="debug-section-title">Animations</h3>
+                    <div class="debug-button-row">
+                        <button type="button" data-demo="idle">Idle</button>
+                        <button type="button" data-demo="run">Run</button>
+                        <button type="button" data-demo="jump">Jump</button>
+                        <button type="button" data-demo="punch">Punch</button>
+                    </div>
+                    <h3 class="debug-section-title">Debug options</h3>
+                    <div class="debug-button-row">
+                        <button type="button" id="hitboxToggle" aria-pressed="false">Show hitbox</button>
+                        <button type="button" id="gridToggle" aria-pressed="false">Show grid</button>
+                        <button type="button" id="resetFighterBtn">Reset fighter</button>
+                        <button type="button" id="closeDebugBtn">Close menu</button>
+                    </div>
+                    <p class="debug-muted">Move with A/D or ←/→ · Hold Shift to run faster · Jump with Space/W · Punch with J</p>
+                </div>
+            </section>
+        </section>
+    </main>
+    <script src="./debug.js"></script>
+    <script src="./game.js"></script>
+</body>
+</html>

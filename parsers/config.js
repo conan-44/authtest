@@ -17,16 +17,35 @@ window.AchievementLib.parseYamlSimple = function parseYamlSimple(text) {
 
 window.AchievementLib.parseMilestonesConfig = function parseMilestonesConfig(text) {
     const milestones = [];
+    const paragonNames = new Map();
+    let readingParagonNames = false;
     for (let line of text.split(/\r?\n/)) {
         line = line.trim();
-        if (!line || line.startsWith("#")) continue;
+        if (!line) continue;
+        if (line.startsWith("#")) {
+            if (/^#+\s*paragon names\b/i.test(line)) readingParagonNames = true;
+            continue;
+        }
         const separatorIndex = line.indexOf(":");
         if (separatorIndex <= 0) continue;
-        const points = parseInt(line.slice(0, separatorIndex).trim(), 10);
-        const name = line.slice(separatorIndex + 1).trim();
+        const key = line.slice(0, separatorIndex).trim();
+        const value = line.slice(separatorIndex + 1).trim();
+        if (readingParagonNames) {
+            const tier = parseInt(key, 10);
+            if (!isNaN(tier) && value) paragonNames.set(tier, value);
+            continue;
+        }
+        const points = parseInt(key, 10);
+        const name = value;
         if (!isNaN(points) && name) milestones.push({ points, name });
     }
-    return milestones.sort((a, b) => a.points - b.points);
+    return milestones.sort((a, b) => a.points - b.points).map(milestone => {
+        const paragonTier = milestone.name.match(/^Paragon\s+([IVXLCDM]+)$/i)?.[1];
+        const paragonNumber = { I: 1, II: 2, III: 3 }[paragonTier?.toUpperCase()];
+        return paragonNumber && paragonNames.has(paragonNumber)
+            ? { ...milestone, paragonName: paragonNames.get(paragonNumber) }
+            : milestone;
+    });
 };
 
 window.AchievementLib.parseSettingsConfig = function parseSettingsConfig(text) {

@@ -266,8 +266,9 @@ function renderAccountProfileAvatar(avatar, username) {
 }
 
 function applyAccountProfileRank(value) {
-  const ranks = ["BANANA", "TOAST", "MUFFIN", "COOKIE"];
+  const ranks = ["BANANA", "TOAST", "MUFFIN", "COOKIE", "ADMIN"];
   const rank = typeof value === "string" && ranks.includes(value) ? value : "BANANA";
+  const styleRank = rank === "ADMIN" ? "COOKIE" : rank;
   const username = document.getElementById("displayUsername");
   const flair = document.getElementById("displayFlair");
   const avatar = document.getElementById("authProfileAvatar");
@@ -275,29 +276,33 @@ function applyAccountProfileRank(value) {
 
   username.textContent = username.textContent || "Player";
   username.classList.remove("rank-banana", "rank-toast", "rank-muffin", "rank-cookie");
-  username.classList.add(`rank-${rank.toLowerCase()}`);
+  username.classList.add(`rank-${styleRank.toLowerCase()}`);
   username.dataset.text = username.textContent;
   usernameRow.querySelectorAll(".account-admin-badge").forEach(element => element.remove());
 
-  if (rank === "COOKIE") {
+  if (rank === "COOKIE" || rank === "ADMIN") {
     const badge = document.createElement("span");
-    badge.className = "profile-admin-badge account-admin-badge";
-    badge.setAttribute("aria-label", "Admin");
-    const icon = document.createElement("img");
-    icon.src = "./assets/admin.png";
-    icon.alt = "";
+    badge.className = `profile-admin-badge account-admin-badge ${rank === "ADMIN" ? "rank-admin" : "rank-cookie"}`;
+    badge.setAttribute("aria-label", rank === "ADMIN" ? "Admin" : "Cookie rank");
+    const icon = document.createElement(rank === "ADMIN" ? "img" : "span");
+    if (rank === "ADMIN") {
+      icon.src = "./assets/admin.png";
+      icon.alt = "";
+    } else {
+      icon.className = "profile-rank-icon rank-cookie";
+    }
     icon.setAttribute("aria-hidden", "true");
     const label = document.createElement("span");
-    label.textContent = "ADMIN";
+    label.textContent = rank;
     badge.append(icon, label);
     usernameRow.appendChild(badge);
   }
 
   avatar.classList.remove("profile-rank-aura", "rank-toast", "rank-muffin", "rank-cookie");
-  if (rank !== "BANANA") avatar.classList.add("profile-rank-aura", `rank-${rank.toLowerCase()}`);
+  if (styleRank !== "BANANA") avatar.classList.add("profile-rank-aura", `rank-${styleRank.toLowerCase()}`);
   flair.classList.remove("rank-muffin", "rank-cookie", "rank-flair-enhanced");
-  if (rank === "MUFFIN" || rank === "COOKIE") {
-    flair.classList.add("rank-flair-enhanced", `rank-${rank.toLowerCase()}`);
+  if (styleRank === "MUFFIN" || styleRank === "COOKIE") {
+    flair.classList.add("rank-flair-enhanced", `rank-${styleRank.toLowerCase()}`);
     flair.dataset.text = flair.textContent;
   } else {
     delete flair.dataset.text;

@@ -1,0 +1,289 @@
+.chat-name-avatar.profile-rank-aura,
+.chat-presence-avatar.profile-rank-aura {
+    outline: 1px solid var(--theme-secondary, var(--color-points));
+    outline-offset: 1px;
+}
+
+.chat-presence-avatar.profile-rank-aura.rank-muffin,
+.chat-presence-avatar.profile-rank-aura.rank-cookie {
+    outline-color: #477fbd;
+}
+
+.chat-presence-avatar.profile-rank-aura.rank-cookie {
+    outline-color: #c94a4a;
+}
+
+.public-profile-error {
+    font-family: 'lowsmall', sans-serif;
+}
+
+.profile-search-results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--card-gap);
+}
+
+.profile-search-result {
+    display: flex;
+    width: auto;
+    min-width: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--card-gap);
+    margin: 0;
+    border: 0;
+    padding: 4px;
+    background: transparent;
+    text-align: left;
+}
+
+.chat-options-body .profile-search-result {
+    background: transparent;
+    border: 0;
+}
+
+.profile-search-result:hover,
+.profile-search-result:focus-visible {
+    background: var(--color-control-surface);
+}
+
+.profile-search-username {
+    color: var(--color-heading);
+    font-family: 'capsmall', sans-serif;
+    font-weight: 400;
+}
+
+.profile-search-avatar {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    image-rendering: pixelated;
+}
+
+.public-profile-heading {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--card-gap);
+}
+
+.public-profile-avatar {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+}
+
+.public-profile-avatar.profile-rank-aura {
+    border: 2px solid var(--theme-secondary, var(--color-points));
+    box-shadow: none;
+}
+
+.public-profile-avatar.profile-rank-aura.rank-muffin {
+    border-color: #477fbd;
+}
+
+.public-profile-avatar.profile-rank-aura.rank-cookie {
+    border-color: #c94a4a;
+}
+
+#authProfileAvatar.profile-rank-aura.rank-cookie {
+    border-color: #c94a4a;
+}
+
+#authProfileAvatar.profile-rank-aura {
+    border-color: var(--theme-secondary, var(--color-points));
+    box-shadow: none;
+}
+
+#authProfileAvatar.profile-rank-aura.rank-muffin {
+    border-color: #477fbd;
+}
+
+.public-profile-name {
+    margin: 0;
+    color: var(--color-heading);
+    font-family: 'lowsmall', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+}
+
+.public-profile-flair {
+    margin: 2px 0 var(--card-gap);
+    color: var(--color-muted);
+    font-family: 'capsmall', sans-serif;
+}
+
+.rank-flair-enhanced.rank-muffin,
+.chat-flair.rank-muffin,
+.public-profile-flair.rank-muffin {
+    filter: hue-rotate(10deg) saturate(1.05);
+}
+
+.rank-flair-enhanced.rank-cookie,
+.chat-flair.rank-cookie,
+.public-profile-flair.rank-cookie {
+    position: relative;
+    width: fit-content;
+    color: #292343 !important;
+}
+
+.profile-admin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #292343;
+    font-family: 'capsmall', sans-serif;
+    font-size: 0.85rem;
+}
+
+.profile-admin-badge.rank-admin { color: #c94a4a; }
+
+.profile-admin-badge img {
+    width: 24px;
+    height: 24px;
+    image-rendering: pixelated;
+}
+
+.chat-profile-username.rank-cookie,
+.chat-presence-name.rank-cookie,
+.public-profile-name.rank-cookie,
+#displayUsername.rank-cookie {
+    color: #292343;
+}
+
+.rank-effects-disabled .profile-rank-aura {
+    outline-color: var(--color-divider) !important;
+    box-shadow: none !important;
+    animation: none !important;
+}
+
+.rank-effects-disabled .profile-rank-aura:not(.chat-presence-avatar) {
+    border-color: var(--color-divider) !important;
+}
+
+.rank-effects-disabled .rank-muffin,
+.rank-effects-disabled .rank-cookie {
+    filter: none !important;
+    text-shadow: none !important;
+    animation: none !important;
+}
+
+.rank-effects-disabled .rank-muffin { color: inherit !important; }
+
+.public-profile-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--card-gap);
+}
+
+.public-profile-stat {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+    border: var(--achievement-border-width) solid var(--theme-secondary, var(--color-points));
+    padding: var(--control-padding);
+    background: var(--color-card-surface);
+}
+
+.public-profile-stat-label {
+    color: var(--color-muted);
+    font-family: 'lowsmall', sans-serif;
+    font-size: 0.9em;
+}
+
+.public-profile-stat-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-heading);
+    font-family: 'capsmall', sans-serif;
+    font-weight: 400;
+}
+
+.public-profile-provider-value {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.public-profile-provider-icon {
+    flex: 0 0 8px;
+    margin: 0 8px 0 4px;
+}
+
+.public-profile-milestone-stat {
+    max-width: 256px;
+}
+
+.public-profile-milestone-value {
+    display: flex;
+    min-height: 24px;
+    align-items: center;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.public-profile-stat-value .public-profile-current-medal {
+    position: relative;
+    display: inline-block;
+    flex: 0 0 16px;
+    width: 16px;
+    height: 24px;
+}
+
+.public-profile-stat-value .public-profile-current-medal .icons_medal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 8px;
+    height: 12px;
+    transform: scale(2);
+    transform-origin: top left;
+}
+
+.public-profile-milestone-value > span:last-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.public-profile-rank-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.public-profile-rarity-heading {
+    margin: var(--card-gap) 0 0;
+    color: var(--color-heading);
+    font-family: 'capsmall', sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+}
+
+.public-profile-rarity-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: var(--card-gap);
+    margin: 0;
+}
+
+.public-profile-rarity {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--card-gap);
+    border: var(--achievement-border-width) solid var(--theme-secondary, var(--color-points));
+    padding: 6px 8px;
+    background: var(--color-card-surface);
+    font-family: 'capsmall', sans-serif;
+}
+
+.public-profile-rarity dt,
+.public-profile-rarity dd {
+    margin: 0;
+}
+
+.public-profile-error {
+    margin: 0;
+    color: var(--color-error, #9e2525);
+}

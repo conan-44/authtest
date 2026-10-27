@@ -16,7 +16,7 @@ const presenceAvatarCache = new Map();
 const presenceAvatarRequests = new Set();
 const profileRankCache = new Map();
 const profileRankRequests = new Set();
-const PROFILE_RANKS = ["BANANA", "TOAST", "MUFFIN", "COOKIE"];
+const PROFILE_RANKS = ["BANANA", "TOAST", "MUFFIN", "COOKIE", "ADMIN"];
 const messageRecords = new Map();
 const seenChatJoinNotices = new Set();
 window.addEventListener('censoring-setting-changed', () => {
@@ -154,15 +154,16 @@ function renderChatPresence(state = {}) {
     item.className = "chat-presence-member";
     const avatar = makeChatAvatar(member.avatar, "chat-presence-avatar", member.username);
     avatar.classList.add(`is-${member.status}`);
-    if (["TOAST", "MUFFIN", "COOKIE"].includes(member.rank)) {
-      avatar.classList.add("profile-rank-aura", `rank-${member.rank.toLowerCase()}`);
+    const styleRank = member.rank === "ADMIN" ? "COOKIE" : member.rank;
+    if (["TOAST", "MUFFIN", "COOKIE"].includes(styleRank)) {
+      avatar.classList.add("profile-rank-aura", `rank-${styleRank.toLowerCase()}`);
     }
     avatar.title = member.status === "active" ? "Active" : "Idle";
     const name = document.createElement("span");
     name.className = "chat-presence-name";
     name.textContent = member.username;
     applyChatRank(name, member.rank, { nameOnly: true });
-    const adminBadge = member.rank === "COOKIE" ? makeChatAdminBadge() : null;
+    const adminBadge = ["COOKIE", "ADMIN"].includes(member.rank) ? makeChatRankBadge(member.rank) : null;
     const label = document.createElement("span");
     label.className = "chat-presence-member-status";
     label.textContent = member.status;
@@ -236,21 +237,27 @@ async function loadMissingProfileRanks(userIds) {
   }
 }
 
-function makeChatAdminBadge() {
+function makeChatRankBadge(rank) {
+  const isAdmin = rank === "ADMIN";
   const badge = document.createElement("span");
-  badge.className = "profile-admin-badge chat-admin-badge";
-  badge.setAttribute("aria-label", "Admin");
-  const icon = document.createElement("img");
-  icon.src = "./assets/admin.png";
-  icon.alt = "";
+  badge.className = `profile-admin-badge chat-admin-badge ${isAdmin ? "rank-admin" : "rank-cookie"}`;
+  badge.setAttribute("aria-label", isAdmin ? "Admin" : "Cookie rank");
+  const icon = document.createElement(isAdmin ? "img" : "span");
+  if (isAdmin) {
+    icon.src = "./assets/admin.png";
+    icon.alt = "";
+  } else {
+    icon.className = "profile-rank-icon rank-cookie";
+  }
   icon.setAttribute("aria-hidden", "true");
   const label = document.createElement("span");
-  label.textContent = "ADMIN";
+  label.textContent = rank;
   badge.append(icon, label);
   return badge;
 }
 
 function applyChatRank(element, rank, { nameOnly = false } = {}) {
+  const styleRank = rank === "ADMIN" ? "COOKIE" : rank;
   element.classList.remove(
     "rank-banana",
     "rank-toast",
@@ -258,11 +265,11 @@ function applyChatRank(element, rank, { nameOnly = false } = {}) {
     "rank-cookie",
     "rank-flair-enhanced"
   );
-  if (PROFILE_RANKS.includes(rank)) element.classList.add(`rank-${rank.toLowerCase()}`);
-  if (!nameOnly && (rank === "MUFFIN" || rank === "COOKIE")) {
+  if (PROFILE_RANKS.includes(rank)) element.classList.add(`rank-${styleRank.toLowerCase()}`);
+  if (!nameOnly && (styleRank === "MUFFIN" || styleRank === "COOKIE")) {
     element.classList.add("rank-flair-enhanced");
   }
-  if (rank === "COOKIE") element.dataset.text = element.textContent;
+  if (styleRank === "COOKIE") element.dataset.text = element.textContent;
   else delete element.dataset.text;
 }
 
@@ -274,12 +281,13 @@ function refreshChatProfileDecorations(userId) {
     const profileLink = message.querySelector(".chat-profile-link");
     const username = message.querySelector(".chat-profile-username");
     const flair = message.querySelector(".chat-flair");
-    if (avatar && ["TOAST", "MUFFIN", "COOKIE"].includes(rank)) {
-      avatar.classList.add("profile-rank-aura", `rank-${rank.toLowerCase()}`);
+    const styleRank = rank === "ADMIN" ? "COOKIE" : rank;
+    if (avatar && ["TOAST", "MUFFIN", "COOKIE"].includes(styleRank)) {
+      avatar.classList.add("profile-rank-aura", `rank-${styleRank.toLowerCase()}`);
     }
     if (profileLink) {
       profileLink.querySelector(".chat-admin-badge")?.remove();
-      if (rank === "COOKIE") profileLink.appendChild(makeChatAdminBadge());
+      if (rank === "COOKIE" || rank === "ADMIN") profileLink.appendChild(makeChatRankBadge(rank));
     }
     if (username) applyChatRank(username, rank, { nameOnly: true });
     if (flair) applyChatRank(flair, rank);

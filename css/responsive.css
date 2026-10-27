@@ -1,0 +1,54 @@
+@media (max-width: 899px) {
+    .achievements-grid, .achievement-namespace-grid { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 900px) and (max-width: 1299px) {
+    .achievements-grid, .achievement-namespace-grid { grid-template-columns: repeat(var(--achievement-columns-medium), minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+    #gamesGrid.games-carousel { width: calc(700% + 48px); }
+    #gamesPanel .game-card,
+    #gamesPanel .game-card-clone {
+        flex-basis: calc(14.2857143% - 6.8571429px);
+        width: calc(14.2857143% - 6.8571429px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #gamesGrid.games-carousel { animation: none; }
+}
+
+@media (max-width: 700px) {
+    .game-card-icon { transform: scale(14); }
+}
+
+@media (max-width: 700px) {
+    body { padding: var(--mobile-page-padding); display: block; }
+  .page {
+    height: calc(100vh - (var(--mobile-page-padding) * 2));
+    min-height: 0;
+    grid-template-rows: auto minmax(var(--mobile-achievement-panel-min-height), 1fr) var(--mobile-milestone-panel-height);
+    gap: var(--page-gap);
+  }
+  .tab-panel { min-height: var(--mobile-achievement-panel-min-height); }
+  #milestonesPanel,
+  #chatOptionsPanel { height: var(--mobile-milestone-panel-height); }
+    #accountManagement { margin-top: var(--mobile-page-padding); }
+    .build-indicator { right: var(--mobile-page-padding); top: var(--mobile-page-padding); }
+    .panel-header { padding: var(--mobile-panel-header-padding); flex-direction: column; align-items: flex-start; gap: var(--mobile-panel-header-gap); }
+    .panel-body { padding: var(--mobile-page-padding); }
+    .achievements-grid { grid-template-columns: 1fr; }
+    .chat-presence-panel { flex-basis: 125px; padding-left: 8px; }
+    .chat-presence-heading h2 { font-size: 12px; }
+    .chat-presence-member { gap: 4px; font-size: 10px; }
+    .chat-presence-member-status { font-size: 9px; }
+}
+
+@media (hover: none) {
+    .chat-message-actions {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(0, -50%);
+    }
+}

@@ -1,0 +1,159 @@
+.game-card {
+    cursor: pointer;
+}
+
+.game-card:focus-visible {
+    outline: 2px solid var(--color-points);
+    outline-offset: 2px;
+}
+
+#gamesPanel {
+    position: relative;
+}
+
+#gamesPanel > .panel-body {
+    position: relative;
+    display: grid;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#gamesGrid.games-carousel,
+#gamePlayer {
+    grid-area: 1 / 1;
+    min-width: 0;
+    min-height: 0;
+}
+
+#gamesGrid.games-carousel:has(> .game-card:hover, > .game-card-clone:hover) {
+    animation-play-state: paused;
+}
+
+#gamesPanel .game-card,
+#gamesPanel .game-card-clone {
+    display: flex;
+    flex: 0 0 calc(14.2857143% - 6.8571429px);
+    width: calc(14.2857143% - 6.8571429px);
+    min-width: 0;
+    height: 100%;
+    box-sizing: border-box;
+    align-items: stretch;
+    padding: clamp(16px, 3vw, 48px);
+    border-radius: 0;
+}
+
+.game-card-icon-area {
+    display: grid;
+    width: 100%;
+    min-height: 0;
+    flex: 1 1 auto;
+    place-items: center;
+}
+
+.game-card-icon-bulls { background-position: 0 0; }
+
+.game-card-icon-number-pillars { background-position: -8px 0; }
+
+.game-card-icon-chess { background-position: -16px 0; }
+
+.game-card-icon-cards { background-position: -24px 0; }
+
+.game-card-icon-minecraft { background-position: -32px 0; }
+
+.game-card-icon-street-fighter { background-position: -40px 0; }
+
+.game-card-copy {
+    width: 100%;
+    flex: 0 0 auto;
+    padding-bottom: clamp(8px, 2vh, 24px);
+    text-align: center;
+}
+
+.game-card-clone {
+    cursor: default;
+}
+
+@keyframes games-carousel-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(-85.7142857% - 6.8571429px)); }
+}
+
+.games-pagination {
+    position: absolute;
+    z-index: 3;
+    right: 0;
+    bottom: 16px;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: max-content;
+    margin: 0 auto;
+    border: 2px solid var(--color-white);
+    padding: 4px 8px;
+    background: var(--color-panel-surface);
+    box-shadow: 0 2px 6px rgb(0 0 0 / 20%);
+    font-variant-numeric: tabular-nums;
+    font-family: 'capsmall', sans-serif;
+}
+
+.games-pagination button {
+    display: grid;
+    width: 26px;
+    min-height: 26px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    place-items: center;
+    background: transparent;
+    color: var(--color-muted);
+    font: 14px/1 'capsmall', sans-serif;
+}
+
+.games-pagination button[aria-current="true"] {
+    background: var(--color-control);
+    color: var(--color-heading);
+    box-shadow: inset 0 0 0 2px var(--color-white);
+}
+
+.games-pagination span {
+    display: grid;
+    width: 4px;
+    height: 26px;
+    flex: 0 0 4px;
+    place-items: center;
+    color: var(--color-muted);
+    font: 12px/1 'capsmall', sans-serif;
+}
+
+#gamesPanel:has(#gamePlayer:not(.is-hidden)) .games-pagination {
+    display: none;
+}
+
+.game-player {
+    display: flex;
+    flex-direction: column;
+    gap: var(--card-gap);
+    height: 100%;
+    min-height: 0;
+}
+
+.game-back-btn {
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    margin: 0;
+    padding: 6px 12px;
+    font-size: 14px;
+}
+
+.game-frame {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    border: var(--achievement-border-width) solid var(--color-white);
+    background: var(--color-white);
+}
