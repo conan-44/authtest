@@ -4,7 +4,7 @@
         menu,
         player,
         getBattleStarted,
-        startAction,
+        playDemoAnimation,
         beginMove,
         endMove,
         resetPlayer
@@ -44,7 +44,7 @@
         }, { capture: true });
 
         document.querySelectorAll('[data-demo]').forEach(button => {
-            button.addEventListener('click', () => startAction(button.dataset.demo));
+            button.addEventListener('click', () => playDemoAnimation(button.dataset.demo));
         });
 
         document.querySelectorAll('[data-move]').forEach(button => {

@@ -11,6 +11,8 @@
   "main:idea-person",
   "main:eight-options",
   "main:poll-regular",
+  "main:all-game-leaderboards",
+  "main:all-game-leaderboards-at-once",
   // bulls & cows
   "mastermind:beginner",
   "mastermind:codebreaker",
@@ -20,6 +22,7 @@
   "mastermind:all-difficulties",
   "mastermind:twenty-five",
   "mastermind:code-collector",
+  "mastermind:leaderboard-champion",
   // number pillars
   "number-pillars:first-win",
   "number-pillars:streak-five",
@@ -29,6 +32,7 @@
   "number-pillars:streak-ten",
   "number-pillars:hard-clear",
   "number-pillars:five-hundred-xp",
+  "number-pillars:leaderboard-champion",
   // chess
   "chess:first-game",
   "chess:ten-games",
@@ -44,6 +48,7 @@
   "chess:enpassant-blunder",
   "chess:enpassant-great",
   "chess:opening-student",
+  "chess:leaderboard-champion",
   // blackjack
   "blackjack:first-hand",
   "blackjack:first-win",
@@ -54,6 +59,7 @@
   "blackjack:hot-streak",
   "blackjack:five-hands",
   "blackjack:five-naturals",
+  "blackjack:leaderboard-champion",
   // dou dizhu
   "dou-dizhu:first-game",
   "dou-dizhu:five-games",
@@ -67,5 +73,8 @@
   "dou-dizhu:joker",
   "dou-dizhu:first-analysis",
   "dou-dizhu:ten-analyses",
-  "dou-dizhu:twenty-five-games"
+  "dou-dizhu:twenty-five-games",
+  "dou-dizhu:leaderboard-champion",
+  // street fighter
+  "streetfighter:leaderboard-champion"
 ]

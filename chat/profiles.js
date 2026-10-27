@@ -13,6 +13,24 @@ const minimizeChatOptionsBtn = document.getElementById("minimizeChatOptionsBtn")
 let profileRequestId = 0;
 
 const profileRanks = ["BANANA", "TOAST", "MUFFIN", "COOKIE", "ADMIN"];
+const publicGameRatingDefaults = {
+  mastermind: 1000,
+  chess: 1000,
+  blackjack: 1000,
+  doudizhu: 1000,
+  "number-pillars": 0,
+  minecraft: 0,
+  streetfighter: 1000
+};
+const publicGameRatingLabels = {
+  mastermind: "Bulls & Cows",
+  chess: "Chess",
+  blackjack: "Blackjack",
+  doudizhu: "Dou Dizhu",
+  "number-pillars": "Number Pillars",
+  minecraft: "Minecraft",
+  streetfighter: "Street Fighter"
+};
 
 async function queryPublicProfiles(buildQuery) {
   const result = await buildQuery("id, username, flair, created_at, avatar, auth_providers");
@@ -175,6 +193,7 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
     const [
       { data: stats, error: statsError },
       { data: rawRank, error: rankError },
+      { data: gameRatings, error: gameRatingsError },
       achievements,
       milestones
     ] = await Promise.all([
@@ -184,12 +203,17 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
         .eq("user_id", profile.id)
         .maybeSingle(),
       _supabase.rpc("get_public_profile_rank", { p_user_id: profile.id }),
+      _supabase
+        .from("game_ratings")
+        .select("game, rating")
+        .eq("user_id", profile.id),
       Promise.resolve(window.achievements.getAchievements()),
       Promise.resolve(window.achievements.getMilestones())
     ]);
     if (requestId !== profileRequestId) return;
     if (statsError) console.error("Could not load public profile achievement stats.", statsError);
     if (rankError) console.error("Could not load the public profile rank.", rankError);
+    if (gameRatingsError) console.error("Could not load public game ratings.", gameRatingsError);
     const rank = rankError ? null : normalizeProfileRank(rawRank);
     if (!rankError && !rank) console.error("Supabase returned an invalid public profile rank.", rawRank);
 
@@ -307,6 +331,38 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
     milestoneStat.append(milestoneLabel, milestoneValue);
     statsGrid.appendChild(milestoneStat);
 
+    const gameRatingsSection = document.createElement("section");
+    gameRatingsSection.className = "public-profile-game-rating-section";
+    const gameRatingsHeading = document.createElement("h3");
+    gameRatingsHeading.className = "public-profile-rarity-heading";
+    gameRatingsHeading.textContent = "Game Ratings";
+    const gameRatingsGrid = document.createElement("div");
+    gameRatingsGrid.className = "public-profile-game-ratings";
+    const ratingsByGame = new Map(
+      Array.isArray(gameRatings)
+        ? gameRatings
+          .filter(item => typeof item?.game === "string" && Number.isSafeInteger(item.rating))
+          .map(item => [item.game, item.rating])
+        : []
+    );
+    if (gameRatings && !Array.isArray(gameRatings)) {
+      console.error("Public game ratings were returned in an unexpected format.", gameRatings);
+    }
+    Object.entries(publicGameRatingLabels).forEach(([game, label]) => {
+      const rating = gameRatingsError
+        ? null
+        : ratingsByGame.get(game) ?? publicGameRatingDefaults[game];
+      const value = rating === null
+        ? "Unavailable"
+        : game === "number-pillars"
+          ? `${rating.toLocaleString()} XP`
+          : game === "minecraft"
+            ? `${rating.toLocaleString()} min`
+            : `${rating.toLocaleString()} Elo`;
+      gameRatingsGrid.appendChild(makeProfileStat(label, value, "public-profile-game-rating"));
+    });
+    gameRatingsSection.append(gameRatingsHeading, gameRatingsGrid);
+
     const joined = profile.created_at ? new Date(profile.created_at) : null;
     const joinedText = joined && Number.isFinite(joined.getTime())
       ? joined.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })
@@ -329,7 +385,14 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
       rarityList.appendChild(row);
     });
 
-    chatPublicProfileContent.replaceChildren(headingRow, flair, statsGrid, rarityHeading, rarityList);
+    chatPublicProfileContent.replaceChildren(
+      headingRow,
+      flair,
+      statsGrid,
+      gameRatingsSection,
+      rarityHeading,
+      rarityList
+    );
     profileSearchStatus.textContent = statsUnavailable
       ? "Profile loaded, but achievement stats are unavailable."
       : `Viewing ${profile.username || "Player"}'s profile.`;

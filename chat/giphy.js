@@ -93,7 +93,7 @@ function parseGameInviteMessage(content) {
   try {
     const invite = JSON.parse(content.slice(GAME_INVITE_MESSAGE_PREFIX.length));
     if (
-      !["chess", "doudizhu"].includes(invite?.game) ||
+      !["chess", "doudizhu", "streetfighter"].includes(invite?.game) ||
       typeof invite.invite_code !== "string" ||
       !/^[A-Z0-9]{8}$/.test(invite.invite_code)
     ) return null;
@@ -137,11 +137,12 @@ function renderChatMessageBody(bodyDiv, rawContent, username = "Player") {
     const icon = document.createElement("span");
     icon.className = "chat-shared-game-icon";
     icon.setAttribute("aria-hidden", "true");
-    icon.textContent = gameInvite.game === "chess" ? "♟" : "地主";
+    icon.textContent = gameInvite.game === "chess" ? "♟" : gameInvite.game === "doudizhu" ? "地主" : "SF";
 
     const title = document.createElement("span");
     title.className = "chat-shared-game-title";
-    title.textContent = `${username} invited you to ${gameInvite.game === "chess" ? "Chess" : "Dou Dizhu"}`;
+    const gameName = { chess: "Chess", doudizhu: "Dou Dizhu", streetfighter: "Street Fighter" }[gameInvite.game];
+    title.textContent = `${username} invited you to ${gameName}`;
 
     const joinButton = document.createElement("button");
     joinButton.type = "button";

@@ -78,6 +78,21 @@ function recordCardGameAchievement(game, eventName, details = {}) {
   }
 }
 
+function recordCardGameRating(game, delta) {
+  try {
+    const updater = window.parent?.gameRatings?.adjust;
+    if (typeof updater !== "function") {
+      console.error(`Game rating tracker is unavailable for ${game}.`);
+      return;
+    }
+    Promise.resolve(updater(game, delta)).catch(error => {
+      console.error(`Could not update ${game} rating.`, error);
+    });
+  } catch (error) {
+    console.error(`Could not reach the game rating tracker for ${game}.`, error);
+  }
+}
+
 function syncHandScrollbar() {
   const visibleWidth = ownHand.clientWidth;
   const contentWidth = ownHand.scrollWidth;
@@ -493,6 +508,11 @@ function recordBlackjackRound() {
     playerCards: blackjack.player.length,
     natural: blackjack.status === "blackjack"
   });
+  if (blackjack.status === "win" || blackjack.status === "blackjack") {
+    recordCardGameRating("blackjack", 12);
+  } else if (blackjack.status === "lose" || blackjack.status === "bust" || blackjack.status === "dealer-blackjack") {
+    recordCardGameRating("blackjack", -12);
+  }
 }
 
 function renderBlackjack() {
@@ -1056,6 +1076,8 @@ function playDouDizhuCards(playerIndex, cards) {
       humanWasLandlord: douDizhu.landlord === 0,
       winnerWasLandlord: landlordWon
     });
+    const humanWon = (playerIndex === douDizhu.landlord) === (douDizhu.landlord === 0);
+    recordCardGameRating("doudizhu", humanWon ? 12 : -12);
   } else {
     douDizhu.currentPlayer = (playerIndex + 1) % 3;
     setDouDizhuBotDialogue(playerIndex, "play");

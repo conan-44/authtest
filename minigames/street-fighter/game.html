@@ -3,24 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light dark">
+    <meta name="color-scheme" content="light">
     <title>Street Fighter</title>
-    <link rel="stylesheet" href="./game.css">
+    <link rel="stylesheet" href="./game.css?v=charged-punch-v1">
 </head>
 <body>
-    <main>
-        <header>
-            <h1>Street Fighter</h1>
-            <div class="header-actions">
-                <p id="gameStatus" class="status" aria-live="polite">Click Start Battle to play</p>
-                <button id="startBattleBtn" type="button" disabled>Start Battle</button>
+    <main class="street-fighter-app">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">LOCAL GAME</p>
+                <h1>street fighter</h1>
             </div>
+            <p id="gameStatus" class="status" aria-live="polite">Choose a mode to begin</p>
         </header>
+        <section class="mode-panel local-panel" aria-labelledby="localGameHeading">
+            <div class="section-heading">
+                <h2 id="localGameHeading">Play on this device</h2>
+                <p class="section-hint">Train on your own or face the AI.</p>
+            </div>
+            <div class="local-actions">
+                <button id="startBattleBtn" class="primary-button" type="button" disabled>Start Training</button>
+                <button id="newBattleBtn" class="quiet-button" type="button" disabled>New Battle</button>
+                <label class="bot-difficulty-label" for="botDifficulty">Bot difficulty
+                    <select id="botDifficulty" aria-label="Bot difficulty">
+                        <option value="easy">Rookie</option>
+                        <option value="normal" selected>Fighter</option>
+                        <option value="hard">Champion</option>
+                    </select>
+                </label>
+                <button id="fightBotBtn" class="quiet-button" type="button" disabled>Fight Bot</button>
+            </div>
+        </section>
+        <section class="mode-panel multiplayer-panel" aria-labelledby="onlineGameHeading">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">ONLINE GAME</p>
+                    <h2 id="onlineGameHeading">Challenge a friend</h2>
+                </div>
+                <p class="section-hint">Create a private match or join with an invite code.</p>
+            </div>
+            <div class="multiplayer-actions">
+                <button id="createOnlineBattleBtn" type="button">Create online battle</button>
+                <label class="invite-code-label" for="onlineInviteCode">Invite code</label>
+                <input id="onlineInviteCode" type="text" inputmode="text" autocomplete="off" maxlength="8" placeholder="8-character code">
+                <button id="joinOnlineBattleBtn" type="button">Join</button>
+                <button id="copyOnlineInviteBtn" type="button" hidden>Copy invite link</button>
+                <button id="shareOnlineInviteBtn" type="button" hidden>Share in chat</button>
+            </div>
+            <p id="multiplayerStatus" class="multiplayer-status" aria-live="polite"></p>
+        </section>
         <section class="arena" aria-label="Fighting arena">
-            <canvas id="gameCanvas" width="720" height="300" tabindex="0" aria-label="A controllable fighter in a training arena. Start Battle, then use the keyboard to play."></canvas>
-            <div class="health-ui" aria-hidden="true">
-                <span id="playerHealthText" class="health-value player-health-value">PLAYER 10 / 10</span>
-                <span id="dummyHealthText" class="health-value dummy-health-value">DUMMY 10 / 10</span>
+            <canvas id="gameCanvas" width="720" height="300" tabindex="0" aria-label="A controllable fighter in a training arena. Move with A and D, jump with Space or W, and hold then release J to charge and attack."></canvas>
+            <div class="health-ui">
+                <span id="playerHealthText" class="health-value player-health-value" aria-hidden="true">PLAYER 10 / 10</span>
+                <span id="dummyHealthText" class="health-value dummy-health-value" aria-hidden="true">DUMMY 10 / 10</span>
+                <button id="reviveBtn" class="revive-button" type="button" aria-label="Revive player and bot" title="Revive both fighters" hidden></button>
                 <span id="comboText" class="combo-text"></span>
             </div>
             <div id="impactFlash" class="impact-flash" aria-hidden="true" hidden></div>
@@ -31,9 +68,10 @@
                 </div>
                 <div class="mobile-actions">
                     <button type="button" data-action="jump" aria-label="Jump, Space or W"><span class="mobile-key">SPACE / W</span><span>JUMP</span></button>
-                    <button type="button" data-action="punch" aria-label="Punch, J"><span class="mobile-key">J</span><span>PUNCH</span></button>
+                    <button type="button" data-action="punch" aria-label="Hold to charge punch, J"><span class="mobile-key">HOLD J</span><span>PUNCH</span></button>
                 </div>
             </div>
+            <p class="key-hints">Move: A/D or ←/→ · Jump: Space/W · Hold J to charge punch; release to attack</p>
             <section id="debugMenu" class="debug-menu" aria-label="Street Fighter debug menu" hidden>
                 <div class="debug-info">
                     <h2 class="debug-title">FIGHTER DEBUG</h2>
@@ -66,12 +104,12 @@
                         <button type="button" id="resetFighterBtn">Reset fighter</button>
                         <button type="button" id="closeDebugBtn">Close menu</button>
                     </div>
-                    <p class="debug-muted">Move with A/D or ←/→ · Hold Shift to run faster · Jump with Space/W · Punch with J</p>
+                    <p class="debug-muted">Move with A/D or ←/→ · Hold Shift to run faster · Jump with Space/W · Hold J to charge punch</p>
                 </div>
             </section>
         </section>
     </main>
-    <script src="./debug.js"></script>
-    <script src="./game.js"></script>
+    <script src="./debug.js?v=punch-ability-demo-v1"></script>
+    <script src="./game.js?v=charged-punch-v3"></script>
 </body>
 </html>

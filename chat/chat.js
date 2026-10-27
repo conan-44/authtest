@@ -519,7 +519,7 @@ window.shareGameToChat = async function shareGameToChat(game, data) {
 };
 
 window.shareGameInviteToChat = async function shareGameInviteToChat(game, inviteCode) {
-  if (!["chess", "doudizhu"].includes(game) || !/^[A-Z0-9]{8}$/.test(inviteCode)) {
+  if (!["chess", "doudizhu", "streetfighter"].includes(game) || !/^[A-Z0-9]{8}$/.test(inviteCode)) {
     throw new Error("This game invite is invalid.");
   }
   const { data: authData, error: authError } = await _supabase.auth.getUser();

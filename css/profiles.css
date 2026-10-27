@@ -201,6 +201,22 @@
     font-weight: 400;
 }
 
+.public-profile-game-rating-section {
+    display: grid;
+    gap: var(--card-gap);
+    margin-top: var(--card-gap);
+}
+
+.public-profile-game-ratings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--card-gap);
+}
+
+.public-profile-game-rating {
+    min-height: 48px;
+}
+
 .public-profile-provider-value {
     flex-direction: row;
     align-items: center;

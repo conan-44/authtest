@@ -75,6 +75,25 @@ function addGuess(guess, bulls, cows, solver = 'you') {
         gameFinished = true;
         guessInput.disabled = true;
         document.getElementById('submit-guess').disabled = true;
+        if (solver === 'you') {
+            const ratingChange = attemptCount < 6 ? 8 : attemptCount > 8 ? -2 : 0;
+            if (ratingChange) recordGameRatingChange(ratingChange);
+        }
+    }
+}
+
+function recordGameRatingChange(delta) {
+    try {
+        const updater = window.parent?.gameRatings?.adjust;
+        if (typeof updater !== 'function') {
+            console.error('Game rating tracker is unavailable.');
+            return;
+        }
+        Promise.resolve(updater('mastermind', delta)).catch(error => {
+            console.error('Could not update Bulls & Cows rating.', error);
+        });
+    } catch (error) {
+        console.error('Could not reach the game rating tracker.', error);
     }
 }
 

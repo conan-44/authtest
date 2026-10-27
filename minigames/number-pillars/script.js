@@ -131,6 +131,32 @@ let targetNum = document.getElementById("targetNum");
 let answerSum = document.getElementById("answerSum");
 let xp = document.getElementById("xp");
 let lives = document.getElementById("lives");
+
+function syncNumberPillarsRating() {
+    const currentXp = Number.parseInt(xp.textContent, 10);
+    if (!Number.isSafeInteger(currentXp) || currentXp < 0 || window.parent === window) return;
+    try {
+        const updater = window.parent.gameRatings?.set;
+        if (typeof updater !== 'function') {
+            console.error('Game rating tracker is unavailable.');
+            return;
+        }
+        Promise.resolve(updater('number-pillars', currentXp)).catch(error => {
+            console.error('Could not update Number Pillars rating.', error);
+        });
+    } catch (error) {
+        console.error('Could not reach the game rating tracker.', error);
+    }
+}
+
+if (xp) {
+    new MutationObserver(syncNumberPillarsRating).observe(xp, {
+        childList: true,
+        characterData: true,
+        subtree: true
+    });
+    syncNumberPillarsRating();
+}
 // level editor elements
 let levelEditor = document.getElementById('levelEditor');
 let editorNumbers = document.getElementById('editorNumbers');

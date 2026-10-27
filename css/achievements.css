@@ -122,6 +122,14 @@
     font-size: 20px;
 }
 
+.achievement-sprite-image {
+    display: block;
+    flex: none;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
 .achievement-tree-title {
     max-width: 200px;
     overflow: hidden;
@@ -196,6 +204,11 @@
     background: var(--color-control);
     color: var(--color-icon-text);
     letter-spacing: 0.5px;
+}
+
+.achievement-icon .achievement-sprite-image {
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .achievement-title { margin: 0 0 var(--achievement-title-bottom); font-size: calc(1.5rem * var(--font-multiplier)); font-weight: 400; font-family: 'capsmall', sans-serif; }

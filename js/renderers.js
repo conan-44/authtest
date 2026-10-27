@@ -13,6 +13,77 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
     let activeTreeNamespace = null;
     let treeMode = false;
 
+    const ACHIEVEMENT_SPRITES = {
+        icons: { url: "./assets/icons.png", width: 288, height: 32, tileWidth: 8, tileHeight: 8, columns: 36 },
+        main: { url: "./assets/minigames/games.png", width: 48, height: 8, tileWidth: 8, tileHeight: 8, columns: 6 },
+        mastermind: { url: "./assets/minigames/bots.png", width: 32, height: 8, tileWidth: 8, tileHeight: 8, columns: 4 },
+        "number-pillars": { url: "./assets/minigames/games.png", width: 48, height: 8, tileWidth: 8, tileHeight: 8, columns: 6 },
+        chess: { url: "./assets/minigames/chess/pieces.png", width: 48, height: 32, tileWidth: 8, tileHeight: 16, columns: 6 },
+        blackjack: { url: "./assets/minigames/cards.png", width: 24, height: 24, tileWidth: 8, tileHeight: 12, columns: 3 },
+        "dou-dizhu": { url: "./assets/minigames/cards.png", width: 24, height: 24, tileWidth: 8, tileHeight: 12, columns: 3 }
+    };
+
+    function mainAchievementSprite(achievement) {
+        const key = achievement.key.toLowerCase();
+        if (key === "codebreaker") return { sheet: "mastermind", column: 0, row: 0 };
+        if (key === "team-fort") return { sheet: "main", column: 4, row: 0 };
+        if (/beginning|suit-up/.test(key)) return { column: 25, row: 3 };
+        if (/profile/.test(key)) return { column: 3, row: 3 };
+        if (/poll|suggestion|idea|eight-options/.test(key)) return { column: 31, row: 3 };
+        if (/chat|message|channel|gif/.test(key)) return { column: 23, row: 3 };
+        return { column: 24, row: 3 };
+    }
+
+    function achievementSpritePosition(achievement, sprite) {
+        const key = achievement.key.toLowerCase();
+        if (achievement.namespace === "main") return mainAchievementSprite(achievement);
+        if (achievement.namespace === "number-pillars") {
+            return key === "custom-level"
+                ? { sheet: "icons", column: 25, row: 3 }
+                : { column: 1, row: 0 };
+        }
+        if (achievement.namespace === "chess") {
+            if (/king|checkmate|castle/.test(key)) return { column: 5, row: 1 };
+            if (/opening|analysis/.test(key)) return { column: 4, row: 1 };
+            if (/enpassant/.test(key)) return { column: 0, row: 1 };
+            return { column: 1 + (key.length % 4), row: 1 };
+        }
+        if (achievement.namespace === "dou-dizhu" && /joker/.test(key)) {
+            return { column: 2, row: 0 };
+        }
+        if ((achievement.namespace === "blackjack" || achievement.namespace === "dou-dizhu")
+            && /bomb|rocket|bust|natural/.test(key)) {
+            return { column: 0, row: 1 };
+        }
+        let hash = 0;
+        for (const character of key) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+        return { column: hash % sprite.columns, row: sprite.height / sprite.tileHeight > 1 ? hash % 2 : 0 };
+    }
+
+    function addAchievementSprite(element, achievement, size) {
+        const defaultSheet = achievement.namespace === "main"
+            ? "icons"
+            : achievement.namespace === "number-pillars"
+                ? "number-pillars"
+                : achievement.namespace;
+        const position = achievementSpritePosition(
+            achievement,
+            ACHIEVEMENT_SPRITES[defaultSheet] || ACHIEVEMENT_SPRITES.main
+        );
+        const sprite = ACHIEVEMENT_SPRITES[position.sheet || defaultSheet] || ACHIEVEMENT_SPRITES.main;
+        const { column, row } = position;
+        const scale = Math.min(3.5, size / Math.max(sprite.tileWidth, sprite.tileHeight));
+        const image = document.createElement("span");
+        image.className = "achievement-sprite-image";
+        image.setAttribute("aria-hidden", "true");
+        image.style.width = `${sprite.tileWidth * scale}px`;
+        image.style.height = `${sprite.tileHeight * scale}px`;
+        image.style.backgroundImage = `url("${sprite.url}")`;
+        image.style.backgroundSize = `${sprite.width * scale}px ${sprite.height * scale}px`;
+        image.style.backgroundPosition = `${-column * sprite.tileWidth * scale}px ${-row * sprite.tileHeight * scale}px`;
+        element.replaceChildren(image);
+    }
+
     function unlockPopupAudio() {
         if (popupAudioUnlocked) return;
         popupAudioUnlocked = true;
@@ -186,7 +257,7 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
                 const icon = document.createElement("span");
                 icon.className = "achievement-tree-icon";
                 icon.setAttribute("aria-hidden", "true");
-                icon.textContent = achievement.icon;
+                addAchievementSprite(icon, achievement, 25);
                 const title = document.createElement("span");
                 title.className = "achievement-tree-title";
                 title.textContent = achievement.title;
@@ -410,7 +481,9 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
                 card.className = "achievement-card" + ` rarity-${achievement.rarity}` + (complete ? " is-completed" : " is-locked") + (achievement.rarity === "secret" && !complete ? " is-secret-locked" : "");
                 const banner = document.createElement("span"); banner.className = `banners banners-${achievement.rarity}`;
                 const cardInner = document.createElement("div"); cardInner.className = "achievement-card-inner";
-                const icon = document.createElement("div"); icon.className = "achievement-icon"; icon.textContent = achievement.icon;
+                const icon = document.createElement("div"); icon.className = "achievement-icon";
+                icon.setAttribute("aria-hidden", "true");
+                addAchievementSprite(icon, achievement, 30);
                 const body = document.createElement("div");
                 const title = document.createElement("h3"); title.className = `achievement-title rarity-${achievement.rarity}`; title.textContent = achievement.title;
                 const description = document.createElement("p"); description.className = "achievement-description"; description.textContent = achievement.rarity === "secret" && !complete ? "???" : (achievement.description || "No description.");

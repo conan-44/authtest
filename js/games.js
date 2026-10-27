@@ -50,6 +50,138 @@
     let gameInviteChannel = null;
     let gameInviteUserId = null;
     let gameInviteSubscriptionGeneration = 0;
+    const gameRatingQueues = new Map();
+    const gameRatingDefaults = {
+        mastermind: 1000,
+        chess: 1000,
+        blackjack: 1000,
+        doudizhu: 1000,
+        'number-pillars': 0,
+        minecraft: 0,
+        streetfighter: 1000
+    };
+    const leaderboardGames = [
+        { game: 'mastermind', achievement: 'mastermind:leaderboard-champion' },
+        { game: 'chess', achievement: 'chess:leaderboard-champion' },
+        { game: 'blackjack', achievement: 'blackjack:leaderboard-champion' },
+        { game: 'doudizhu', achievement: 'dou-dizhu:leaderboard-champion' },
+        { game: 'number-pillars', achievement: 'number-pillars:leaderboard-champion' },
+        { game: 'streetfighter', achievement: 'streetfighter:leaderboard-champion' }
+    ];
+    let leaderboardCheck = Promise.resolve();
+
+    window.gameRatings = {
+        adjust(game, amount) {
+            return updateGameRating(game, amount, null);
+        },
+        set(game, rating) {
+            return updateGameRating(game, 0, rating);
+        },
+        checkAchievements() {
+            return checkGameRatingAchievements();
+        },
+        defaults: { ...gameRatingDefaults }
+    };
+
+    async function checkGameRatingAchievements() {
+        const previous = leaderboardCheck;
+        leaderboardCheck = previous.catch(() => {}).then(async () => {
+            const { data: { user }, error: authError } = await _supabase.auth.getUser();
+            if (authError) throw new Error(`Could not verify your account for leaderboard achievements: ${authError.message}`);
+            if (!user || !window.achievements) return;
+            await window.achievements.loadAllFromDirectoryIndex();
+
+            const leaders = await Promise.all(leaderboardGames.map(async ({ game }) => {
+                const { data, error } = await _supabase
+                    .from('game_ratings')
+                    .select('user_id, rating')
+                    .eq('game', game)
+                    .order('rating', { ascending: false })
+                    .limit(2);
+                if (error) throw new Error(`Could not check the ${game} leaderboard: ${error.message}`);
+                const [first, second] = data || [];
+                return {
+                    game,
+                    isUniqueLeader: first?.user_id === user.id && (!second || first.rating > second.rating)
+                };
+            }));
+
+            for (const { game, achievement } of leaderboardGames) {
+                if (leaders.find(leader => leader.game === game)?.isUniqueLeader) {
+                    await window.achievements.unlock(achievement);
+                }
+            }
+
+            const reachedEveryGame = leaderboardGames.every(({ achievement }) => (
+                window.achievements.isCompleted(achievement)
+            ));
+            if (reachedEveryGame) await window.achievements.unlock('main:all-game-leaderboards');
+
+            if (leaders.every(leader => leader.isUniqueLeader)) {
+                await window.achievements.unlock('main:all-game-leaderboards-at-once');
+            }
+        });
+        return leaderboardCheck;
+    }
+
+    function updateGameRating(game, delta, rating) {
+        if (!Object.hasOwn(gameRatingDefaults, game)) {
+            return Promise.reject(new Error(`Unknown game rating: ${game}`));
+        }
+        if (!Number.isSafeInteger(delta) || (rating !== null && !Number.isSafeInteger(rating))) {
+            return Promise.reject(new Error('Game rating updates must use whole numbers.'));
+        }
+        const previous = gameRatingQueues.get(game) || Promise.resolve();
+        const update = previous.catch(() => {}).then(async () => {
+            const { data: { user }, error: authError } = await _supabase.auth.getUser();
+            if (authError) throw new Error(`Could not verify your sign-in for game ratings: ${authError.message}`);
+            if (!user) throw new Error('Sign in to save game ratings to your profile.');
+            const { error } = await _supabase.rpc('update_game_rating', {
+                p_game: game,
+                p_delta: delta,
+                p_rating: rating
+            });
+            if (error) throw new Error(`Could not save your ${game} rating: ${error.message}`);
+            checkGameRatingAchievements().catch(error => {
+                console.error('Could not update leaderboard achievements.', error);
+            });
+        });
+        gameRatingQueues.set(game, update);
+        return update.finally(() => {
+            if (gameRatingQueues.get(game) === update) gameRatingQueues.delete(game);
+        });
+    }
+
+    let activeGameId = null;
+    let minecraftPlaytimeTimer = null;
+    let minecraftLastTick = null;
+    let minecraftRemainderSeconds = 0;
+
+    function flushMinecraftPlaytime() {
+        if (minecraftLastTick === null) return;
+        if (document.visibilityState === 'visible') {
+            minecraftRemainderSeconds += (Date.now() - minecraftLastTick) / 1000;
+            const wholeMinutes = Math.floor(minecraftRemainderSeconds / 60);
+            if (wholeMinutes > 0) {
+                minecraftRemainderSeconds -= wholeMinutes * 60;
+                window.gameRatings.adjust('minecraft', wholeMinutes).catch(error => {
+                    console.error('Could not save Minecraft playtime.', error);
+                });
+            }
+        }
+        minecraftLastTick = Date.now();
+    }
+
+    function startMinecraftPlaytime() {
+        window.clearInterval(minecraftPlaytimeTimer);
+        minecraftRemainderSeconds = 0;
+        minecraftLastTick = Date.now();
+        minecraftPlaytimeTimer = window.setInterval(flushMinecraftPlaytime, 15000);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        minecraftLastTick = Date.now();
+    });
 
     window.gameMultiplayer = {
         async create(game, mode, seatCount, publicState, privateStates = {}) {
@@ -118,11 +250,52 @@
                 .on('broadcast', { event: 'joined' }, ({ payload }) => onJoin(payload))
                 .subscribe(status => onStatus(status));
             return () => _supabase.removeChannel(channel);
+        },
+        async connectStreetFighter(sessionId, handlers = {}) {
+            if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sessionId)) {
+                throw new Error('This Street Fighter session is invalid.');
+            }
+            const channel = _supabase
+                .channel(`game-session:${sessionId}`, {
+                    config: { private: true, broadcast: { self: false } }
+                })
+                .on('broadcast', { event: 'input' }, ({ payload }) => handlers.onInput?.(payload))
+                .on('broadcast', { event: 'state' }, ({ payload }) => handlers.onState?.(payload))
+                .on('broadcast', { event: 'joined' }, ({ payload }) => handlers.onJoin?.(payload))
+                .on('broadcast', { event: 'ready' }, ({ payload }) => handlers.onReady?.(payload))
+                .on('broadcast', { event: 'denied' }, ({ payload }) => handlers.onDenied?.(payload));
+            try {
+                await new Promise((resolve, reject) => {
+                    const timeout = window.setTimeout(() => reject(new Error('Timed out connecting to the match.')), 12000);
+                    channel.subscribe(status => {
+                        handlers.onStatus?.(status);
+                        if (status === 'SUBSCRIBED') {
+                            window.clearTimeout(timeout);
+                            resolve();
+                        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+                            window.clearTimeout(timeout);
+                            reject(new Error('Could not connect to the Street Fighter match.'));
+                        }
+                    });
+                });
+            } catch (error) {
+                await _supabase.removeChannel(channel);
+                throw error;
+            }
+            return {
+                async send(event, payload) {
+                    const result = await channel.send({ type: 'broadcast', event, payload });
+                    if (result !== 'ok') throw new Error(`Could not send match ${event}.`);
+                },
+                async close() {
+                    await _supabase.removeChannel(channel);
+                }
+            };
         }
     };
 
     function createGameInviteLink(game, inviteCode) {
-        if (!['chess', 'doudizhu'].includes(game) || !/^[A-Z0-9]{8}$/.test(inviteCode)) {
+        if (!['chess', 'doudizhu', 'streetfighter'].includes(game) || !/^[A-Z0-9]{8}$/.test(inviteCode)) {
             throw new Error('This game invite is invalid.');
         }
         const inviteUrl = new URL(window.location.href);
@@ -134,7 +307,7 @@
     function showGameInvitePopup(payload) {
         if (
             !payload ||
-            !['chess', 'doudizhu'].includes(payload.game) ||
+            !['chess', 'doudizhu', 'streetfighter'].includes(payload.game) ||
             typeof payload.invite_code !== 'string' ||
             !/^[A-Z0-9]{8}$/.test(payload.invite_code)
         ) return;
@@ -153,7 +326,8 @@
         popup.setAttribute('role', 'status');
         const message = document.createElement('p');
         const sender = typeof payload.sender_username === 'string' ? payload.sender_username : 'A player';
-        message.textContent = `${sender} invited you to ${payload.game === 'chess' ? 'Chess' : 'Dou Dizhu'}.`;
+        const gameName = { chess: 'Chess', doudizhu: 'Dou Dizhu', streetfighter: 'Street Fighter' }[payload.game];
+        message.textContent = `${sender} invited you to ${gameName}.`;
         const actions = document.createElement('div');
         actions.className = 'game-invite-popup-actions';
         const accept = document.createElement('button');
@@ -198,12 +372,13 @@
     }
 
     window.openGameInvite = (game, inviteCode) => {
-        if (!['chess', 'doudizhu'].includes(game) || !/^[A-Z0-9]{8}$/.test(inviteCode)) {
+        if (!['chess', 'doudizhu', 'streetfighter'].includes(game) || !/^[A-Z0-9]{8}$/.test(inviteCode)) {
             throw new Error('This game invite is invalid.');
         }
         const routes = {
             chess: './minigames/chess/game.html',
-            doudizhu: './minigames/cards/main.html'
+            doudizhu: './minigames/cards/main.html',
+            streetfighter: './minigames/street-fighter/game.html'
         };
         window.activateTab('games');
         loadGameSource(`${routes[game]}?invite=${encodeURIComponent(inviteCode)}`);
@@ -212,6 +387,8 @@
     function loadGame(card) {
         const src = card.dataset.src;
         if (!src || src === 'link here') return;
+        activeGameId = card.dataset.game || null;
+        if (activeGameId === 'mc') startMinecraftPlaytime();
         loadGameSource(src);
     }
 
@@ -242,6 +419,13 @@
     };
 
     function closeGame() {
+        if (activeGameId === 'mc') {
+            flushMinecraftPlaytime();
+            window.clearInterval(minecraftPlaytimeTimer);
+            minecraftPlaytimeTimer = null;
+            minecraftLastTick = null;
+        }
+        activeGameId = null;
         gamePlayer.classList.add('is-hidden');
         gamesGrid.classList.remove('is-hidden');
         gameFrame.src = 'about:blank';
@@ -424,6 +608,11 @@
         subscribeGameInvites(session?.user || null).catch(error => {
             console.error('Could not update game invite notifications.', error);
         });
+        if (session?.user) {
+            checkGameRatingAchievements().catch(error => {
+                console.error('Could not check leaderboard achievements after sign in.', error);
+            });
+        }
     });
     _supabase.auth.getSession().then(({ data, error }) => {
         if (error) throw error;
@@ -433,6 +622,6 @@
     });
 
     const inviteFromUrl = new URLSearchParams(window.location.search).get('gameInvite');
-    const inviteParts = inviteFromUrl?.match(/^(chess|doudizhu):([A-Z0-9]{8})$/);
+    const inviteParts = inviteFromUrl?.match(/^(chess|doudizhu|streetfighter):([A-Z0-9]{8})$/);
     if (inviteParts) window.openGameInvite(inviteParts[1], inviteParts[2]);
 })();

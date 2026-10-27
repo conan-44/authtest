@@ -48,6 +48,8 @@ let analysisInProgress = false;
 let openingBook = null;
 let openingBookError = "";
 let chessGameRecorded = false;
+let chessRatingRecorded = false;
+let chessReviewPenaltyApplied = false;
 let analysisAchievementRecorded = false;
 let onlineMatch = null;
 let onlineUnsubscribe = null;
@@ -97,6 +99,57 @@ function recordGameAchievementEvent(eventName, details = {}) {
   } catch (error) {
     console.error("Could not reach the game achievement tracker.", error);
   }
+}
+
+function recordChessRating(delta) {
+  try {
+    const updater = window.parent.gameRatings?.adjust;
+    if (typeof updater !== "function") {
+      console.error("Game rating tracker is unavailable for Chess.");
+      return;
+    }
+    Promise.resolve(updater("chess", delta)).catch(error => {
+      console.error("Could not update Chess rating.", error);
+    });
+  } catch (error) {
+    console.error("Could not reach the Chess rating tracker.", error);
+  }
+}
+
+function chessRatingPlayerColor() {
+  if (onlineMatch) return onlineMatch.seat === 0 ? "w" : "b";
+  return chessBotProfile() ? "w" : null;
+}
+
+function recordChessResult() {
+  if (!game.isGameOver() || chessRatingRecorded) return;
+  const playerColor = chessRatingPlayerColor();
+  if (!playerColor) return;
+  chessRatingRecorded = true;
+  if (game.isDraw()) {
+    recordChessRating(0);
+    return;
+  }
+  const winnerColor = game.turn() === "w" ? "b" : "w";
+  recordChessRating(winnerColor === playerColor ? 16 : -16);
+}
+
+function applyChessReviewPenalty() {
+  const history = historyWithFen();
+  const playerColor = chessRatingPlayerColor();
+  if (
+    chessReviewPenaltyApplied ||
+    game.isGameOver() ||
+    !history.length ||
+    !playerColor
+  ) return;
+  chessReviewPenaltyApplied = true;
+  const currentEvaluation = evaluations.length === history.length + 1
+    ? evaluations[history.length]?.centipawns
+    : null;
+  const whiteAdvantage = Number.isFinite(currentEvaluation) ? currentEvaluation : -materialBalance() * 100;
+  const playerAdvantage = whiteAdvantage * (playerColor === "w" ? 1 : -1);
+  recordChessRating(playerAdvantage >= 300 ? -1 : playerAdvantage <= -300 ? -5 : -3);
 }
 
 loadOpeningBook()
@@ -500,6 +553,7 @@ function renderAnalysisPosition() {
 async function analyzeGame() {
   const history = historyWithFen();
   if (!history.length || analysisInProgress) return;
+  applyChessReviewPenalty();
 
   analysisInProgress = true;
   isReviewing = true;
@@ -677,6 +731,7 @@ async function makeMove(from, to, promotion = "q") {
         winner: game.isCheckmate() ? (game.turn() === "w" ? "black" : "white") : null,
       });
     }
+    recordChessResult();
     selectedSquare = null;
     legalMoves = [];
     clearAnalysis();
@@ -788,6 +843,7 @@ async function playChessBotTurn() {
           winner: game.isCheckmate() ? "black" : null,
         });
       }
+      recordChessResult();
     } else {
       const balance = materialBalance();
       setChessBotDialogue(botMove.captured ? "capturing" : balance >= 2 ? "winning" : balance <= -2 ? "losing" : "idle");
@@ -812,6 +868,7 @@ async function refreshOnlineMatch() {
   onlineMatch.currentTurn = state.current_turn;
   onlineMatch.players = state.players;
   game.loadPgn(state.public_state.pgn || "");
+  recordChessResult();
   clearAnalysis();
   renderBoard();
   renderMoveHistory();
@@ -819,6 +876,9 @@ async function refreshOnlineMatch() {
 
 function attachOnlineMatch(match, version = 0) {
   onlineUnsubscribe?.();
+  chessGameRecorded = false;
+  chessRatingRecorded = false;
+  chessReviewPenaltyApplied = false;
   onlineMatch = { ...match, version };
   const inviteActions = document.getElementById("multiplayerInviteActions");
   if (match.invite_code) {
@@ -851,6 +911,7 @@ function attachOnlineMatch(match, version = 0) {
       clearAnalysis();
       renderBoard();
       renderMoveHistory();
+      recordChessResult();
     },
     payload => {
       if (Number.isInteger(payload.seat)) {
@@ -1005,6 +1066,7 @@ document.getElementById("cancelPromotionBtn").addEventListener("click", () => {
 
 reviewButton.addEventListener("click", () => {
   if (botThinking) return;
+  applyChessReviewPenalty();
   isReviewing = !isReviewing;
   reviewedPly = historyWithFen().length;
   selectedSquare = null;
@@ -1059,6 +1121,8 @@ newGameButton.addEventListener("click", () => {
   botThinking = false;
   game.reset();
   chessGameRecorded = false;
+  chessRatingRecorded = false;
+  chessReviewPenaltyApplied = false;
   analysisAchievementRecorded = false;
   discoveredOpenings.clear();
   isReviewing = false;
@@ -1077,6 +1141,8 @@ botLevelSelect.addEventListener("change", () => {
   botThinking = false;
   game.reset();
   chessGameRecorded = false;
+  chessRatingRecorded = false;
+  chessReviewPenaltyApplied = false;
   analysisAchievementRecorded = false;
   isReviewing = false;
   reviewedPly = 0;
@@ -1099,6 +1165,8 @@ botPersonalitySelect.addEventListener("change", () => {
   botThinking = false;
   game.reset();
   chessGameRecorded = false;
+  chessRatingRecorded = false;
+  chessReviewPenaltyApplied = false;
   analysisAchievementRecorded = false;
   isReviewing = false;
   reviewedPly = 0;

@@ -1,8 +1,7 @@
         :root {
-            color-scheme: light dark;
+            color-scheme: light;
             font-family: "lowsmall", sans-serif;
             --game-page: var(--color-page, #ffffff);
-            --game-surface: var(--color-panel-surface, #dde2e7);
             --game-surface-body: var(--color-panel-body-surface, #e9ebed);
             --game-control: var(--color-control-surface, #eef2f4);
             --game-control-pressed: var(--color-control-pressed, #ffffff);
@@ -10,6 +9,9 @@
             --game-heading: var(--color-heading, #2a4d67);
             --game-border: var(--color-button-border, #ffffff);
             --game-divider: var(--color-divider, rgb(0 0 0 / 14%));
+            --game-panel: var(--color-panel-body-surface, #e9ebed);
+            --game-raised: var(--color-card-surface, #cfcfcf);
+            --game-muted: var(--color-muted, #444444);
             --game-accent: var(--theme-secondary, var(--color-points, #b58c19));
             background: var(--game-page);
             color: var(--game-text);
@@ -27,6 +29,12 @@
             font-display: swap;
         }
 
+        @font-face {
+            font-family: "lowbig";
+            src: url("../../assets/font/lowbig.ttf") format("truetype");
+            font-display: swap;
+        }
+
         * { box-sizing: border-box; }
 
         body {
@@ -37,52 +45,156 @@
             background: var(--game-page);
         }
 
-        main {
-            width: min(100%, 900px);
+        .street-fighter-app {
+            display: grid;
+            width: min(100%, 1040px);
+            gap: 14px;
             margin: 0 auto;
         }
 
-        header {
+        .topbar,
+        .section-heading {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 16px;
-            margin-bottom: 14px;
+        }
+
+        .topbar {
+            margin-bottom: 4px;
+        }
+
+        .eyebrow {
+            margin: 0 0 3px;
+            color: var(--game-heading);
+            font-family: "capsmall", sans-serif;
+            font-size: 0.68rem;
+            letter-spacing: 0.16em;
         }
 
         h1 {
             margin: 0;
             color: var(--game-heading);
-            font-size: clamp(1.5rem, 5vw, 2.4rem);
-            letter-spacing: 0.04em;
+            font-family: "lowbig", sans-serif;
+            font-size: clamp(1.6rem, 4vw, 2.2rem);
+            font-weight: normal;
+            text-shadow: 4px 4px 0 rgb(26 37 49 / 18%);
+        }
+
+        h2 {
+            margin: 0;
+            color: var(--game-heading);
+            font-family: "capsmall", sans-serif;
+            font-size: 1rem;
+            font-weight: normal;
         }
 
         .status {
+            max-width: 46%;
             margin: 0;
-            color: var(--game-text);
+            color: var(--game-muted);
             font-size: 0.9rem;
             text-align: right;
         }
 
+        .section-hint {
+            margin: 0;
+            color: var(--game-muted);
+            font-size: 0.85rem;
+            text-align: right;
+        }
+
         .key-hints {
-            margin: -6px 0 10px;
-            color: var(--game-heading);
+            margin: 0;
+            color: var(--game-muted);
             font-size: 0.85rem;
         }
 
-        .header-actions {
+        .mode-panel {
+            min-width: 0;
+            border: 4px solid var(--game-border);
+            padding: 12px;
+            background: var(--game-panel);
+            box-shadow: inset 0 0 0 2px rgb(0 0 0 / 8%);
+        }
+
+        .section-heading {
+            margin-bottom: 10px;
+        }
+
+        .local-actions,
+        .multiplayer-actions {
             display: flex;
             align-items: center;
-            justify-content: end;
-            gap: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
+
+        .local-actions label,
+        .invite-code-label {
+            display: grid;
+            gap: 3px;
+            color: var(--game-muted);
+            font-size: 0.75rem;
+        }
+
+        #botDifficulty,
+        #onlineInviteCode {
+            min-height: 34px;
+            border: 2px solid var(--game-border);
+            border-radius: 0;
+            padding: 3px 6px;
+            background: var(--game-control);
+            color: var(--game-text);
+            font: inherit;
+        }
+
+        #onlineInviteCode {
+            width: min(100%, 180px);
+            text-transform: uppercase;
+        }
+
+        .multiplayer-status {
+            min-height: 1.2em;
+            margin: 10px 0 0;
+            color: var(--game-muted);
+            font-size: 0.82rem;
+        }
+
+        .primary-button,
+        .quiet-button {
+            min-height: 38px;
+            border-radius: 0;
+            padding: 5px 10px;
+            font-family: "capsmall", sans-serif;
+        }
+
+        .primary-button {
+            background: var(--game-raised);
+        }
+
+        .quiet-button {
+            background: var(--game-control);
+        }
+
+        .mode-panel button:hover,
+        .mode-panel button:focus-visible {
+            background: var(--game-control-pressed);
+        }
+
+        .mode-panel button:disabled {
+            cursor: not-allowed;
+            opacity: 0.58;
+        }
+
+        .multiplayer-actions button[hidden] { display: none; }
 
         .arena {
             position: relative;
             overflow: hidden;
             border: 3px solid var(--game-border);
             background: var(--game-surface-body);
-            box-shadow: 8px 8px 0 var(--game-divider);
+            box-shadow: 6px 6px 0 var(--game-divider);
         }
 
         .health-ui {
@@ -116,6 +228,37 @@
         .dummy-health-value {
             right: 2.78%;
             width: 38.89%;
+        }
+
+        .revive-button {
+            position: absolute;
+            z-index: 3;
+            top: 5%;
+            left: 50%;
+            display: grid;
+            width: clamp(24px, 4.2%, 34px);
+            min-width: 24px;
+            height: clamp(24px, 4.2%, 34px);
+            min-height: 24px;
+            place-items: center;
+            transform: translateX(-50%);
+            border: 0;
+            padding: 0;
+            background: transparent;
+            color: #ef596d;
+            font: 24px/1 "capsmall", sans-serif;
+            text-shadow: 1px 2px 0 rgb(0 0 0 / 48%);
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .revive-button[hidden] { display: none; }
+
+        .revive-button:hover,
+        .revive-button:focus-visible {
+            background: transparent;
+            color: #ff263f;
+            transform: translateX(-50%) scale(1.16);
         }
 
         .combo-text {
@@ -329,11 +472,45 @@
             background: color-mix(in srgb, var(--game-control-pressed) 84%, transparent);
         }
 
+        .mobile-actions [data-action="punch"] {
+            touch-action: none;
+            user-select: none;
+        }
+
         @media (max-width: 620px) {
             .debug-menu { grid-template-columns: 1fr; }
-            .status { max-width: 44%; }
+            .topbar,
+            .section-heading {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .status {
+                max-width: 100%;
+                text-align: left;
+            }
+            .section-hint { text-align: left; }
+            .multiplayer-actions { align-items: stretch; }
+            .multiplayer-actions button,
+            #onlineInviteCode { flex: 1 1 130px; }
         }
 
         @media (max-width: 620px) {
             .key-hints { font-size: 0.78rem; }
+        }
+
+        @media (max-width: 420px) {
+            .mobile-controls { flex-wrap: wrap; }
+            .mobile-actions {
+                max-width: 100%;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                margin-left: auto;
+            }
+            .mobile-controls button {
+                width: 56px;
+                min-width: 56px;
+                height: 56px;
+                min-height: 56px;
+            }
         }
