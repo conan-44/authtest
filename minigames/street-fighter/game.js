@@ -23,7 +23,8 @@
                 interact: new Image()
             };
             const punchChargeMax = 1200;
-            const punchWindupFrameDuration = 110;
+            const punchWindupFrameDuration = 55;
+            const punchMaxWindupFrameDuration = 110;
             const punchFollowThroughFrameDuration = 70;
             const punchImpactDelay = punchWindupFrameDuration * 3;
             const punchAnimationDuration = punchImpactDelay + punchFollowThroughFrameDuration * 3;
@@ -102,9 +103,9 @@
             let localServerTarget = null;
             const maxHealth = 10;
             const comboWindows = [
-                { minimum: 180, maximum: 350 },
-                { minimum: 200, maximum: 320 },
-                { minimum: 220, maximum: 320 }
+                { minimum: 100, maximum: 600 },
+                { minimum: 120, maximum: 600 },
+                { minimum: 140, maximum: 600 }
             ];
             const botComboDamage = [1, 1, 2];
             const botDifficulties = {
@@ -187,7 +188,8 @@
                 lastPunchAt: 0,
                 punchCooldownUntil: 0,
                 punchCooldownDuration: 0,
-                pendingPunch: null
+                pendingPunch: null,
+                punchWindupFrameDuration
             };
             const dummy = {
                 x: 550,
@@ -216,7 +218,8 @@
                 lastPunchAt: 0,
                 punchCooldownUntil: 0,
                 punchCooldownDuration: 0,
-                pendingPunch: null
+                pendingPunch: null,
+                punchWindupFrameDuration
             };
             let lastTime = 0;
             let previousAnimation = 'idle';
@@ -401,11 +404,17 @@
                 const level = Math.max(0, Math.min(1, Number.isFinite(charge) ? charge : 0));
                 const row = Math.round(level * 4);
                 const animationName = `punch-row-${row}`;
+                const windupFrameDuration = Math.round(
+                    punchWindupFrameDuration
+                    + level * (punchMaxWindupFrameDuration - punchWindupFrameDuration)
+                );
+                const impactDelay = windupFrameDuration * 3;
+                const animationDuration = impactDelay + punchFollowThroughFrameDuration * 3;
                 const baseDamage = 1 + Math.round(level * 3);
-                const stunDuration = Math.round(level * 850);
+                const stunDuration = row === 0 ? 0 : Math.round(level * 850);
                 const hitStop = Math.round(55 + level * 165);
                 const cooldown = Math.round(450 + level * 1350);
-                const comboLimit = Math.max(1, 4 - Math.round(level * 3));
+                const comboLimit = Math.max(1, 3 - Math.max(0, row - 1));
                 const cooldownRemaining = Math.max(0, actor.punchCooldownUntil - now);
                 const cooldownRecovery = actor.punchCooldownDuration
                     ? 1 - cooldownRemaining / actor.punchCooldownDuration
@@ -432,13 +441,14 @@
                 actor.lastPunchAt = now;
                 actor.animation = animationName;
                 actor.animationStarted = now;
-                actor.actionUntil = now + punchImpactDelay;
+                actor.punchWindupFrameDuration = windupFrameDuration;
+                actor.actionUntil = now + impactDelay;
                 actor.demoAnimation = animationName;
-                actor.demoUntil = now + animations[animationName].duration;
+                actor.demoUntil = now + animationDuration;
                 actor.pendingPunch = multiplayerActive && multiplayerRole !== 0
                     ? null
                     : {
-                        resolveAt: now + punchImpactDelay,
+                        resolveAt: now + impactDelay,
                         stats: { damage: damageAmount, stunDuration, hitStop, comboLimit }
                     };
                 if (actor === player) {
@@ -484,13 +494,13 @@
                     else comboMaxHits = Math.min(comboMaxHits, stats.comboLimit);
                     comboHits += 1;
                     comboLastHitAt = now;
-                    if (comboHits >= 3 && !comboRewarded) {
+                    if (comboHits >= 2 && !comboRewarded) {
                         comboRewarded = true;
                         recordStreetFighterRating(2);
                     }
                     document.getElementById('comboText').textContent = stats.stunDuration
                         ? 'STUN!'
-                        : comboHits >= 3 ? `${comboHits} HIT COMBO!` : `${comboHits} HIT`;
+                        : comboHits >= 2 ? `${comboHits} HIT COMBO!` : `${comboHits} HIT`;
                     comboFeedbackUntil = now + 900;
                     status.textContent = 'Punch landed';
                     if (comboHits >= comboMaxHits) {
@@ -1503,9 +1513,11 @@
                 } else {
                     const elapsed = Math.max(0, now - fighter.animationStarted);
                     if (fighter.animation.startsWith('punch-row-') || fighter.animation === 'punch') {
-                        const frameIndex = elapsed < punchImpactDelay
-                            ? Math.floor(elapsed / punchWindupFrameDuration)
-                            : 3 + Math.floor((elapsed - punchImpactDelay) / punchFollowThroughFrameDuration);
+                        const windupFrameDuration = fighter.punchWindupFrameDuration || punchWindupFrameDuration;
+                        const impactDelay = windupFrameDuration * 3;
+                        const frameIndex = elapsed < impactDelay
+                            ? Math.floor(elapsed / windupFrameDuration)
+                            : 3 + Math.floor((elapsed - impactDelay) / punchFollowThroughFrameDuration);
                         frame = animation.frames[Math.min(frameIndex, animation.frames.length - 1)];
                     } else {
                         const frameRate = animation.rate || frameDuration;
@@ -1557,16 +1569,26 @@
 
             function drawPunchChargeBar(now) {
                 if (!punchChargeActive) return;
-                const width = 48;
-                const height = 5;
-                const x = Math.round(player.x + frameSize * frameScale / 2 - width / 2);
-                const y = Math.round(player.y - frameSize * frameScale - 12);
                 const progress = Math.max(0, Math.min(1, (now - punchChargeStartedAt) / punchChargeMax));
-                context.fillStyle = 'rgb(0 0 0 / 72%)';
-                context.fillRect(x - 1, y - 1, width + 2, height + 2);
-                context.fillStyle = getComputedStyle(document.documentElement)
-                    .getPropertyValue('--game-accent').trim();
-                context.fillRect(x, y, width * progress, height);
+                const level = Math.round(progress * 4);
+                if (level === 0 || !iconSheet.complete || !iconSheet.naturalWidth) return;
+                const barRow = Math.min(3, Math.ceil(progress * 4) - 1);
+                const width = iconFrameSize * 4 * 2;
+                const height = iconFrameSize * 2;
+                const x = Math.round(player.x + frameSize * frameScale / 2 - width / 2);
+                const y = Math.round(player.y - frameSize * frameScale - height - 42);
+                context.imageSmoothingEnabled = false;
+                context.drawImage(
+                    iconSheet,
+                    0,
+                    (barRow + 1) * iconFrameSize,
+                    iconFrameSize * 4,
+                    iconFrameSize,
+                    x,
+                    y,
+                    width,
+                    height
+                );
             }
 
             function drawPlayerIndicator(now) {

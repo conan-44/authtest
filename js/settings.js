@@ -3,6 +3,8 @@ const musicManifestFile = "./assets/audio/music/index.skvwmeta";
 const APP_THEME_STORAGE_KEY = "skvwaffle.theme.v1";
 const RANK_EFFECTS_SETTING_STORAGE_KEY = "skvwaffle.disable-rank-effects.v1";
 const TAB_ICON_STYLE_STORAGE_KEY = "skvwaffle.tab-icon-style.v1";
+const MUSIC_VOLUME_STORAGE_KEY = "skvwaffle.music-volume.v1";
+const MUSIC_LOOP_STORAGE_KEY = "skvwaffle.music-loop.v1";
 const DEFAULT_APP_THEME = { accent: "#2a4d67", secondary: "#8a5a00" };
 const APP_THEME_PRESETS = [
     { name: "Classic", accent: DEFAULT_APP_THEME.accent, secondary: DEFAULT_APP_THEME.secondary },
@@ -17,7 +19,34 @@ const APP_THEME_PRESETS = [
 
 (() => {
     const settingsList = document.getElementById("settingsList");
-    let musicController = null;
+    const scrollablePageElements = () => [
+        document.documentElement,
+        document.body,
+        ...document.querySelectorAll(".page, #accountManagement")
+    ];
+    const resetPageScroll = () => {
+        window.scrollTo(0, 0);
+        scrollablePageElements().forEach(element => {
+            element.scrollTop = 0;
+        });
+    };
+    const resetPageScrollAfterSettingChange = () => {
+        resetPageScroll();
+        window.requestAnimationFrame(resetPageScroll);
+    };
+
+    if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
+    window.addEventListener("pageshow", () => {
+        resetPageScroll();
+        window.requestAnimationFrame(resetPageScroll);
+    });
+    settingsList?.addEventListener("change", resetPageScrollAfterSettingChange);
+    settingsList?.addEventListener("click", event => {
+        if (event.target instanceof Element && event.target.closest(".settings-color-preset")) {
+            resetPageScrollAfterSettingChange();
+        }
+    });
+
     let musicAutoplayRequested = false;
     let appTheme = loadAppTheme();
     applyAppTheme();
@@ -415,15 +444,26 @@ const APP_THEME_PRESETS = [
         return controls;
     }
 
-    function createMusicVolumeControl() {
-        const volume = document.createElement("label");
-        volume.className = "music-volume";
-        volume.title = "Music volume";
-        volume.innerHTML = `
-            <span class="music-volume-label">Volume</span>
-            <input class="music-volume-input" type="range" min="0" max="1" step="0.01" value="0.3" aria-label="Music volume">
-        `;
-        return volume;
+    function loadMusicVolume(defaultValue) {
+        try {
+            const saved = localStorage.getItem(MUSIC_VOLUME_STORAGE_KEY);
+            if (saved === null) return defaultValue;
+            const volume = Number(saved);
+            if (Number.isFinite(volume) && volume >= 0 && volume <= 1) return volume;
+            console.warn("The saved music volume is invalid; using the configured default.");
+        } catch (error) {
+            console.error("Could not read the music volume preference.", error);
+        }
+        return defaultValue;
+    }
+
+    function saveMusicVolume(volume) {
+        try {
+            localStorage.setItem(MUSIC_VOLUME_STORAGE_KEY, String(volume));
+        } catch (error) {
+            console.error("Could not save the music volume preference.", error);
+            if (typeof showPopup === "function") showPopup("Your music volume could not be saved on this device.", "error");
+        }
     }
 
     function parseMusicTrack(track) {
@@ -438,89 +478,120 @@ const APP_THEME_PRESETS = [
         return source.split("/").pop().split(".")[0];
     }
 
-    function updateMusicCredit(creditElement, track) {
-        creditElement.textContent = track.credit ? `${track.credit}` : "";
-        creditElement.hidden = !track.credit;
+    function updateMusicCredit(credit, track) {
+        credit.textContent = track.credit ? `${track.credit}` : "";
+        credit.hidden = !track.credit;
     }
 
-    async function bindMusicControls(controls, creditElement, volumeInput) {
+    function loadMusicLoop(defaultValue) {
+        try {
+            const saved = localStorage.getItem(MUSIC_LOOP_STORAGE_KEY);
+            if (saved === "true" || saved === "false") return saved === "true";
+        } catch (error) {
+            console.error("Could not read the music loop preference.", error);
+        }
+        return defaultValue;
+    }
+
+    async function bindMusicControls(controls, volumeInput, musicToggle, loopToggle, credit, defaultVolume) {
         let tracks = [];
         let currentTrack = -1;
         const player = new Audio();
-        musicController = player;
         const trackName = controls.querySelector(".music-track-name");
         const buttons = controls.querySelectorAll(".music-cycle-btn");
+        loopToggle.checked = loadMusicLoop(loopToggle.checked);
+        player.loop = loopToggle.checked;
+        loopToggle.addEventListener("change", () => {
+            player.loop = loopToggle.checked;
+            try {
+                localStorage.setItem(MUSIC_LOOP_STORAGE_KEY, String(loopToggle.checked));
+            } catch (error) {
+                console.error("Could not save the music loop preference.", error);
+                if (typeof showPopup === "function") showPopup("Your loop preference could not be saved on this device.", "error");
+            }
+        });
+        volumeInput.value = String(loadMusicVolume(defaultVolume));
+        volumeInput.dispatchEvent(new Event("input", { bubbles: true }));
+        player.volume = volumeInput.valueAsNumber;
+        volumeInput.addEventListener("input", () => {
+            player.volume = volumeInput.valueAsNumber;
+        });
+        volumeInput.addEventListener("change", () => saveMusicVolume(volumeInput.valueAsNumber));
 
         try {
             const response = await fetch(musicManifestFile, { cache: "no-store" });
-            if (response.ok) tracks = await response.json();
+            if (!response.ok) throw new Error(`Failed to load ${musicManifestFile}: ${response.status}`);
+            const manifest = await response.json();
+            if (!Array.isArray(manifest)) throw new TypeError("The music manifest must contain a list of tracks.");
+            tracks = manifest;
         } catch (error) {
             tracks = [];
+            console.error("Could not load music tracks.", error);
+            trackName.textContent = "Music unavailable";
         }
 
         tracks = tracks
             .filter(track => typeof track === "string" && track.trim())
             .map(parseMusicTrack)
             .filter(track => track.source);
-        creditElement.textContent = "";
-        creditElement.hidden = true;
-        player.volume = Number(volumeInput.value);
-        volumeInput.addEventListener("input", () => {
-            player.volume = Number(volumeInput.value);
-        });
+        credit.textContent = "";
+        credit.hidden = true;
         const updateMusicAvailability = () => {
-            const enabled = window.getAppSetting ? window.getAppSetting("audio", "music", true) : true;
+            const enabled = musicToggle.checked;
             if (!enabled) player.pause();
             buttons.forEach(button => {
-                button.disabled = !enabled;
+                button.disabled = !enabled || !tracks.length;
                 button.title = enabled ? "Cycle music" : "Music is disabled";
             });
+            volumeInput.disabled = !enabled;
+            loopToggle.disabled = !enabled;
         };
         updateMusicAvailability();
-        window.playMusicOnLogin = function playMusicOnLogin() {
-            musicAutoplayRequested = true;
-            if (!window.getAppSetting("audio", "music", true) || !tracks.length) return;
+        const playCurrentTrack = async (notify = false) => {
+            if (!musicToggle.checked || !tracks.length) return;
             if (currentTrack < 0) currentTrack = 0;
             const track = tracks[currentTrack];
             player.src = track.source.startsWith("./") ? track.source : `./assets/audio/music/${track.source}`;
-            player.play().then(() => {
+            try {
+                await player.play();
                 trackName.textContent = getTrackDisplayName(track.source);
-                updateMusicCredit(creditElement, track);
-            }).catch(() => {});
+                updateMusicCredit(credit, track);
+                if (notify && typeof showPopup === "function") {
+                    showPopup(`Music playing: ${trackName.textContent}`, "music");
+                }
+            } catch (error) {
+                trackName.textContent = getTrackDisplayName(track.source);
+                console.warn("Could not start music playback.", error);
+            }
+        };
+        window.playMusicOnLogin = function playMusicOnLogin() {
+            musicAutoplayRequested = true;
+            void playCurrentTrack();
         };
         const retryAutoplay = () => {
-            if (musicAutoplayRequested && window.getAppSetting("audio", "music", true) && player.paused) {
-                window.playMusicOnLogin();
-            }
+            if (musicAutoplayRequested && musicToggle.checked && player.paused) void playCurrentTrack();
         };
         document.addEventListener("pointerdown", retryAutoplay);
         document.addEventListener("keydown", retryAutoplay);
         buttons.forEach(button => {
             button.addEventListener("click", () => {
-                if (!window.getAppSetting("audio", "music", true)) {
-                    if (typeof showPopup === "function") showPopup("Music is disabled in settings.", "error");
-                    return;
-                }
                 if (!tracks.length) {
                     if (typeof showPopup === "function") showPopup("No music tracks are available yet.", "error");
                     return;
                 }
                 const direction = button.dataset.direction === "previous" ? -1 : 1;
                 currentTrack = (currentTrack + direction + tracks.length) % tracks.length;
-                const track = tracks[currentTrack];
-                player.src = track.source.startsWith("./") ? track.source : `./assets/audio/music/${track.source}`;
-                player.play().then(() => {
-                    trackName.textContent = getTrackDisplayName(track.source);
-                    updateMusicCredit(creditElement, track);
-                    if (typeof showPopup === "function") showPopup(`Music playing: ${trackName.textContent}`, "music");
-                }).catch(() => {
-                    trackName.textContent = getTrackDisplayName(track.source);
-                });
+                void playCurrentTrack(true);
             });
         });
-        settingsList.querySelector('[data-section="audio"][data-setting="music"]')?.addEventListener("change", () => {
+        musicToggle.addEventListener("change", () => {
             updateMusicAvailability();
-            if (window.getAppSetting("audio", "music", true) && musicAutoplayRequested) window.playMusicOnLogin();
+            if (musicToggle.checked) {
+                musicAutoplayRequested = true;
+                void playCurrentTrack();
+            } else {
+                musicAutoplayRequested = false;
+            }
         });
     }
 
@@ -534,25 +605,23 @@ const APP_THEME_PRESETS = [
             settingsList.appendChild(heading);
             const isAudioSection = section.toLowerCase() === "audio";
             const audioLayout = isAudioSection ? document.createElement("div") : null;
-            const audioTopRow = isAudioSection ? document.createElement("div") : null;
-            const musicCredit = isAudioSection ? document.createElement("p") : null;
-            const musicVolume = isAudioSection ? createMusicVolumeControl() : null;
-            const musicMeta = isAudioSection ? document.createElement("div") : null;
+            let musicToggle = null;
+            let loopToggle = null;
+            let musicVolumeSetting = null;
             if (audioLayout) {
                 audioLayout.className = "settings-audio-layout";
-                audioTopRow.className = "settings-audio-top-row";
-                musicCredit.className = "music-credit";
-                musicMeta.className = "music-meta";
-                musicMeta.append(musicCredit, musicVolume);
-                audioTopRow.append(musicMeta);
-                audioLayout.append(audioTopRow);
                 settingsList.appendChild(audioLayout);
             }
 
             Object.entries(values).forEach(([key, enabled]) => {
                 if (enabled && typeof enabled === "object" && enabled.type === "slider"
                     && Array.isArray(enabled.stops) && enabled.stops.length) {
-                    settingsList.appendChild(createSliderSetting(section, key, enabled));
+                    const sliderSetting = createSliderSetting(section, key, enabled);
+                    if (isAudioSection && key.toLowerCase() === "music volume") {
+                        musicVolumeSetting = sliderSetting;
+                    } else {
+                        settingsList.appendChild(sliderSetting);
+                    }
                     return;
                 }
                 if (enabled && typeof enabled === "object" && enabled.type === "dropdown" && Array.isArray(enabled.options)) {
@@ -580,18 +649,39 @@ const APP_THEME_PRESETS = [
 
                 label.append(checkbox, icon, text);
                 if (isAudioSection && key.toLowerCase() === "sound effects") {
-                    audioTopRow.prepend(label);
+                    audioLayout.appendChild(label);
                 } else if (isAudioSection && key.toLowerCase() === "music") {
-                    const musicControls = createMusicControls();
-                    const audioRow = document.createElement("div");
-                    audioRow.className = "settings-audio-row";
-                    audioRow.append(label, musicControls);
-                    audioLayout.append(audioRow);
-                    bindMusicControls(musicControls, musicCredit, musicVolume.querySelector(".music-volume-input"));
+                    musicToggle = checkbox;
+                } else if (isAudioSection && key.toLowerCase() === "loop music") {
+                    loopToggle = checkbox;
                 } else {
                     settingsList.appendChild(label);
                 }
             });
+            if (isAudioSection && musicToggle) {
+                if (!musicVolumeSetting) throw new Error("The audio music volume setting is missing.");
+                if (!loopToggle) throw new Error("The audio loop music setting is missing.");
+                const musicControls = createMusicControls();
+                const audioRow = document.createElement("div");
+                audioRow.className = "settings-audio-row";
+                audioRow.append(musicToggle.closest(".settings-toggle"), loopToggle.closest(".settings-toggle"), musicControls);
+                audioLayout.appendChild(audioRow);
+                const musicCredit = document.createElement("p");
+                musicCredit.className = "music-credit";
+                musicCredit.hidden = true;
+                musicCredit.setAttribute("aria-live", "polite");
+                audioLayout.append(musicVolumeSetting, musicCredit);
+                bindMusicControls(
+                    musicControls,
+                    musicVolumeSetting.querySelector(".settings-slider"),
+                    musicToggle,
+                    loopToggle,
+                    musicCredit,
+                    0.4
+                );
+            } else if (isAudioSection && musicVolumeSetting) {
+                settingsList.appendChild(musicVolumeSetting);
+            }
         });
         bindSettingAnimations();
         settingsList.querySelectorAll(".settings-checkbox").forEach(checkbox => {
@@ -611,6 +701,7 @@ const APP_THEME_PRESETS = [
                 }
             });
         });
+        resetPageScroll();
     }
 
     async function loadSettings() {

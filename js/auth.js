@@ -211,6 +211,9 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
   } else {
     document.getElementById('authSection').style.display = 'block';
     document.getElementById('profileSection').style.display = 'none';
+    activeProfileAvatarUserId = null;
+    currentProfileAvatar = null;
+    renderAccountProfileAvatar(null, 'Player');
     printLog("No user logged in (INITIAL_SESSION null). Fill form and click Sign Up.");
     showPopup("Sign in or create an account to start!", 'info');
     if (typeof window.setTabsGuestMode === "function") window.setTabsGuestMode(true);
@@ -247,22 +250,32 @@ function updateAuthBadgesAndProviders(user) {
 
 function renderAccountProfileAvatar(avatar, username) {
   const canvas = document.getElementById('authProfileAvatar');
-  canvas.alt = `${username || 'Player'}'s profile picture`;
+  const source = getProfileAvatarImageSource(avatar);
+  const alt = `${username || 'Player'}'s profile picture`;
+  canvas.alt = alt;
+  canvas.src = source;
+  const settingsPreview = document.getElementById('settingsProfileAvatarPreview');
+  settingsPreview.src = source;
+  settingsPreview.alt = `Current profile picture for ${username || 'Player'}`;
+  currentProfileAvatar = avatar;
+  renderSavedProfileAvatarPicker();
+}
+
+function getProfileAvatarImageSource(avatar) {
   if (!avatar || window.ProfileAvatars.isDefault(avatar)) {
-    canvas.src = './assets/profile.png';
-    return;
+    return './assets/profile.png';
   }
   const decoded = window.ProfileAvatars.decode(avatar);
   if (decoded) {
     const renderer = document.createElement('canvas');
     if (!window.ProfileAvatars.draw(renderer, avatar)) {
-      canvas.src = './assets/profile.png';
-      return;
+      console.warn('Could not render a saved profile picture.');
+      return './assets/profile.png';
     }
-    canvas.src = renderer.toDataURL('image/png');
-    return;
+    return renderer.toDataURL('image/png');
   }
-  canvas.src = './assets/profile.png';
+  console.warn('A profile picture has an invalid format.', avatar);
+  return './assets/profile.png';
 }
 
 function applyAccountProfileRank(value) {
@@ -375,19 +388,183 @@ const PROFILE_AVATAR_DEFAULT_PALETTE = window.ProfileAvatars.defaultPalette;
 const profileAvatarCanvas = document.getElementById('profileAvatarCanvas');
 const profileAvatarPaletteEl = document.getElementById('profileAvatarPalette');
 const profileAvatarStatus = document.getElementById('profileAvatarStatus');
+const savedProfileAvatarPicker = document.getElementById('savedProfileAvatarPicker');
+const savedProfileAvatarStatus = document.getElementById('savedProfileAvatarStatus');
 const profileAvatarSizeSelect = document.getElementById('profileAvatarSize');
+const PROFILE_AVATAR_STORAGE_KEY_PREFIX = 'skvwaffle.saved-profile-pictures.v1.';
+const MAX_SAVED_PROFILE_AVATARS = 10;
 let profileAvatarSize = 16;
 let profileAvatarPalette = PROFILE_AVATAR_DEFAULT_PALETTE.slice(0, 8);
 let profileAvatarPixels = new Uint8Array(profileAvatarSize * profileAvatarSize);
 let activeProfileAvatarColor = 0;
 let paintingProfileAvatar = false;
 let profileAvatarTool = 'pencil';
+let activeProfileAvatarUserId = null;
+let currentProfileAvatar = null;
+let selectingSavedProfileAvatar = false;
 const profileAvatarPencilBtn = document.getElementById('profileAvatarPencilBtn');
 const profileAvatarFillBtn = document.getElementById('profileAvatarFillBtn');
 const settingsWorkspace = document.getElementById('settingsWorkspace');
 const profileAvatarView = document.getElementById('profileAvatarView');
 const openProfileAvatarEditorBtn = document.getElementById('openProfileAvatarEditorBtn');
 const profileAvatarBackBtn = document.getElementById('profileAvatarBackBtn');
+
+function normalizeProfileAvatar(avatar) {
+  const decoded = window.ProfileAvatars.decode(avatar);
+  if (!decoded) return null;
+  return window.ProfileAvatars.encode(decoded.size, decoded.palette, decoded.pixels);
+}
+
+function getSavedProfileAvatars(userId = activeProfileAvatarUserId) {
+  if (!userId) return [];
+  const storageKey = `${PROFILE_AVATAR_STORAGE_KEY_PREFIX}${userId}`;
+  const stored = localStorage.getItem(storageKey);
+  if (stored === null) return [];
+
+  let parsed;
+  try {
+    parsed = JSON.parse(stored);
+  } catch (error) {
+    console.error('Could not parse saved profile pictures; clearing the invalid local list.', error);
+    localStorage.removeItem(storageKey);
+    return [];
+  }
+  if (!Array.isArray(parsed)) {
+    console.error('Saved profile pictures have an invalid format; clearing the local list.');
+    localStorage.removeItem(storageKey);
+    return [];
+  }
+
+  const unique = new Map();
+  parsed.forEach(avatar => {
+    const normalized = normalizeProfileAvatar(avatar);
+    if (!normalized) {
+      console.warn('Skipping an invalid saved profile picture.');
+      return;
+    }
+    unique.set(JSON.stringify(normalized), normalized);
+  });
+  return [...unique.values()].slice(0, MAX_SAVED_PROFILE_AVATARS);
+}
+
+function saveProfileAvatarLocally(avatar, userId = activeProfileAvatarUserId) {
+  if (!userId) throw new Error('Sign in before saving profile pictures on this device.');
+  const normalized = normalizeProfileAvatar(avatar);
+  if (!normalized) throw new Error('This profile picture cannot be saved.');
+  const storageKey = `${PROFILE_AVATAR_STORAGE_KEY_PREFIX}${userId}`;
+  const pictures = getSavedProfileAvatars(userId)
+    .filter(saved => JSON.stringify(saved) !== JSON.stringify(normalized));
+  pictures.unshift(normalized);
+  const limitedPictures = pictures.slice(0, MAX_SAVED_PROFILE_AVATARS);
+  localStorage.setItem(storageKey, JSON.stringify(limitedPictures));
+  return limitedPictures;
+}
+
+function renderSavedProfileAvatarPicker() {
+  if (!savedProfileAvatarPicker || !savedProfileAvatarStatus) return;
+  savedProfileAvatarPicker.replaceChildren();
+  if (!activeProfileAvatarUserId) {
+    savedProfileAvatarStatus.textContent = 'Sign in to save profile pictures on this device.';
+    return;
+  }
+
+  let pictures;
+  try {
+    pictures = getSavedProfileAvatars();
+  } catch (error) {
+    console.error('Could not load saved profile pictures from this device.', error);
+    savedProfileAvatarStatus.textContent = 'Saved pictures could not be loaded from this device.';
+    return;
+  }
+
+  const current = normalizeProfileAvatar(currentProfileAvatar);
+  const currentSerialized = current ? JSON.stringify(current) : '';
+  pictures.forEach((avatar, index) => {
+    const serialized = JSON.stringify(avatar);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'saved-profile-avatar-option';
+    button.setAttribute('aria-label', `Use saved profile picture ${index + 1}`);
+    button.setAttribute('aria-pressed', String(serialized === currentSerialized));
+    button.title = serialized === currentSerialized
+      ? 'Current profile picture'
+      : `Use saved profile picture ${index + 1}`;
+
+    const image = document.createElement('img');
+    image.src = getProfileAvatarImageSource(avatar);
+    image.alt = '';
+    image.setAttribute('aria-hidden', 'true');
+    button.appendChild(image);
+    button.addEventListener('click', () => applySavedProfileAvatar(avatar, button));
+    savedProfileAvatarPicker.appendChild(button);
+  });
+  savedProfileAvatarStatus.textContent = pictures.length
+    ? `${pictures.length} of ${MAX_SAVED_PROFILE_AVATARS} saved on this device`
+    : `No saved pictures yet · up to ${MAX_SAVED_PROFILE_AVATARS}`;
+}
+
+function animateSavedProfileAvatarSelection(button) {
+  const preview = document.getElementById('settingsProfileAvatarPreview');
+  if (typeof button.animate !== 'function' || !preview) return Promise.resolve();
+  const source = button.getBoundingClientRect();
+  const target = preview.getBoundingClientRect();
+  if (!source.width || !target.width) return Promise.resolve();
+  const animation = button.animate([
+    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+    {
+      transform: `translate(${target.left + target.width / 2 - source.left - source.width / 2}px, `
+        + `${target.top + target.height / 2 - source.top - source.height / 2}px) `
+        + `scale(${Math.max(1, target.width / source.width)})`,
+      opacity: 0.35
+    }
+  ], { duration: 280, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+  return animation.finished.catch(error => {
+    if (error?.name !== 'AbortError') throw error;
+  });
+}
+
+async function applySavedProfileAvatar(avatar, button) {
+  if (selectingSavedProfileAvatar) return;
+  const selected = normalizeProfileAvatar(avatar);
+  if (!selected || JSON.stringify(selected) === JSON.stringify(normalizeProfileAvatar(currentProfileAvatar))) return;
+  selectingSavedProfileAvatar = true;
+  savedProfileAvatarPicker.querySelectorAll('button').forEach(option => {
+    option.disabled = true;
+  });
+  savedProfileAvatarStatus.textContent = 'Changing profile picture…';
+
+  try {
+    const savedPictures = getSavedProfileAvatars();
+    if (!savedPictures.some(saved => JSON.stringify(saved) === JSON.stringify(selected))) {
+      throw new Error('That saved picture is no longer available.');
+    }
+    const [{ data: { user }, error: authError }, animation] = await Promise.all([
+      _supabase.auth.getUser(),
+      animateSavedProfileAvatarSelection(button)
+    ]);
+    if (authError) throw authError;
+    if (!user || user.id !== activeProfileAvatarUserId) {
+      throw new Error('Sign in to the account that owns these saved pictures.');
+    }
+    const { error } = await _supabase
+      .from('profiles')
+      .update({ avatar: selected })
+      .eq('id', user.id);
+    if (error) throw error;
+    await animation;
+    currentProfileAvatar = selected;
+    renderAccountProfileAvatar(selected, document.getElementById('displayUsername').textContent);
+    savedProfileAvatarStatus.textContent = 'Profile picture changed.';
+    showPopup('Profile picture changed.', 'success');
+  } catch (error) {
+    console.error('Could not apply the saved profile picture.', error);
+    savedProfileAvatarStatus.textContent = 'Could not change the profile picture.';
+    showPopup(error.message || 'Could not change the profile picture.', 'error');
+  } finally {
+    selectingSavedProfileAvatar = false;
+    renderSavedProfileAvatarPicker();
+  }
+}
 
 function setProfileAvatarTool(tool) {
   profileAvatarTool = tool;
@@ -598,6 +775,7 @@ initializeProfileAvatarPalette();
 drawProfileAvatarEditor();
 
 async function fetchProfile(userId) {
+  activeProfileAvatarUserId = userId;
   printLog("Fetching profile row from SQL table...");
   const { data, error } = await _supabase
     .from('profiles')
@@ -614,6 +792,17 @@ async function fetchProfile(userId) {
     document.getElementById('displayUsername').textContent = data.username;
     document.getElementById('displayFlair').textContent = data.flair;
     renderAccountProfileAvatar(data.avatar, data.username);
+    try {
+      const currentAvatar = normalizeProfileAvatar(data.avatar);
+      if (currentAvatar) {
+        const savedPictures = saveProfileAvatarLocally(currentAvatar, userId);
+        renderSavedProfileAvatarPicker();
+        savedProfileAvatarStatus.textContent = `Saved on this device · ${savedPictures.length} of ${MAX_SAVED_PROFILE_AVATARS}`;
+      }
+    } catch (storageError) {
+      console.error('Could not save the current profile picture to this device.', storageError);
+      savedProfileAvatarStatus.textContent = 'The current picture could not be saved to this device.';
+    }
     const { data: rank, error: rankError } = await _supabase.rpc("get_public_profile_rank", {
       p_user_id: userId
     });
@@ -680,7 +869,19 @@ document.getElementById('saveProfileAvatarBtn').addEventListener('click', async 
       .update({ avatar })
       .eq('id', user.id);
     if (error) throw error;
+    activeProfileAvatarUserId = user.id;
     renderAccountProfileAvatar(avatar, document.getElementById('displayUsername').textContent);
+    try {
+      const savedPictures = saveProfileAvatarLocally(avatar, user.id);
+      renderSavedProfileAvatarPicker();
+      savedProfileAvatarStatus.textContent = `Saved on this device · ${savedPictures.length} of ${MAX_SAVED_PROFILE_AVATARS}`;
+    } catch (storageError) {
+      console.error('Profile picture was updated, but could not be saved to this device.', storageError);
+      savedProfileAvatarStatus.textContent = 'Profile updated, but the local copy could not be saved.';
+      profileAvatarStatus.textContent = 'Profile picture saved to your account, but not to this device.';
+      showPopup('Profile picture saved to your account, but could not be stored on this device.', 'warning');
+      return;
+    }
     profileAvatarStatus.textContent = 'Profile picture saved.';
     showPopup('Profile picture saved.', 'success');
   } catch (error) {
@@ -705,6 +906,7 @@ document.getElementById('clearProfileAvatarBtn').addEventListener('click', async
       .eq('id', user.id);
     if (error) throw error;
     loadProfileAvatarEditor(null);
+    currentProfileAvatar = null;
     renderAccountProfileAvatar(null, document.getElementById('displayUsername').textContent);
     profileAvatarStatus.textContent = 'Profile picture removed.';
     showPopup('Profile picture removed.', 'success');

@@ -491,6 +491,28 @@ const history_file = "./history/achievements.skvwhist";
             return action === "unlock" ? unlock(`${namespace}:${name}`) : revoke(`${namespace}:${name}`);
         }
 
+        async function executeAdminCodeCommand(commandString) {
+            const user = await getAuthenticatedUser();
+            if (!user) {
+                console.warn("The achieve() console command requires an admin account.");
+                return false;
+            }
+
+            const { data: rank, error } = await _supabase.rpc("get_public_profile_rank", {
+                p_user_id: user.id
+            });
+            if (error) {
+                console.error("Could not verify admin rank for the achieve() console command.", error);
+                return false;
+            }
+            if (rank !== "ADMIN") {
+                console.warn("The achieve() console command is restricted to admin accounts.");
+                return false;
+            }
+
+            return executeCodeCommand(commandString);
+        }
+
         function getMilestoneTarget(value) {
             const normalized = value.toLowerCase().replace(/\.until$/, "");
             const milestone = state.milestones.find(item => item.name.toLowerCase() === normalized);
@@ -656,7 +678,7 @@ const history_file = "./history/achievements.skvwhist";
             loadAllFromDirectoryIndex,
             loadAchievement: loaders.loadAchievement,
             loadUserProfile,
-            executeCodeCommand,
+            executeAdminCodeCommand,
             points: command => {
                 if (command && typeof command === "object") return executePointsCommand(command.action, command.value);
                 return executeCodeCommand(command.startsWith("points") ? command : `points(${command})`);
@@ -734,7 +756,7 @@ const history_file = "./history/achievements.skvwhist";
     });
     loadVersionIndicator();
 
-    window.achieve = command => achievements.executeCodeCommand(command);
+    window.achieve = command => achievements.executeAdminCodeCommand(command);
     window.points = command => achievements.points(command);
     window.add = value => ({ action: "add", value: String(value) });
     window.remove = value => ({ action: "remove", value: String(value) });

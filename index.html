@@ -9,9 +9,9 @@
     <script src="https://cdn.jsdelivr.net/gh/Parcoil/cloak@main/src/index.min.js"></script>
     <link rel="icon" type="image/x-icon" href="./assets/test-favicon.png">
     <link rel="stylesheet" href="./css/variables.css?v=css-split-v1">
-    <link rel="stylesheet" href="./css/base.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/base.css?v=no-page-scroll-v2">
     <link rel="stylesheet" href="./css/blog.css?v=css-split-v1">
-    <link rel="stylesheet" href="./css/settings.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/settings.css?v=no-page-scroll-v1">
     <link rel="stylesheet" href="./css/chat.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/profiles.css?v=game-ratings-v1">
     <link rel="stylesheet" href="./css/achievements.css?v=css-split-v1">
@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="./css/milestones.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/notifications.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/sheet.css?v=css-split-v1">
-    <link rel="stylesheet" href="./css/responsive.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/responsive.css?v=no-page-scroll-v2">
 </head>
 <body>
     <main class="page">
@@ -110,9 +110,16 @@
             </div>
             <div id="settingsWorkspace" class="panel-body settings-workspace">
                 <div class="settings-profile-picture-entry">
-                    <div>
+                    <div class="settings-profile-picture-copy">
                         <h2>Profile Picture</h2>
                         <p>create your own profile picture.</p>
+                    </div>
+                    <div class="profile-avatar-quick-picker">
+                        <div class="profile-avatar-quick-picker-row">
+                            <img id="settingsProfileAvatarPreview" src="./assets/profile.png" alt="Current profile picture">
+                            <div id="savedProfileAvatarPicker" class="saved-profile-avatar-picker" role="group" aria-label="Saved profile pictures"></div>
+                        </div>
+                        <p id="savedProfileAvatarStatus" class="saved-profile-avatar-status" aria-live="polite"></p>
                     </div>
                     <button type="button" id="openProfileAvatarEditorBtn">Edit Profile Picture</button>
                 </div>
@@ -398,12 +405,12 @@
     <script src="./js/utils.js"></script>
     <script src="./js/profile-avatars.js?v=profile-pixels-v3"></script>
     <script src="./js/renderers.js?v=achievement-sprites-v3"></script>
-    <script src="./js/achievements.js?v=exact-2000-points-v1"></script>
-    <script src="./js/auth.js?v=cookie-rank-badges-v1"></script>
+    <script src="./js/achievements.js?v=admin-achieve-command-v1"></script>
+    <script src="./js/auth.js?v=saved-profile-pictures-v1"></script>
     <script src="./js/blog.js"></script>
     <script src="./js/blog-community.js?v=exact-2000-points-v1"></script>
     <script src="./js/tabs.js"></script>
-    <script src="./js/settings.js?v=tab-icon-choice-v1"></script>
+    <script src="./js/settings.js?v=no-scroll-restoration-v3"></script>
     <script src="./js/games.js?v=game-leaderboards-v1"></script>
     <script src="./js/tips.js"></script>
     <!-- api config stuff -->
