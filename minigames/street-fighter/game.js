@@ -13,6 +13,9 @@
             const multiplayerStatus = document.getElementById('multiplayerStatus');
             const copyOnlineInviteButton = document.getElementById('copyOnlineInviteBtn');
             const shareOnlineInviteButton = document.getElementById('shareOnlineInviteBtn');
+            const characterWorkshop = window.StreetFighterCharacters;
+            const defaultCharacter = characterWorkshop.getDefault();
+            let selectedCharacter = characterWorkshop.getSelected();
             const mannequinSheet = new Image();
             const iconSheet = new Image();
             const playerSheets = {
@@ -47,6 +50,7 @@
                 idle: { sheet: 'idle', row: 2, width: 24, height: 24, frames: [0, 1, 2, 3], rate: 210 },
                 run: { sheet: 'walk', row: 2, width: 24, height: 24, frames: [0, 1, 2, 3], rate: 90 },
                 jump: { sheet: 'jump', row: 2, width: 24, height: 22, frames: [0, 1, 2, 3, 4], rate: 95 },
+                interact: { sheet: 'interact', row: 0, width: 24, height: 24, frames: [0, 1, 2, 3], rate: 85, duration: 520 },
                 punch: chargedPunchAnimations['punch-row-0'],
                 ...chargedPunchAnimations
             };
@@ -61,6 +65,7 @@
                 idle: { row: 0, frames: [0] },
                 run: { row: 2, frames: [0, 1, 2, 3] },
                 jump: { row: 5, frames: [0, 1, 2, 3, 4], rate: 95 },
+                interact: { row: 0, frames: [0, 1, 2, 3], rate: 85, duration: 520 },
                 punch: { row: 0, frames: punchFrames, rate: punchWindupFrameDuration, duration: punchAnimationDuration },
                 ...Object.fromEntries(
                     Array.from({ length: 5 }, (_, row) => [
@@ -101,7 +106,7 @@
             let remoteInput = { left: false, right: false, run: false };
             let remoteTarget = null;
             let localServerTarget = null;
-            const maxHealth = 10;
+            const defaultMaxHealth = 10;
             const comboWindows = [
                 { minimum: 100, maximum: 600 },
                 { minimum: 120, maximum: 600 },
@@ -169,12 +174,18 @@
             let impactShowsSparks = false;
             let pauseDuration = 0;
             let gameNow = 0;
+            const attackEffects = [];
             const player = {
                 x: 130,
                 y: groundY,
                 velocityY: 0,
                 facing: 1,
-                health: maxHealth,
+                health: defaultMaxHealth,
+                maxHealth: defaultMaxHealth,
+                character: selectedCharacter,
+                slowUntil: 0,
+                slowFactor: 1,
+                hitOverlay: null,
                 stunnedUntil: 0,
                 flashUntil: 0,
                 jumpWindupUntil: 0,
@@ -193,7 +204,8 @@
             };
             const dummy = {
                 x: 550,
-                health: maxHealth,
+                health: defaultMaxHealth,
+                maxHealth: defaultMaxHealth,
                 flashUntil: 0,
                 attackTelegraphUntil: 0,
                 deathAt: 0,
@@ -204,7 +216,13 @@
                 y: groundY,
                 velocityY: 0,
                 facing: -1,
-                health: maxHealth,
+                health: defaultMaxHealth,
+                maxHealth: defaultMaxHealth,
+                character: defaultCharacter,
+                slowUntil: 0,
+                slowFactor: 1,
+                hitOverlay: null,
+                characterReceived: false,
                 stunnedUntil: 0,
                 flashUntil: 0,
                 jumpWindupUntil: 0,
@@ -224,6 +242,21 @@
             let lastTime = 0;
             let previousAnimation = 'idle';
 
+            function applyCharacterToFighter(fighter, character, restoreHealth = false) {
+                fighter.character = character;
+                fighter.maxHealth = defaultMaxHealth + character.stats.health;
+                if (restoreHealth) fighter.health = fighter.maxHealth;
+                else fighter.health = Math.min(fighter.health, fighter.maxHealth);
+            }
+
+            window.addEventListener('streetfighter-character-selected', event => {
+                const character = characterWorkshop.normalize(event.detail?.character, 40);
+                if (!character || !characterWorkshop.isWithinBudget(character)) return;
+                selectedCharacter = character;
+                if (!battleStarted) applyCharacterToFighter(player, selectedCharacter, true);
+                status.textContent = `${character.name} selected`;
+            });
+
             const debug = window.createStreetFighterDebug({
                 canvas,
                 menu: document.getElementById('debugMenu'),
@@ -237,7 +270,7 @@
                     player.y = groundY;
                     player.velocityY = 0;
                     player.facing = 1;
-                    player.health = maxHealth;
+                    player.health = player.maxHealth;
                     player.flashUntil = 0;
                     player.jumpWindupUntil = 0;
                     player.jumpAirStarted = 0;
@@ -248,7 +281,7 @@
                     resetPunchCooldown(player);
                     player.animation = 'idle';
                     player.animationStarted = gameNow;
-                    dummy.health = maxHealth;
+                    dummy.health = dummy.maxHealth;
                     dummy.flashUntil = 0;
                     dummy.attackTelegraphUntil = 0;
                     dummy.deathAt = 0;
@@ -294,7 +327,10 @@
                     `../../assets/minigames/streetfighter/characters/player/${file}.png`,
                     `player ${name} sprites`
                 ))
-            ]).then(() => {
+            ]).then(async () => {
+                await characterWorkshop.ready;
+                selectedCharacter = characterWorkshop.getSelected();
+                applyCharacterToFighter(player, selectedCharacter, true);
                 startBattleButton.disabled = false;
                 fightBotButton.disabled = false;
                 status.textContent = battleStarted ? 'Battle started' : 'Click Start Battle to play';
@@ -344,7 +380,7 @@
             }
 
             function playDemoAnimation(name, now = gameNow) {
-                if (name === 'punch') name = 'punch-row-0';
+                if (name === 'punch') name = 'interact';
                 if (!animations[name]) return;
                 if (name === 'jump') {
                     jump(now);
@@ -403,14 +439,16 @@
                     || performance.now() < impactUntilReal) return false;
                 const level = Math.max(0, Math.min(1, Number.isFinite(charge) ? charge : 0));
                 const row = Math.round(level * 4);
-                const animationName = `punch-row-${row}`;
+                const animationName = 'interact';
+                const character = actor.character || defaultCharacter;
+                const attack = character.attack;
                 const windupFrameDuration = Math.round(
                     punchWindupFrameDuration
                     + level * (punchMaxWindupFrameDuration - punchWindupFrameDuration)
                 );
                 const impactDelay = windupFrameDuration * 3;
-                const animationDuration = impactDelay + punchFollowThroughFrameDuration * 3;
-                const baseDamage = 1 + Math.round(level * 3);
+                const animationDuration = impactDelay + 85;
+                const baseDamage = 1 + Math.round(level * 3) + character.stats.power * 0.25;
                 const stunDuration = row === 0 ? 0 : Math.round(level * 850);
                 const hitStop = Math.round(55 + level * 165);
                 const cooldown = Math.round(450 + level * 1350);
@@ -419,7 +457,10 @@
                 const cooldownRecovery = actor.punchCooldownDuration
                     ? 1 - cooldownRemaining / actor.punchCooldownDuration
                     : 1;
-                const damageAmount = Math.max(1, Math.round(baseDamage * (0.4 + 0.6 * cooldownRecovery)));
+                const critical = Math.random() < character.stats.crit * 0.04;
+                const damageAmount = Math.max(1, Math.round(
+                    baseDamage * (0.4 + 0.6 * cooldownRecovery) * (critical ? 1.5 : 1)
+                ));
 
                 if (actor === player && comboHits > 0) {
                     if (comboHits >= comboMaxHits) {
@@ -449,8 +490,18 @@
                     ? null
                     : {
                         resolveAt: now + impactDelay,
-                        stats: { damage: damageAmount, stunDuration, hitStop, comboLimit }
-                    };
+                            stats: {
+                                damage: damageAmount,
+                                stunDuration,
+                                hitStop,
+                                comboLimit,
+                                attackType: attack.type,
+                                attackColor: attack.color,
+                                overlay: attack.overlay,
+                                slowDuration: character.stats.debuff * 125,
+                                critical
+                            }
+                        };
                 if (actor === player) {
                     previousAnimation = animationName;
                     if (multiplayerActive && multiplayerRole === 1) {
@@ -477,7 +528,8 @@
                 const actorCenter = actor.x + frameSize * frameScale / 2;
                 const targetCenter = target === dummy ? dummy.x : target.x + frameSize * frameScale / 2;
                 const facingTarget = Math.sign(targetCenter - actorCenter) === actor.facing;
-                if (!facingTarget || Math.abs(targetCenter - actorCenter) > punchRange || target.health <= 0) {
+                const attackRange = stats.attackType === 'beam' ? canvas.width : punchRange;
+                if (!facingTarget || Math.abs(targetCenter - actorCenter) > attackRange || target.health <= 0) {
                     if (actor === player) {
                         status.textContent = 'Punch missed — cooldown started';
                         resetCombo(now, comboHits > 0 ? 'COMBO BROKEN' : '');
@@ -488,6 +540,27 @@
                 damage(target, now, stats.damage, stats.stunDuration
                     ? { stunDuration: stats.stunDuration }
                     : {});
+                if (stats.slowDuration > 0 && target !== dummy) {
+                    target.slowUntil = now + stats.slowDuration;
+                    target.slowFactor = 0.55;
+                }
+                if (stats.attackType === 'overlay' && stats.overlay?.includes('1') && target !== dummy) {
+                    target.hitOverlay = {
+                        pixels: stats.overlay,
+                        color: stats.attackColor,
+                        until: now + 800
+                    };
+                }
+                if (stats.attackType === 'beam') {
+                    attackEffects.push({
+                        x1: actorCenter,
+                        x2: targetCenter,
+                        y: actor.y - frameSize * frameScale * 0.58,
+                        color: stats.attackColor,
+                        createdAt: now,
+                        expiresAt: now + 180
+                    });
+                }
                 startHitStop(now, stats.hitStop);
                 if (actor === player) {
                     if (comboHits === 0) comboMaxHits = stats.comboLimit;
@@ -542,6 +615,12 @@
 
             function beginBattle() {
                 if (battleStarted) return;
+                selectedCharacter = characterWorkshop.getSelected();
+                if (!characterWorkshop.isWithinBudget(selectedCharacter)) {
+                    status.textContent = 'Your selected character exceeds your current ELO stat budget.';
+                    return;
+                }
+                applyCharacterToFighter(player, selectedCharacter, true);
                 battleStarted = true;
                 streetFighterResultRecorded = false;
                 newBattleButton.disabled = multiplayerActive;
@@ -568,7 +647,10 @@
                 player.y = groundY;
                 player.velocityY = 0;
                 player.facing = 1;
-                player.health = maxHealth;
+                applyCharacterToFighter(player, selectedCharacter, true);
+                player.slowUntil = 0;
+                player.slowFactor = 1;
+                player.hitOverlay = null;
                 player.stunnedUntil = 0;
                 player.flashUntil = 0;
                 player.jumpWindupUntil = 0;
@@ -586,7 +668,11 @@
                 remotePlayer.y = groundY;
                 remotePlayer.velocityY = 0;
                 remotePlayer.facing = -1;
-                remotePlayer.health = maxHealth;
+                applyCharacterToFighter(remotePlayer, defaultCharacter, true);
+                remotePlayer.slowUntil = 0;
+                remotePlayer.slowFactor = 1;
+                remotePlayer.hitOverlay = null;
+                remotePlayer.characterReceived = false;
                 remotePlayer.stunnedUntil = 0;
                 remotePlayer.flashUntil = 0;
                 remotePlayer.jumpWindupUntil = 0;
@@ -631,7 +717,7 @@
                 fighter.y = groundY;
                 fighter.velocityY = 0;
                 fighter.facing = facing;
-                fighter.health = maxHealth;
+                fighter.health = fighter.maxHealth;
                 fighter.stunnedUntil = 0;
                 fighter.flashUntil = 0;
                 fighter.jumpWindupUntil = 0;
@@ -736,7 +822,10 @@
                 player.y = groundY;
                 player.velocityY = 0;
                 player.facing = role === 0 ? 1 : -1;
-                player.health = maxHealth;
+                applyCharacterToFighter(player, selectedCharacter, true);
+                player.slowUntil = 0;
+                player.slowFactor = 1;
+                player.hitOverlay = null;
                 player.stunnedUntil = 0;
                 player.flashUntil = 0;
                 player.jumpWindupUntil = 0;
@@ -754,7 +843,10 @@
                 remotePlayer.y = groundY;
                 remotePlayer.velocityY = 0;
                 remotePlayer.facing = role === 0 ? -1 : 1;
-                remotePlayer.health = maxHealth;
+                applyCharacterToFighter(remotePlayer, defaultCharacter, true);
+                remotePlayer.slowUntil = 0;
+                remotePlayer.slowFactor = 1;
+                remotePlayer.hitOverlay = null;
                 remotePlayer.stunnedUntil = 0;
                 remotePlayer.flashUntil = 0;
                 remotePlayer.jumpWindupUntil = 0;
@@ -806,6 +898,13 @@
                                     || payload.attackCharge < 0 || payload.attackCharge > 1))
                             || !payload.held || typeof payload.held !== 'object') return;
                         receivedInputSequence = payload.sequence;
+                        if (!remotePlayer.characterReceived) {
+                            const character = characterWorkshop.normalize(payload.character, 40);
+                            if (character) {
+                                applyCharacterToFighter(remotePlayer, character, true);
+                                remotePlayer.characterReceived = true;
+                            }
+                        }
                         remoteInput = {
                             left: payload.held?.left === true,
                             right: payload.held?.right === true,
@@ -833,6 +932,7 @@
                         }
                         receivedStateSequence = payload.sequence;
                         localServerTarget = localState;
+                        applyCharacterToFighter(player, localState.character);
                         player.health = localState.health;
                         player.stunnedUntil = gameNow + localState.stunRemaining;
                         remoteTarget = opponentState;
@@ -841,6 +941,13 @@
                             remotePlayer.animationStarted = gameNow;
                         }
                         remotePlayer.facing = opponentState.facing;
+                        if (!remotePlayer.characterReceived) {
+                            applyCharacterToFighter(remotePlayer, opponentState.character, true);
+                            remotePlayer.characterReceived = true;
+                        } else {
+                            remotePlayer.character = opponentState.character;
+                        }
+                        remotePlayer.maxHealth = opponentState.maxHealth;
                         remotePlayer.health = opponentState.health;
                         remotePlayer.stunnedUntil = gameNow + opponentState.stunRemaining;
                         if (localState.health === 0 || opponentState.health === 0) {
@@ -874,7 +981,7 @@
                     multiplayerActive = false;
                     multiplayerRole = null;
                     fightBotButton.disabled = false;
-                    dummy.health = maxHealth;
+                    dummy.health = dummy.maxHealth;
                     dummy.flashUntil = 0;
                     dummy.attackTelegraphUntil = 0;
                     dummy.deathAt = 0;
@@ -891,10 +998,13 @@
             }
 
             function isValidOnlineFighter(fighter) {
+                const character = characterWorkshop.normalize(fighter?.character, 40);
                 return fighter && Number.isFinite(fighter.x) && fighter.x >= 36 && fighter.x <= canvas.width - 36
                     && Number.isFinite(fighter.y) && fighter.y >= 0 && fighter.y <= groundY
                     && (fighter.facing === -1 || fighter.facing === 1)
-                    && Number.isInteger(fighter.health) && fighter.health >= 0 && fighter.health <= maxHealth
+                    && character && Number.isInteger(fighter.maxHealth)
+                    && fighter.maxHealth === defaultMaxHealth + character.stats.health
+                    && Number.isInteger(fighter.health) && fighter.health >= 0 && fighter.health <= fighter.maxHealth
                     && Number.isFinite(fighter.stunRemaining) && fighter.stunRemaining >= 0
                     && fighter.stunRemaining <= 2000
                     && typeof fighter.flashing === 'boolean'
@@ -917,6 +1027,7 @@
                     jumpSequence: localJumpSequence,
                     attackSequence: localAttackSequence,
                     attackCharge: localAttackCharge,
+                    character: selectedCharacter,
                     held
                 };
                 multiplayerConnection.send('input', payload)
@@ -933,6 +1044,8 @@
                     y: fighter.y,
                     facing: fighter.facing,
                     health: fighter.health,
+                    maxHealth: fighter.maxHealth,
+                    character: fighter.character,
                     stunRemaining: Math.max(0, Math.min(2000, fighter.stunnedUntil - gameNow)),
                     animation: fighter.animation,
                     flashing: now < fighter.flashUntil
@@ -1010,7 +1123,7 @@
             });
 
             function rebuildDummy() {
-                dummy.health = maxHealth;
+                dummy.health = dummy.maxHealth;
                 dummy.stunnedUntil = 0;
                 dummy.flashUntil = 0;
                 dummy.attackTelegraphUntil = 0;
@@ -1098,12 +1211,12 @@
                 const towardPlayer = playerCenter < botCenter ? 'left' : 'right';
                 const inAttackRange = distance <= 105;
 
-                if (player.animation.startsWith('punch')
+                if ((player.animation.startsWith('punch') || player.animation === 'interact')
                     && player.animationStarted !== botHandledPunchStartedAt) {
                     botHandledPunchStartedAt = player.animationStarted;
                     botReactPunchAt = player.animationStarted + botDifficulty.reaction;
                 }
-                if (player.health > 0 && player.animation.startsWith('punch') && distance < 145
+                if (player.health > 0 && (player.animation.startsWith('punch') || player.animation === 'interact') && distance < 145
                     && now >= botReactPunchAt && now >= botNextDodgeAt && remotePlayer.y >= groundY) {
                     if (Math.random() < botDifficulty.dodgeChance) {
                         startFighterJump(remotePlayer, now);
@@ -1239,7 +1352,8 @@
             }
 
             function updateFighter(fighter, input, now, delta) {
-                const speed = input.run ? 260 : 155;
+                const speed = (input.run ? 260 : 155) * (1 + (fighter.character?.stats.speed || 0) * 0.04)
+                    * (now < fighter.slowUntil ? fighter.slowFactor : 1);
                 if (fighter.health > 0 && now >= fighter.stunnedUntil && input.left !== input.right) {
                     const direction = input.left ? -1 : 1;
                     fighter.x = Math.max(36, Math.min(canvas.width - 36, fighter.x + direction * speed * delta));
@@ -1350,6 +1464,9 @@
                 for (let index = floatingIcons.length - 1; index >= 0; index -= 1) {
                     if (now - floatingIcons[index].createdAt >= 1200) floatingIcons.splice(index, 1);
                 }
+                for (let index = attackEffects.length - 1; index >= 0; index -= 1) {
+                    if (now >= attackEffects[index].expiresAt) attackEffects.splice(index, 1);
+                }
                 if (player.animation !== previousAnimation) {
                     if (!(botActive && (player.health <= 0 || remotePlayer.health <= 0))) {
                         status.textContent = player.animation === 'idle'
@@ -1388,9 +1505,10 @@
             function drawHealthBars() {
                 const palette = getComputedStyle(document.documentElement);
                 const opponentHealth = multiplayerActive || botActive ? remotePlayer.health : dummy.health;
-                document.getElementById('playerHealthText').textContent = `PLAYER ${player.health} / ${maxHealth}`;
+                const opponentMaxHealth = multiplayerActive || botActive ? remotePlayer.maxHealth : dummy.maxHealth;
+                document.getElementById('playerHealthText').textContent = `${player.character?.name || 'PLAYER'} ${player.health} / ${player.maxHealth}`;
                 const opponentName = multiplayerActive ? 'OPPONENT' : botActive ? 'BOT' : 'DUMMY';
-                document.getElementById('dummyHealthText').textContent = `${opponentName} ${opponentHealth} / ${maxHealth}`;
+                document.getElementById('dummyHealthText').textContent = `${opponentName} ${opponentHealth} / ${opponentMaxHealth}`;
                 const barWidth = 280;
                 const barHeight = 20;
                 const top = 17;
@@ -1401,12 +1519,12 @@
                 context.fillRect(left, top, barWidth, barHeight);
                 context.fillRect(right, top, barWidth, barHeight);
                 context.fillStyle = palette.getPropertyValue('--game-heading').trim();
-                context.fillRect(left, top, barWidth * (player.health / maxHealth), barHeight);
+                context.fillRect(left, top, barWidth * (player.health / player.maxHealth), barHeight);
                 context.fillStyle = palette.getPropertyValue('--game-accent').trim();
                 context.fillRect(
-                    right + barWidth * (1 - opponentHealth / maxHealth),
+                    right + barWidth * (1 - opponentHealth / opponentMaxHealth),
                     top,
-                    barWidth * (opponentHealth / maxHealth),
+                    barWidth * (opponentHealth / opponentMaxHealth),
                     barHeight
                 );
                 drawIcon(0, canvas.width / 2 - 12, top - 2, 24);
@@ -1512,7 +1630,13 @@
                     }
                 } else {
                     const elapsed = Math.max(0, now - fighter.animationStarted);
-                    if (fighter.animation.startsWith('punch-row-') || fighter.animation === 'punch') {
+                    if (fighter.animation === 'interact') {
+                        const windupFrameDuration = fighter.punchWindupFrameDuration || animation.rate;
+                        const impactDelay = windupFrameDuration * 3;
+                        frame = elapsed < impactDelay
+                            ? Math.min(2, Math.floor(elapsed / windupFrameDuration))
+                            : 3;
+                    } else if (fighter.animation.startsWith('punch-row-') || fighter.animation === 'punch') {
                         const windupFrameDuration = fighter.punchWindupFrameDuration || punchWindupFrameDuration;
                         const impactDelay = windupFrameDuration * 3;
                         const frameIndex = elapsed < impactDelay
@@ -1557,6 +1681,8 @@
                     frameSize * frameScale
                 );
                 context.restore();
+                drawFighterHat(fighter, drawX, drawY);
+                drawHitOverlay(fighter, drawX, drawY, now);
                 if (fighter === player && debug.isHitboxVisible()) {
                     context.strokeStyle = getComputedStyle(document.documentElement)
                         .getPropertyValue('--game-accent').trim();
@@ -1565,6 +1691,59 @@
                 }
                 if (fighter === player) drawPunchChargeBar(now);
                 if (fighter === player) debug.update(animation, frame);
+            }
+
+            function drawFighterHat(fighter, drawX, drawY) {
+                const hat = fighter.character?.hat;
+                if (!Array.isArray(hat) || !hat.some(Boolean)) return;
+                context.save();
+                context.translate(drawX, drawY);
+                if (fighter.facing < 0) {
+                    context.translate(frameSize * frameScale, 0);
+                    context.scale(-1, 1);
+                }
+                hat.forEach((color, index) => {
+                    if (!color) return;
+                    context.fillStyle = color;
+                    context.fillRect((index % 8) * 3, Math.floor(index / 8) * 3, 3, 3);
+                });
+                context.restore();
+            }
+
+            function drawHitOverlay(fighter, drawX, drawY, now) {
+                const overlay = fighter.hitOverlay;
+                if (!overlay || now >= overlay.until) return;
+                context.save();
+                context.translate(drawX, drawY);
+                if (fighter.facing < 0) {
+                    context.translate(frameSize * frameScale, 0);
+                    context.scale(-1, 1);
+                }
+                context.globalAlpha = 0.72;
+                context.fillStyle = overlay.color;
+                for (let index = 0; index < overlay.pixels.length; index += 1) {
+                    if (overlay.pixels[index] !== '1') continue;
+                    context.fillRect((index % 16) * 1.5, Math.floor(index / 16) * 1.5, 1.5, 1.5);
+                }
+                context.restore();
+            }
+
+            function drawAttackEffects(now) {
+                context.save();
+                attackEffects.forEach(effect => {
+                    const progress = (now - effect.createdAt) / (effect.expiresAt - effect.createdAt);
+                    context.globalAlpha = Math.max(0, 1 - progress);
+                    context.strokeStyle = effect.color;
+                    context.lineWidth = 9;
+                    context.shadowColor = effect.color;
+                    context.shadowBlur = 14;
+                    context.beginPath();
+                    context.moveTo(effect.x1, effect.y);
+                    context.lineTo(effect.x2, effect.y);
+                    context.stroke();
+                    context.shadowBlur = 0;
+                });
+                context.restore();
             }
 
             function drawPunchChargeBar(now) {
@@ -1643,6 +1822,7 @@
                 drawDummy(sceneTime, impactActive && impactShowsSparks);
                 if (multiplayerActive || botActive) drawPlayer(sceneTime, remotePlayer);
                 drawPlayer(sceneTime);
+                drawAttackEffects(sceneTime);
                 drawPlayerIndicator(sceneTime);
                 drawDamageNumbers(sceneTime);
                 impactFlash.hidden = !impactActive || !impactShowsSparks;

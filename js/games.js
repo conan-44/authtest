@@ -71,6 +71,23 @@
     let leaderboardCheck = Promise.resolve();
 
     window.gameRatings = {
+        async get(game) {
+            if (!Object.hasOwn(gameRatingDefaults, game)) {
+                throw new Error(`Unknown game rating: ${game}`);
+            }
+            const { data: { user }, error: authError } = await _supabase.auth.getUser();
+            if (authError?.name === 'AuthSessionMissingError') return gameRatingDefaults[game];
+            if (authError) throw new Error(`Could not verify your sign-in for game ratings: ${authError.message}`);
+            if (!user) return gameRatingDefaults[game];
+            const { data, error } = await _supabase
+                .from('game_ratings')
+                .select('rating')
+                .eq('user_id', user.id)
+                .eq('game', game)
+                .maybeSingle();
+            if (error) throw new Error(`Could not load your ${game} rating: ${error.message}`);
+            return data?.rating ?? gameRatingDefaults[game];
+        },
         adjust(game, amount) {
             return updateGameRating(game, amount, null);
         },

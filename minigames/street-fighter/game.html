@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
     <title>Street Fighter</title>
-    <link rel="stylesheet" href="./game.css?v=charged-punch-v1">
+    <link rel="stylesheet" href="./game.css?v=elo-character-workshop-v1">
 </head>
 <body>
     <main class="street-fighter-app">
@@ -52,8 +52,71 @@
             </div>
             <p id="multiplayerStatus" class="multiplayer-status" aria-live="polite"></p>
         </section>
+        <details class="mode-panel character-workshop" id="characterWorkshop">
+            <summary>Character Workshop <span id="characterBudgetSummary">Loading ELO budget…</span></summary>
+            <div class="workshop-content">
+                <div class="workshop-toolbar">
+                    <button id="newCharacterBtn" type="button">New character</button>
+                    <button id="saveCharacterBtn" type="button">Save character</button>
+                    <button id="useCharacterBtn" class="primary-button" type="button">Use character</button>
+                    <span id="characterWorkshopStatus" class="workshop-status" aria-live="polite"></span>
+                </div>
+                <div id="characterRoster" class="character-roster" role="list" aria-label="Saved characters"></div>
+                <div class="character-editor">
+                    <div class="character-settings">
+                        <label class="character-name-label" for="characterName">Character name
+                            <input id="characterName" type="text" maxlength="24" autocomplete="off" value="New Fighter">
+                        </label>
+                        <div class="character-stats">
+                            <h3>Stat points</h3>
+                            <p id="characterPointsSummary">0 / 0 points used</p>
+                            <label>Health <span>+1 HP per point</span><input type="number" min="0" value="0" data-character-stat="health"></label>
+                            <label>Power <span>+0.25 damage per point</span><input type="number" min="0" value="0" data-character-stat="power"></label>
+                            <label>Critical <span>+4% chance per point</span><input type="number" min="0" value="0" data-character-stat="crit"></label>
+                            <label>Speed <span>+4% movement per point</span><input type="number" min="0" value="0" data-character-stat="speed"></label>
+                            <label>Debuff <span>+125 ms slow per point</span><input type="number" min="0" value="0" data-character-stat="debuff"></label>
+                        </div>
+                        <div class="character-attack-settings">
+                            <h3>Attack</h3>
+                            <label for="characterAttackType">Effect
+                                <select id="characterAttackType">
+                                    <option value="beam">Recolorable beam</option>
+                                    <option value="overlay">Drawn overlay + debuff</option>
+                                </select>
+                            </label>
+                            <label for="characterAttackColor">Attack color
+                                <input id="characterAttackColor" type="color" value="#2a4d67">
+                            </label>
+                        </div>
+                    </div>
+                    <div class="character-drawings">
+                        <div class="character-drawing">
+                            <h3>Opponent overlay <span>16 × 16</span></h3>
+                            <p>Draw the hit effect; erase cells to make them transparent.</p>
+                            <canvas id="characterOverlayCanvas" width="256" height="256" aria-label="16 by 16 opponent attack overlay editor"></canvas>
+                        </div>
+                        <div class="character-drawing">
+                            <h3>Hat accessory <span>8 × 4</span></h3>
+                            <p>Paint a small accessory that appears above your fighter.</p>
+                            <canvas id="characterHatCanvas" width="256" height="128" aria-label="8 by 4 hat accessory editor"></canvas>
+                            <label for="characterHatColor">Hat color
+                                <input id="characterHatColor" type="color" value="#f4a261">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="character-sharing">
+                    <label for="characterShareCode">Share code
+                        <textarea id="characterShareCode" rows="3" spellcheck="false" placeholder="Copy a character code here to share, or paste one to import"></textarea>
+                    </label>
+                    <button id="copyCharacterCodeBtn" type="button">Create &amp; copy share code</button>
+                    <button id="importCharacterCodeBtn" type="button">Import code</button>
+                </div>
+                <button id="characterEraserBtn" type="button" aria-pressed="false">Eraser: off</button>
+            </div>
+        </details>
         <section class="arena" aria-label="Fighting arena">
-            <canvas id="gameCanvas" width="720" height="300" tabindex="0" aria-label="A controllable fighter in a training arena. Move with A and D, jump with Space or W, and hold then release J to charge and attack."></canvas>
+            <canvas id="gameCanvas" width="720" height="300" tabindex="0" aria-label="A controllable fighter in a training arena. Move with A and D, jump with Space or W, and hold then release J to charge a custom attack."></canvas>
             <div class="health-ui">
                 <span id="playerHealthText" class="health-value player-health-value" aria-hidden="true">PLAYER 10 / 10</span>
                 <span id="dummyHealthText" class="health-value dummy-health-value" aria-hidden="true">DUMMY 10 / 10</span>
@@ -68,10 +131,10 @@
                 </div>
                 <div class="mobile-actions">
                     <button type="button" data-action="jump" aria-label="Jump, Space or W"><span class="mobile-key">SPACE / W</span><span>JUMP</span></button>
-                    <button type="button" data-action="punch" aria-label="Hold to charge punch, J"><span class="mobile-key">HOLD J</span><span>PUNCH</span></button>
+                    <button type="button" data-action="punch" aria-label="Hold to charge custom attack, J"><span class="mobile-key">HOLD J</span><span>ATTACK</span></button>
                 </div>
             </div>
-            <p class="key-hints">Move: A/D or ←/→ · Jump: Space/W · Hold J to charge punch; release to attack</p>
+            <p class="key-hints">Move: A/D or ←/→ · Jump: Space/W · Hold J to charge your custom attack</p>
             <section id="debugMenu" class="debug-menu" aria-label="Street Fighter debug menu" hidden>
                 <div class="debug-info">
                     <h2 class="debug-title">FIGHTER DEBUG</h2>
@@ -110,6 +173,7 @@
         </section>
     </main>
     <script src="./debug.js?v=punch-ability-demo-v1"></script>
-    <script src="./game.js?v=charged-punch-v5"></script>
+    <script src="./characters.js?v=elo-character-workshop-v3"></script>
+    <script src="./game.js?v=elo-character-workshop-v3"></script>
 </body>
 </html>

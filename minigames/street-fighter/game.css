@@ -112,10 +112,9 @@
 
         .mode-panel {
             min-width: 0;
-            border: 4px solid var(--game-border);
+            border: var(--panel-divider-width, 4px) solid var(--color-white, #ffffff);
             padding: 12px;
             background: var(--game-panel);
-            box-shadow: inset 0 0 0 2px rgb(0 0 0 / 8%);
         }
 
         .section-heading {
@@ -187,14 +186,226 @@
             opacity: 0.58;
         }
 
+        .character-workshop > summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--game-heading);
+            font-family: "capsmall", sans-serif;
+            cursor: pointer;
+            list-style-position: inside;
+        }
+
+        #characterBudgetSummary,
+        .workshop-status,
+        .character-stats > p {
+            color: var(--game-muted);
+            font: 0.8rem "lowsmall", sans-serif;
+        }
+
+        .workshop-content {
+            display: grid;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .workshop-toolbar,
+        .character-roster,
+        .character-sharing {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .workshop-status { flex: 1 1 100%; }
+
+        .character-roster {
+            padding: 8px;
+            border: 2px solid var(--game-border);
+            background: var(--game-control);
+        }
+
+        .character-roster:empty::after {
+            color: var(--game-muted);
+            content: "No saved characters yet. Make one and save it here.";
+            font-size: 0.8rem;
+        }
+
+        .character-roster button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .character-slot {
+            display: inline-flex;
+            align-items: stretch;
+            gap: 2px;
+        }
+
+        .character-slot > button[aria-pressed] { min-width: 0; }
+        .character-slot > .character-remove-button { min-width: 28px; padding-inline: 5px; }
+
+        .character-roster button[aria-pressed="true"] {
+            background: var(--game-control-pressed);
+            box-shadow: inset 0 -3px 0 var(--game-accent);
+        }
+
+        .character-roster canvas {
+            width: 24px;
+            height: 12px;
+            image-rendering: pixelated;
+        }
+
+        .character-editor {
+            display: grid;
+            grid-template-columns: minmax(210px, 0.8fr) minmax(0, 1.2fr);
+            gap: 14px;
+        }
+
+        .character-settings,
+        .character-drawings,
+        .character-stats,
+        .character-attack-settings {
+            display: grid;
+            align-content: start;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .character-settings h3,
+        .character-drawing h3 {
+            margin: 0;
+            color: var(--game-heading);
+            font: 0.9rem "capsmall", sans-serif;
+        }
+
+        .character-name-label,
+        .character-attack-settings > label,
+        .character-sharing > label {
+            display: grid;
+            gap: 4px;
+            color: var(--game-muted);
+            font-size: 0.8rem;
+        }
+
+        #characterName,
+        #characterAttackType,
+        #characterHatColor,
+        #characterAttackColor,
+        #characterShareCode,
+        .character-stats input {
+            min-width: 0;
+            border: 2px solid var(--game-border);
+            border-radius: 0;
+            padding: 6px;
+            background: var(--game-control);
+            color: var(--game-text);
+            font: inherit;
+        }
+
+        .character-stats > label {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, auto) 64px;
+            align-items: center;
+            gap: 6px;
+            color: var(--game-text);
+            font-size: 0.8rem;
+        }
+
+        .character-stats > label > span,
+        .character-drawing h3 > span,
+        .character-drawing p {
+            color: var(--game-muted);
+            font: 0.72rem "lowsmall", sans-serif;
+        }
+
+        .character-stats input {
+            width: 64px;
+            min-height: 32px;
+        }
+
+        .character-attack-settings {
+            grid-template-columns: minmax(0, 1fr) minmax(100px, 0.6fr);
+            align-items: end;
+        }
+
+        .character-attack-settings h3 { grid-column: 1 / -1; }
+        #characterAttackColor,
+        #characterHatColor { width: 100%; min-height: 34px; }
+
+        .character-drawings {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            align-items: start;
+        }
+
+        .character-drawing {
+            display: grid;
+            justify-items: start;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .character-drawing h3 {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .character-drawing p {
+            min-height: 2.2em;
+            margin: 0;
+        }
+
+        .character-drawing canvas {
+            width: min(100%, 256px);
+            height: auto;
+            border: 2px solid var(--game-border);
+            background-color: #fff;
+            background-image:
+                linear-gradient(45deg, #d7dce1 25%, transparent 25%),
+                linear-gradient(-45deg, #d7dce1 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #d7dce1 75%),
+                linear-gradient(-45deg, transparent 75%, #d7dce1 75%);
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+            background-size: 16px 16px;
+            image-rendering: pixelated;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        #characterHatCanvas { max-width: 256px; }
+
+        .character-drawing > label {
+            display: grid;
+            width: 100%;
+            gap: 4px;
+            color: var(--game-muted);
+            font-size: 0.76rem;
+        }
+
+        .character-sharing { align-items: end; }
+        .character-sharing > label { flex: 1 1 280px; }
+        #characterShareCode { width: 100%; resize: vertical; font: 0.75rem monospace; }
+
+        @media (max-width: 700px) {
+            .character-editor { grid-template-columns: 1fr; }
+            .character-stats > label {
+                grid-template-columns: minmax(0, 1fr) minmax(0, auto) 56px;
+            }
+            .character-stats input { width: 56px; }
+        }
+
         .multiplayer-actions button[hidden] { display: none; }
 
         .arena {
             position: relative;
             overflow: hidden;
-            border: 3px solid var(--game-border);
+            border: var(--panel-divider-width, 4px) solid var(--color-white, #ffffff);
             background: var(--game-surface-body);
-            box-shadow: 6px 6px 0 var(--game-divider);
         }
 
         .health-ui {
@@ -331,7 +542,6 @@
             align-content: center;
             justify-items: center;
             gap: 2px;
-            border: 2px solid color-mix(in srgb, var(--game-border) 78%, transparent);
             border-radius: 0;
             padding: 5px;
             background: rgb(230 230 230 / 76%);
@@ -444,20 +654,20 @@
         button {
             min-width: 42px;
             min-height: 38px;
-            border: 2px solid var(--game-border);
+            border: 0;
             border-radius: 0;
             padding: 5px 9px;
-            background: var(--game-control);
+            background: var(--game-raised);
             color: inherit;
             font: inherit;
             font-size: 0.9em;
             cursor: pointer;
             touch-action: manipulation;
+            transition: background-color 0.15s ease;
         }
 
         button:hover,
         button:focus-visible {
-            border-color: var(--game-accent);
             background: var(--game-control-pressed);
         }
 
