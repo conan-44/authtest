@@ -8,6 +8,11 @@
     const gamePlayer = document.getElementById('gamePlayer');
     const gameFrame = document.getElementById('gameFrame');
     const backToGamesBtn = document.getElementById('backToGamesBtn');
+    function streetFighterRoute() {
+        const useLegacy = window.getAppSetting?.('games', 'use legacy Street Fighter', false) === true;
+        return `./minigames/street-fighter/game.html${useLegacy ? '?legacy=1' : ''}`;
+    }
+
     function syncGameTheme() {
         if (!gameFrame.src) return;
         try {
@@ -395,14 +400,15 @@
         const routes = {
             chess: './minigames/chess/game.html',
             doudizhu: './minigames/cards/main.html',
-            streetfighter: './minigames/street-fighter/game.html'
+            streetfighter: streetFighterRoute()
         };
         window.activateTab('games');
-        loadGameSource(`${routes[game]}?invite=${encodeURIComponent(inviteCode)}`);
+        const inviteSeparator = routes[game].includes('?') ? '&' : '?';
+        loadGameSource(`${routes[game]}${inviteSeparator}invite=${encodeURIComponent(inviteCode)}`);
     };
 
     function loadGame(card) {
-        const src = card.dataset.src;
+        const src = card.dataset.game === 'street-fighter' ? streetFighterRoute() : card.dataset.src;
         if (!src || src === 'link here') return;
         activeGameId = card.dataset.game || null;
         if (activeGameId === 'mc') startMinecraftPlaytime();

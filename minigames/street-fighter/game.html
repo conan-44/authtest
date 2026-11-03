@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
     <title>Street Fighter</title>
-    <link rel="stylesheet" href="./game.css?v=elo-character-workshop-v1">
+    <script>
+        if (new URLSearchParams(window.location.search).get('legacy') === '1') {
+            document.documentElement.classList.add('legacy-street-fighter');
+        }
+    </script>
+    <link rel="stylesheet" href="./game.css?v=turn-battle-v1">
 </head>
 <body>
     <main class="street-fighter-app">
@@ -14,8 +19,121 @@
                 <p class="eyebrow">LOCAL GAME</p>
                 <h1>street fighter</h1>
             </div>
-            <p id="gameStatus" class="status" aria-live="polite">Choose a mode to begin</p>
+            <div class="topbar-actions">
+                <p id="gameStatus" class="status" aria-live="polite">Choose a formation to begin</p>
+                <button id="turnStartBattleBtn" class="primary-button" type="button" disabled>Start battle</button>
+            </div>
         </header>
+        <section class="mode-panel formation-setup" aria-labelledby="formationHeading">
+            <div class="section-heading">
+                <h2 id="formationHeading">Choose your formation</h2>
+                <div class="formation-mana" aria-label="999 mana">
+                    <span class="game-icon mana-icon" aria-hidden="true"></span>
+                    <span>999</span>
+                </div>
+            </div>
+            <p class="formation-description">Choose a saved formation slot. Each uses the Balanced role order.</p>
+            <div class="formation-carousel" aria-label="Saved formation slots">
+                <div class="formation-choices" role="group" aria-label="Saved formation slots">
+                    <article class="achievement-card rarity-common formation-card" data-slot="0">
+                        <span class="formation-card-inner">
+                            <span class="formation-name">Slot 1</span>
+                            <span class="formation-stage" aria-hidden="true"></span>
+                            <span class="formation-card-copy">
+                                <span class="formation-lineup">
+                                    <span class="formation-role"><span class="game-icon attack-icon" aria-hidden="true"></span><span>Attacker</span></span>
+                                    <span class="formation-role"><span class="game-icon defense-icon" aria-hidden="true"></span><span>Defense</span></span>
+                                    <span class="formation-role"><span class="game-icon healer-icon" aria-hidden="true"></span><span>Healer</span></span>
+                                </span>
+                                <span class="formation-use-row"><button class="formation-use-button" type="button" data-use-formation="0">Use formation</button></span>
+                            </span>
+                        </span>
+                    </article>
+                    <article class="achievement-card rarity-common formation-card" data-slot="1">
+                        <span class="formation-card-inner">
+                            <span class="formation-name">Slot 2</span>
+                            <span class="formation-stage" aria-hidden="true"></span>
+                            <span class="formation-card-copy">
+                                <span class="formation-lineup">
+                                    <span class="formation-role"><span class="game-icon attack-icon" aria-hidden="true"></span><span>Attacker</span></span>
+                                    <span class="formation-role"><span class="game-icon defense-icon" aria-hidden="true"></span><span>Defense</span></span>
+                                    <span class="formation-role"><span class="game-icon healer-icon" aria-hidden="true"></span><span>Healer</span></span>
+                                </span>
+                                <span class="formation-use-row"><button class="formation-use-button" type="button" data-use-formation="1">Use formation</button></span>
+                            </span>
+                        </span>
+                    </article>
+                    <article class="achievement-card rarity-common formation-card" data-slot="2">
+                        <span class="formation-card-inner">
+                            <span class="formation-name">Slot 3</span>
+                            <span class="formation-stage" aria-hidden="true"></span>
+                            <span class="formation-card-copy">
+                                <span class="formation-lineup">
+                                    <span class="formation-role"><span class="game-icon attack-icon" aria-hidden="true"></span><span>Attacker</span></span>
+                                    <span class="formation-role"><span class="game-icon defense-icon" aria-hidden="true"></span><span>Defense</span></span>
+                                    <span class="formation-role"><span class="game-icon healer-icon" aria-hidden="true"></span><span>Healer</span></span>
+                                </span>
+                                <span class="formation-use-row"><button class="formation-use-button" type="button" data-use-formation="2">Use formation</button></span>
+                            </span>
+                        </span>
+                    </article>
+                    <article class="achievement-card rarity-common formation-card" data-slot="3">
+                        <span class="formation-card-inner">
+                            <span class="formation-name">Slot 4</span>
+                            <span class="formation-stage" aria-hidden="true"></span>
+                            <span class="formation-card-copy">
+                                <span class="formation-lineup">
+                                    <span class="formation-role"><span class="game-icon attack-icon" aria-hidden="true"></span><span>Attacker</span></span>
+                                    <span class="formation-role"><span class="game-icon defense-icon" aria-hidden="true"></span><span>Defense</span></span>
+                                    <span class="formation-role"><span class="game-icon healer-icon" aria-hidden="true"></span><span>Healer</span></span>
+                                </span>
+                                <span class="formation-use-row"><button class="formation-use-button" type="button" data-use-formation="3">Use formation</button></span>
+                            </span>
+                        </span>
+                    </article>
+                    <article class="achievement-card rarity-common formation-card" data-slot="4">
+                        <span class="formation-card-inner">
+                            <span class="formation-name">Slot 5</span>
+                            <span class="formation-stage" aria-hidden="true"></span>
+                            <span class="formation-card-copy">
+                                <span class="formation-lineup">
+                                    <span class="formation-role"><span class="game-icon attack-icon" aria-hidden="true"></span><span>Attacker</span></span>
+                                    <span class="formation-role"><span class="game-icon defense-icon" aria-hidden="true"></span><span>Defense</span></span>
+                                    <span class="formation-role"><span class="game-icon healer-icon" aria-hidden="true"></span><span>Healer</span></span>
+                                </span>
+                                <span class="formation-use-row"><button class="formation-use-button" type="button" data-use-formation="4">Use formation</button></span>
+                            </span>
+                        </span>
+                    </article>
+                </div>
+            </div>
+            <nav class="formation-pagination" aria-label="Formation pages">
+                <button type="button" data-page="0" aria-label="Show slide 1" aria-current="true">1</button>
+                <span aria-hidden="true">·</span>
+                <button type="button" data-page="1" aria-label="Show slide 2">2</button>
+                <span aria-hidden="true">·</span>
+                <button type="button" data-page="2" aria-label="Show slide 3">3</button>
+                <span aria-hidden="true">·</span>
+                <button type="button" data-page="3" aria-label="Show slide 4">4</button>
+                <span aria-hidden="true">·</span>
+                <button type="button" data-page="4" aria-label="Show slide 5">5</button>
+            </nav>
+        </section>
+        <section class="mode-panel turn-battle" id="turnBattle" aria-labelledby="turnBattleHeading" hidden>
+            <div class="section-heading">
+                <h2 id="turnBattleHeading">Player vs Enemy</h2>
+            </div>
+            <div class="battle-sides">
+                <section class="battle-team player-team" aria-labelledby="playerTeamHeading">
+                    <h3 id="playerTeamHeading">Player</h3>
+                    <div class="battle-units" id="playerUnits"></div>
+                </section>
+                <section class="battle-team enemy-team" aria-labelledby="enemyTeamHeading">
+                    <h3 id="enemyTeamHeading">Enemy</h3>
+                    <div class="battle-units" id="enemyUnits"></div>
+                </section>
+            </div>
+        </section>
         <section class="mode-panel local-panel" aria-labelledby="localGameHeading">
             <div class="section-heading">
                 <h2 id="localGameHeading">Play on this device</h2>
@@ -172,8 +290,18 @@
             </section>
         </section>
     </main>
-    <script src="./debug.js?v=punch-ability-demo-v1"></script>
-    <script src="./characters.js?v=elo-character-workshop-v3"></script>
-    <script src="./game.js?v=elo-character-workshop-v3"></script>
+    <script>
+        const legacyVersion = document.documentElement.classList.contains('legacy-street-fighter');
+        const scriptRoot = legacyVersion ? './legacy/' : './';
+        const scriptFiles = legacyVersion
+            ? ['debug.js', 'characters.js', 'game.js']
+            : ['formation.js'];
+        for (const scriptFile of scriptFiles) {
+            const script = document.createElement('script');
+            script.async = false;
+            script.src = `${scriptRoot}${scriptFile}?v=${legacyVersion ? 'legacy-streetfighter-v1' : 'turn-battle-v1'}`;
+            document.body.appendChild(script);
+        }
+    </script>
 </body>
 </html>

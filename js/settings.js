@@ -5,6 +5,7 @@ const RANK_EFFECTS_SETTING_STORAGE_KEY = "skvwaffle.disable-rank-effects.v1";
 const TAB_ICON_STYLE_STORAGE_KEY = "skvwaffle.tab-icon-style.v1";
 const MUSIC_VOLUME_STORAGE_KEY = "skvwaffle.music-volume.v1";
 const MUSIC_LOOP_STORAGE_KEY = "skvwaffle.music-loop.v1";
+const LEGACY_STREET_FIGHTER_STORAGE_KEY = "skvwaffle.legacy-street-fighter.v1";
 const DEFAULT_APP_THEME = { accent: "#2a4d67", secondary: "#8a5a00" };
 const APP_THEME_PRESETS = [
     { name: "Classic", accent: DEFAULT_APP_THEME.accent, secondary: DEFAULT_APP_THEME.secondary },
@@ -53,6 +54,14 @@ const APP_THEME_PRESETS = [
     applyTabIconStyle(loadTabIconStyle());
 
     window.getAppSetting = function getAppSetting(section, key, fallback = false) {
+        if (section === "games" && key === "use legacy Street Fighter") {
+            try {
+                const saved = localStorage.getItem(LEGACY_STREET_FIGHTER_STORAGE_KEY);
+                if (saved !== null) return saved === "true";
+            } catch (error) {
+                console.error("Could not read the legacy Street Fighter preference.", error);
+            }
+        }
         if (section === "chat" && key === "disable rank effects") {
             try {
                 const saved = localStorage.getItem(RANK_EFFECTS_SETTING_STORAGE_KEY);
@@ -712,6 +721,27 @@ const APP_THEME_PRESETS = [
             const rankEffectsToggle = settingsList.querySelector(
                 '.settings-checkbox[data-section="chat"][data-setting="disable rank effects"]'
             );
+            const legacyStreetFighterToggle = settingsList.querySelector(
+                '.settings-checkbox[data-section="games"][data-setting="use legacy Street Fighter"]'
+            );
+            if (legacyStreetFighterToggle) {
+                try {
+                    const saved = localStorage.getItem(LEGACY_STREET_FIGHTER_STORAGE_KEY);
+                    if (saved !== null) legacyStreetFighterToggle.checked = saved === "true";
+                } catch (error) {
+                    console.error("Could not load the legacy Street Fighter preference.", error);
+                }
+                legacyStreetFighterToggle.addEventListener("change", () => {
+                    try {
+                        localStorage.setItem(
+                            LEGACY_STREET_FIGHTER_STORAGE_KEY,
+                            String(legacyStreetFighterToggle.checked)
+                        );
+                    } catch (error) {
+                        console.error("Could not save the legacy Street Fighter preference.", error);
+                    }
+                });
+            }
             if (rankEffectsToggle) {
                 try {
                     const saved = localStorage.getItem(RANK_EFFECTS_SETTING_STORAGE_KEY);
