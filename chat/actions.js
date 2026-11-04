@@ -40,7 +40,9 @@ function renderReplyPreview(messageEl, rawContent) {
   const target = messageRecords.get(replyId);
   const username = target?.profiles?.username || "Message";
   const text = target ? getMessagePreview(target.content) : "Original message is unavailable";
-  preview.textContent = `Replying to ${username}: ${text}`;
+  const previewText = `Replying to ${username}: ${text}`;
+  if (window.ChatEmoji) window.ChatEmoji.renderText(preview, previewText);
+  else preview.textContent = previewText;
   preview.classList.remove("is-hidden");
 }
 
@@ -48,16 +50,25 @@ function setReplyTarget(messageEl) {
   const target = messageRecords.get(messageEl.dataset.messageId);
   if (!target) return;
   replyTargetId = String(target.id);
-  chatReplyText.textContent = `Replying to ${target.profiles?.username || "Player"}: ${getMessagePreview(target.content)}`;
+  const previewText = `Replying to ${target.profiles?.username || "Player"}: ${getMessagePreview(target.content)}`;
+  if (window.ChatEmoji) window.ChatEmoji.renderText(chatReplyText, previewText);
+  else chatReplyText.textContent = previewText;
   chatReplyContext.classList.remove("is-hidden");
   document.getElementById("chatInput").focus();
 }
 
 function clearReplyTarget() {
   replyTargetId = null;
+  chatReplyText.dataset.emojiRaw = "";
   chatReplyText.textContent = "";
   chatReplyContext.classList.add("is-hidden");
 }
+
+window.addEventListener("chat-emojis-ready", () => {
+  document.querySelectorAll(".chat-reply-preview, #chatReplyText").forEach(element => {
+    window.ChatEmoji.renderText(element, element.dataset.emojiRaw ?? element.textContent);
+  });
+});
 
 function startEditingMessage(messageEl) {
   if (messageEl.querySelector(".chat-message-editor")) return;
@@ -85,12 +96,17 @@ function startEditingMessage(messageEl) {
 }
 
 async function saveEditedMessage(messageEl) {
+  await window.ChatEmoji?.ready;
   const editor = messageEl.querySelector(".chat-message-editor");
+  if (!editor) return;
   const editedContent = editor?.value.trim();
-  const content = editor?.dataset.replyId
-    ? `${REPLY_MESSAGE_PREFIX}${editor.dataset.replyId}|${editedContent}`
+  const safeEditedContent = window.ChatEmoji
+    ? window.ChatEmoji.sanitize(editedContent || "")
     : editedContent;
-  if (!editedContent) {
+  const content = editor?.dataset.replyId
+    ? `${REPLY_MESSAGE_PREFIX}${editor.dataset.replyId}|${safeEditedContent}`
+    : safeEditedContent;
+  if (!safeEditedContent) {
     setGifSearchStatus("A message cannot be blank. Use Delete to remove it.");
     return;
   }

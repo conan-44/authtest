@@ -16,6 +16,7 @@ chat popups: true
 censoring: true
 hide GIFs: false
 disable rank effects: false
+trusted sources only: false
 [games]
 use legacy Street Fighter: false
 [cloak]

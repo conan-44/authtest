@@ -100,7 +100,8 @@ function activateChatOptionsTab(name) {
     tab.tabIndex = active ? 0 : -1;
   });
   document.querySelectorAll(".chat-options-tab-panel").forEach(panel => {
-    const active = panel.id === (name === "gifs" ? "chatOptionsGifs" : "chatOptionsPlayers");
+    const panelName = name[0].toUpperCase() + name.slice(1);
+    const active = panel.id === `chatOptions${panelName}`;
     panel.hidden = !active;
     panel.classList.toggle("is-hidden", !active);
   });

@@ -1,0 +1,308 @@
+{
+    "providers":
+    [
+        {
+            "type":"bitmap","file":"minecraft:font\/face_smiling.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "😀😃😄😁😆😅🤣😂🙂🙃🫠😉😊😇"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/face_affection.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🥰😍🤩😘😗☺😚😙🥲"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/face_tongue.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "😋😛😜🤪😝🤑"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/face_hand.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🤗🤭🫢🫣🤫🤔🫡"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/face_neutral_skeptical.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🤐🤨😐😑😶🫥😏😒🙄😬🤥🫨"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/face_sleepy.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "😌😔😪🤤😴🫩"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/face_unwell.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "😷🤒🤕🤢🤮🤧🥵🥶🥴😵🤯"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/face_hat.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🤠🥳🥸"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/face_glasses.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "😎🤓🧐"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/face_concerned.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "😕🫤😟🙁☹😮😯😲😳🥺🥹😦😧😨😰😥😢😭😱😖😣😞😓😩😫🥱"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/face_negative.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "😤😡😠🤬😈👿💀☠"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/face_costume.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "💩🤡👹👺👻👽👾🤖"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/cat_face.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "😺😸😹😻😼😽🙀😿😾"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/monkey_face.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🙈🙉🙊"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/heart.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "💌💘💝💖💗💓💞💕💟❣💔❤🩷🧡💛💚💙🩵💜🤎🖤🩶🤍"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/emotion.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "💋💯💢💥💫💦💨🕳💬🗨🗯💭💤"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/hand_fingers_open.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "👋🤚🖐✋🖖🫱🫲🫳🫴🫷🫸"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/hand_fingers_partial.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "👌🤌🤏✌🤞🫰🤟🤘🤙"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/hand_single_finger.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "👈👉👆🖕👇☝🫵"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/hand_fingers_closed.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "👍👎✊👊🤛🤜"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/hands.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "👏🙌🫶👐🤲🤝🙏"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/hand_prop.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "✍💅🤳"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/body_parts.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "💪🦾🦿🦵🦶👂🦻👃🧠🫀🫁🦷🦴👀👁👅👄🫦"]
+        },
+
+
+
+
+        {
+            "type":"bitmap","file":"minecraft:font\/person_symbol.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🗣👤👥🫂👪👣🫆"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/hair_style.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🦰🦱🦳🦲"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/animal_mammal.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🐵🐒🦍🦧🐶🐕🦮🐩🐺🦊🦝🐱🐈🦁🐯"]
+        },
+
+        {
+            "type":"bitmap","file":"minecraft:font\/animal_amphibian.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🐸"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/animal_reptile.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🐊🐢🦎🐍🐲🐉🦕🦖"]
+        },
+
+
+        {
+            "type":"bitmap","file":"minecraft:font\/plant_flower.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "💐🌸💮🪷🏵🌹🥀🌺🌻🌼🌷🪻"]
+        },
+
+
+
+        {
+            "type":"bitmap","file":"minecraft:font\/food_prepared.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🍞🥐🥖🫓🥨🥯🥞🧇🧀🍖🍗🥩🥓🍔🍟🍕🌭🥪🌮🌯🫔🥙🧆🥚🍳🥘🍲🫕🥣🥗🍿🧈🧂🥫"]
+        },
+
+
+
+
+        {
+            "type":"bitmap","file":"minecraft:font\/transport_water.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "⚓🛟⛵🛶🚤🛳⛴🛥🚢"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/transport_air.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "✈🛩🛫🛬🪂💺🚁🚟🚠🚡🛰🚀🛸"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/hotel.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🛎🧳"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/time.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "⌛⏳⌚⏰⏱⏲🕰🕛🕧🕐🕜🕑🕝🕒🕞🕓🕟🕔🕠🕕🕡🕖🕢🕗🕣🕘🕤🕙🕥🕚🕦"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/sky_weather.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🌑🌒🌓🌔🌕🌖🌗🌘🌙🌚🌛🌜🌡☀🌝🌞🪐⭐🌟🌠🌌☁⛅⛈🌤🌥🌦🌧🌨🌩🌪🌫🌬🌀🌈🌂☂☔⛱⚡❄☃⛄☄🔥💧🌊"]
+        },
+
+
+
+
+        {
+            "type":"bitmap","file":"minecraft:font\/award_medal.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🎖🏆🏅🥇🥈🥉"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/sport.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "⚽⚾🥎🏀🏐🏈🏉🎾🥏🎳🏏🏑🏒🥍🏓🏸🥊🥋🥅⛳⛸🎣🤿🎽🎿🛷🥌"]
+        },
+
+
+
+        
+        {
+            "type":"bitmap","file":"minecraft:font\/event.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🎃🎄🎆🎇🧨✨🎈🎉🎊🎋🎍🎎🎏🎐🎑🧧🎀🎁🎗🎟🎫"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/geometric.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🔴🟠🟡🟢🔵🟣🟤⚫⚪🟥🟧🟨🟩🟦🟪🟫⬛⬜◼◻◾◽▪▫🔶🔷🔸🔹🔺🔻💠🔘🔳🔲"]
+        },
+        {
+            "type":"bitmap","file":"minecraft:font\/flag.png",
+            "ascent": 7,
+            "height":8,
+            "chars":[
+                "🏁🚩🎌🏴🏳"
+            ]
+        }
+    ]
+}

@@ -14,7 +14,7 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
     let treeMode = false;
 
     const ACHIEVEMENT_SPRITES = {
-        icons: { url: "./assets/icons.png", width: 288, height: 32, tileWidth: 8, tileHeight: 8, columns: 36 },
+        icons: { url: "./assets/icons.png", width: 296, height: 32, tileWidth: 8, tileHeight: 8, columns: 36 },
         main: { url: "./assets/minigames/games.png", width: 48, height: 8, tileWidth: 8, tileHeight: 8, columns: 6 },
         mastermind: { url: "./assets/minigames/bots.png", width: 32, height: 8, tileWidth: 8, tileHeight: 8, columns: 4 },
         "number-pillars": { url: "./assets/minigames/games.png", width: 48, height: 8, tileWidth: 8, tileHeight: 8, columns: 6 },
@@ -589,11 +589,13 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
 
         const title = document.createElement("div");
         title.className = "notification-title";
-        title.textContent = titleText;
+        if (window.ChatEmoji) window.ChatEmoji.renderText(title, titleText);
+        else title.textContent = titleText;
 
         const subtitle = document.createElement("div");
         subtitle.className = "notification-subtitle";
-        subtitle.textContent = subtitleText;
+        if (window.ChatEmoji) window.ChatEmoji.renderText(subtitle, subtitleText);
+        else subtitle.textContent = subtitleText;
 
         content.append(title, subtitle);
         popup.append(icon, content);

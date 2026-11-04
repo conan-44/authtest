@@ -25,6 +25,7 @@ window.addEventListener('censoring-setting-changed', () => {
 });
 
 window.addEventListener('chat-gifs-setting-changed', updateExistingMessagesCensoring);
+window.addEventListener('chat-emojis-ready', updateExistingMessagesCensoring);
 
 function updateExistingMessagesCensoring() {
   const messageElements = document.querySelectorAll('#chatMessages .chat-msg');
@@ -446,6 +447,10 @@ function recordChatAchievement(eventName) {
 
 async function sendMessage() {
   const input = document.getElementById('chatInput');
+  if (window.ChatEmoji) {
+    await window.ChatEmoji.ready;
+    input.value = window.ChatEmoji.sanitize(input.value);
+  }
   const content = input.value.trim();
   if (!content) return;
   const channelId = activeChatChannelId;

@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="./css/blog.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/settings.css?v=no-page-scroll-v1">
     <link rel="stylesheet" href="./css/chat.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/emojis.css?v=emoji-picker-v1">
+    <link rel="stylesheet" href="./chat/smiley/smiley.css?v=smiley-styles-v4">
     <link rel="stylesheet" href="./css/profiles.css?v=game-ratings-v1">
     <link rel="stylesheet" href="./css/achievements.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/games.css?v=css-split-v1">
@@ -101,6 +103,17 @@
                         <span class="btn-icon icon-signout" aria-hidden="true"></span>Back to Chat
                     </button>
                     <div id="chatPublicProfileContent"></div>
+                </section>
+                <section id="smileyChatView" class="chat-profile-view smiley-chat-view is-hidden" aria-label="Smiley chat">
+                    <button type="button" id="smileyBackToChatButton" class="chat-profile-back">
+                        <span class="btn-icon icon-signout" aria-hidden="true"></span>Back to Chat
+                    </button>
+                    <p id="smileyStatus" aria-live="polite">Ready.</p>
+                    <div id="smileyConversation" aria-live="polite" aria-label="Smiley conversation"></div>
+                    <form id="smileyForm" class="chat-input-row">
+                        <input id="smileyInput" type="text" maxlength="2000" placeholder="Message Smiley..." aria-label="Message Smiley" required>
+                        <button id="smileySendButton" type="submit"><span class="btn-icon icon-send" aria-hidden="true"></span>Send</button>
+                    </form>
                 </section>
             </div>
         </section>
@@ -328,14 +341,26 @@
                 <h1 id="chat-options-heading">Chat Options</h1>
                 <div class="chat-options-controls" role="group" aria-label="Chat options">
                     <div class="chat-options-tabs" role="tablist" aria-label="Chat option panels">
-                        <button type="button" id="chatOptionsGifsTab" role="tab" aria-selected="true" aria-controls="chatOptionsGifs" data-chat-options-tab="gifs">GIFs</button>
+                        <button type="button" id="chatOptionsSmileyTab" role="tab" aria-selected="true" aria-controls="chatOptionsSmiley" data-chat-options-tab="smiley">Smiley</button>
+                        <button type="button" id="chatOptionsGifsTab" role="tab" aria-selected="false" aria-controls="chatOptionsGifs" data-chat-options-tab="gifs">GIFs</button>
                         <button type="button" id="chatOptionsPlayersTab" role="tab" aria-selected="false" aria-controls="chatOptionsPlayers" data-chat-options-tab="players" tabindex="-1">Players</button>
+                        <button type="button" id="chatOptionsEmojiTab" role="tab" aria-selected="false" aria-controls="chatOptionsEmoji" data-chat-options-tab="emoji" tabindex="-1">Emoji</button>
                     </div>
                     <button type="button" id="minimizeChatOptionsBtn" aria-expanded="true" aria-controls="chatOptionsBody">Minimize</button>
                 </div>
             </div>
             <div class="panel-body chat-options-body" id="chatOptionsBody">
                 <div class="chat-options-tab-panels">
+                    <section id="chatOptionsSmiley" class="chat-options-tab-panel" role="tabpanel" aria-labelledby="chatOptionsSmileyTab">
+                        <h2>Smiley</h2>
+                        <div id="smileyWelcome" class="smiley-empty-state">
+                            <div id="smileyConversationList" class="smiley-chat-list" aria-label="Previous Smiley chats"></div>
+                            <button id="smileyStartButton" type="button">
+                                <span>Start a new chat</span>
+                                <span class="smiley-box-icon" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </section>
                     <section id="chatOptionsGifs" class="chat-options-tab-panel" role="tabpanel" aria-labelledby="chatOptionsGifsTab">
                         <form id="gifSearchForm" class="search-form">
                             <label for="gifSearchInput">Search GIPHY</label>
@@ -354,6 +379,13 @@
                         </form>
                         <p id="profileSearchStatus" class="search-status" aria-live="polite">Search for a username, or select a name in chat to view that profile.</p>
                         <div id="profileSearchResults" class="profile-search-results" aria-label="Player search results"></div>
+                    </section>
+                    <section id="chatOptionsEmoji" class="chat-options-tab-panel is-hidden" role="tabpanel" aria-labelledby="chatOptionsEmojiTab" hidden>
+                        <label class="chat-emoji-search-label" for="chatEmojiSearch">Find an emoji</label>
+                        <input type="search" id="chatEmojiSearch" placeholder="Search supported emojis..." autocomplete="off">
+                        <div id="chatEmojiCategories" class="chat-emoji-categories" role="group" aria-label="Emoji categories"></div>
+                        <p id="chatEmojiPickerStatus" class="chat-emoji-picker-status" aria-live="polite">Loading supported emojis...</p>
+                        <div id="chatEmojiGrid" class="chat-emoji-grid" role="group" aria-label="Supported emojis"></div>
                     </section>
                 </div>
             </div>
@@ -404,9 +436,9 @@
     <!-- core scripts + utils here -->
     <script src="./js/utils.js"></script>
     <script src="./js/profile-avatars.js?v=profile-pixels-v3"></script>
-    <script src="./js/renderers.js?v=achievement-sprites-v3"></script>
+    <script src="./js/renderers.js?v=achievement-sprites-v4"></script>
     <script src="./js/achievements.js?v=admin-achieve-command-v1"></script>
-    <script src="./js/auth.js?v=saved-profile-pictures-v1"></script>
+    <script src="./js/auth.js?v=chat-emojis-v1"></script>
     <script src="./js/blog.js"></script>
     <script src="./js/blog-community.js?v=exact-2000-points-v1"></script>
     <script src="./js/tabs.js"></script>
@@ -417,10 +449,12 @@
     <script src="./api-config/giphy-config.js"></script>
     <script src="./api-config/cloak-config.js?v=main-achievements"></script>
     <!-- chat stuff -->
-    <script src="./chat/chat.js?v=streetfighter-multiplayer-v1"></script>
+    <script src="./chat/emojis.js?v=emoji-picker-v2"></script>
+    <script src="./chat/chat.js?v=emoji-picker-v1"></script>
     <script src="./chat/channels.js?v=community-tabs-v1"></script>
-    <script src="./chat/actions.js?v=game-invites"></script>
-    <script src="./chat/giphy.js?v=streetfighter-multiplayer-v1"></script>
-    <script src="./chat/profiles.js?v=game-ratings-v1"></script>
+    <script src="./chat/actions.js?v=chat-emojis-v1"></script>
+    <script src="./chat/giphy.js?v=emoji-picker-v1"></script>
+    <script src="./chat/profiles.js?v=chat-options-smiley-v1"></script>
+    <script type="module" src="./chat/smiley/smiley.js?v=qwen-browser-v2"></script>
 </body>
 </html>

@@ -6,6 +6,7 @@ const TAB_ICON_STYLE_STORAGE_KEY = "skvwaffle.tab-icon-style.v1";
 const MUSIC_VOLUME_STORAGE_KEY = "skvwaffle.music-volume.v1";
 const MUSIC_LOOP_STORAGE_KEY = "skvwaffle.music-loop.v1";
 const LEGACY_STREET_FIGHTER_STORAGE_KEY = "skvwaffle.legacy-street-fighter.v1";
+const TRUSTED_SOURCES_ONLY_STORAGE_KEY = "skvwaffle.smiley-trusted-sources-only.v1";
 const DEFAULT_APP_THEME = { accent: "#2a4d67", secondary: "#8a5a00" };
 const APP_THEME_PRESETS = [
     { name: "Classic", accent: DEFAULT_APP_THEME.accent, secondary: DEFAULT_APP_THEME.secondary },
@@ -68,6 +69,14 @@ const APP_THEME_PRESETS = [
                 if (saved !== null) return saved === "true";
             } catch (error) {
                 console.error("Could not read the rank effects preference.", error);
+            }
+        }
+        if (section === "chat" && key === "trusted sources only") {
+            try {
+                const saved = localStorage.getItem(TRUSTED_SOURCES_ONLY_STORAGE_KEY);
+                if (saved !== null) return saved === "true";
+            } catch (error) {
+                console.error("Could not read the trusted sources preference.", error);
             }
         }
         const control = settingsList?.querySelector(
@@ -655,6 +664,12 @@ const APP_THEME_PRESETS = [
                 const text = document.createElement("span");
                 text.className = "settings-toggle-label";
                 text.textContent = `-  ${formatSettingName(key)}`;
+                if (section === "chat" && key === "trusted sources only") {
+                    const hint = document.createElement("span");
+                    hint.className = "settings-toggle-hint";
+                    hint.textContent = "Restricts external search links to Wikipedia and selected publishers. Smiley can only cite sources it actually fetches; currently those are Wikipedia results.";
+                    text.appendChild(hint);
+                }
 
                 label.append(checkbox, icon, text);
                 if (isAudioSection && key.toLowerCase() === "sound effects") {
@@ -721,6 +736,9 @@ const APP_THEME_PRESETS = [
             const rankEffectsToggle = settingsList.querySelector(
                 '.settings-checkbox[data-section="chat"][data-setting="disable rank effects"]'
             );
+            const trustedSourcesToggle = settingsList.querySelector(
+                '.settings-checkbox[data-section="chat"][data-setting="trusted sources only"]'
+            );
             const legacyStreetFighterToggle = settingsList.querySelector(
                 '.settings-checkbox[data-section="games"][data-setting="use legacy Street Fighter"]'
             );
@@ -757,6 +775,27 @@ const APP_THEME_PRESETS = [
                         console.error("Could not save the rank effects preference.", error);
                     }
                     applyRankEffectsPreference(rankEffectsToggle.checked);
+                });
+            }
+            if (trustedSourcesToggle) {
+                try {
+                    const saved = localStorage.getItem(TRUSTED_SOURCES_ONLY_STORAGE_KEY);
+                    if (saved !== null) trustedSourcesToggle.checked = saved === "true";
+                } catch (error) {
+                    console.error("Could not load the trusted sources preference.", error);
+                }
+                trustedSourcesToggle.addEventListener("change", () => {
+                    try {
+                        localStorage.setItem(
+                            TRUSTED_SOURCES_ONLY_STORAGE_KEY,
+                            String(trustedSourcesToggle.checked)
+                        );
+                    } catch (error) {
+                        console.error("Could not save the trusted sources preference.", error);
+                        if (typeof showPopup === "function") {
+                            showPopup("The trusted sources preference could not be saved on this device.", "error");
+                        }
+                    }
                 });
             }
             if (typeof _supabase !== "undefined") {

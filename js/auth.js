@@ -120,6 +120,7 @@ function showPopup(message, type = 'info') {
   const text = document.createElement('span');
   text.className = 'notification-text';
   text.textContent = message;
+  if (window.ChatEmoji) window.ChatEmoji.renderText(text, message);
 
   const counter = document.createElement('span');
   counter.className = 'notification-count';

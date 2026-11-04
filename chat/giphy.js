@@ -227,7 +227,9 @@ function renderChatMessageBody(bodyDiv, rawContent, username = "Player") {
     return;
   }
 
-  bodyDiv.textContent = censoring ? censorSwearWords(content) : content;
+  const displayContent = censoring ? censorSwearWords(content) : content;
+  if (window.ChatEmoji) window.ChatEmoji.renderText(bodyDiv, displayContent);
+  else bodyDiv.textContent = displayContent;
 }
 
 function getChatMessagePreview(content) {
