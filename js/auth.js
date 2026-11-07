@@ -196,9 +196,70 @@ function showInputPopup(message, inputType = 'text') {
   });
 }
 
+const LOGIN_BANNER_OAUTH_KEY = 'skvwaffle-login-banner-pending';
+let lastAuthUserId = null;
+let loginBannerTimer = null;
+
+function showLoginBanner() {
+  document.querySelector('.login-banner')?.remove();
+  clearTimeout(loginBannerTimer);
+
+  const banner = document.createElement('div');
+  banner.className = 'login-banner';
+  banner.setAttribute('aria-hidden', 'true');
+
+  const content = document.createElement('div');
+  content.className = 'login-banner-content';
+  const icon = document.createElement('img');
+  icon.className = 'login-banner-icon';
+  icon.src = './assets/icon-b.png';
+  icon.alt = '';
+  const textWindow = document.createElement('div');
+  textWindow.className = 'login-banner-text-window';
+  const text = document.createElement('span');
+  text.className = 'login-banner-text';
+  text.textContent = 'skvwaffle';
+  textWindow.appendChild(text);
+  content.append(icon, textWindow);
+  banner.appendChild(content);
+  document.body.appendChild(banner);
+
+  const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 2000 : 4000;
+  loginBannerTimer = setTimeout(() => banner.remove(), duration);
+}
+
+function setPendingOAuthLogin(pending) {
+  try {
+    if (pending) sessionStorage.setItem(LOGIN_BANNER_OAUTH_KEY, '1');
+    else sessionStorage.removeItem(LOGIN_BANNER_OAUTH_KEY);
+  } catch (error) {
+    console.warn('Could not save the sign-in banner state.', error);
+  }
+}
+
+function consumePendingOAuthLogin() {
+  try {
+    const pending = sessionStorage.getItem(LOGIN_BANNER_OAUTH_KEY) === '1';
+    sessionStorage.removeItem(LOGIN_BANNER_OAUTH_KEY);
+    return pending;
+  } catch (error) {
+    console.warn('Could not read the sign-in banner state.', error);
+    return false;
+  }
+}
+
 // 2. LISTEN FOR AUTH CHANGES
 _supabase.auth.onAuthStateChange(async (event, session) => {
   printLog(`Auth Event: ${event}`);
+  const userId = session?.user?.id || null;
+  const pendingOAuthLogin = (event === 'INITIAL_SESSION' || event === 'SIGNED_IN')
+    && consumePendingOAuthLogin();
+  if (userId && userId !== lastAuthUserId && (event === 'SIGNED_IN' || pendingOAuthLogin)) {
+    showLoginBanner();
+  }
+  lastAuthUserId = userId;
+  document.body.classList.toggle('is-guest', !userId);
+  window.dispatchEvent(new CustomEvent("home-dashboard-auth-changed", { detail: { userId } }));
   
   if (session) {
     document.getElementById('authSection').style.display = 'none';
@@ -210,7 +271,7 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
     await fetchProfile(session.user.id);
     if (typeof window.setTabsGuestMode === "function") window.setTabsGuestMode(false);
   } else {
-    document.getElementById('authSection').style.display = 'block';
+    document.getElementById('authSection').style.display = '';
     document.getElementById('profileSection').style.display = 'none';
     activeProfileAvatarUserId = null;
     currentProfileAvatar = null;
@@ -373,6 +434,7 @@ document.getElementById('signInBtn').addEventListener('click', async () => {
 document.getElementById('googleSignInBtn').addEventListener('click', async () => {
   printLog("Redirecting to Google...");
   showPopup("Redirecting to Google...", 'info');
+  setPendingOAuthLogin(true);
   
   const { error } = await _supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -381,7 +443,10 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
     }
   });
 
-  if (error) printLog("❌ Google Auth Error: " + error.message);
+  if (error) {
+    setPendingOAuthLogin(false);
+    printLog("❌ Google Auth Error: " + error.message);
+  }
 });
 
 // 5. FETCH PROFILE FROM DATABASE

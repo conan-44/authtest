@@ -72,6 +72,16 @@ html[data-tab-icon-style="chiseled"] .tab-btn .btn-icon {
     image-rendering: crisp-edges;
 }
 
+html[data-tab-icon-style="chiseled"] .guest-guide-icon.btn-icon {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    background-image: url("../assets/tabcons-16xchisled.png");
+    background-position-y: 0;
+    transform: scale(2);
+}
+
 html[data-tab-icon-style="chiseled"] .tabcon-chat { background-position-x: 0; }
 
 html[data-tab-icon-style="chiseled"] .tabcon-achievements { background-position-x: -16px; }

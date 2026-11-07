@@ -164,6 +164,7 @@
                 p_rating: rating
             });
             if (error) throw new Error(`Could not save your ${game} rating: ${error.message}`);
+            window.dispatchEvent(new Event('home-dashboard-refresh'));
             checkGameRatingAchievements().catch(error => {
                 console.error('Could not update leaderboard achievements.', error);
             });
@@ -407,13 +408,28 @@
         loadGameSource(`${routes[game]}${inviteSeparator}invite=${encodeURIComponent(inviteCode)}`);
     };
 
-    function loadGame(card) {
-        const src = card.dataset.game === 'street-fighter' ? streetFighterRoute() : card.dataset.src;
+    function loadGame(card, cardGame = null) {
+        let src = card.dataset.game === 'street-fighter' ? streetFighterRoute() : card.dataset.src;
         if (!src || src === 'link here') return;
+        if (cardGame) src += `?game=${encodeURIComponent(cardGame)}`;
         activeGameId = card.dataset.game || null;
         if (activeGameId === 'mc') startMinecraftPlaytime();
         loadGameSource(src);
     }
+
+    window.openRatedGame = game => {
+        const routes = {
+            mastermind: 'mastermind',
+            chess: 'chess',
+            blackjack: 'cards',
+            doudizhu: 'cards',
+            streetfighter: 'street-fighter'
+        };
+        const card = document.querySelector(`.game-card[data-game="${routes[game] || ''}"]`);
+        if (!card) throw new Error('This rated game is unavailable.');
+        window.activateTab('games');
+        loadGame(card, game === 'blackjack' || game === 'doudizhu' ? game : null);
+    };
 
     function loadGameSource(src) {
         gameFrame.src = src;

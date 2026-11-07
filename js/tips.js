@@ -3,6 +3,7 @@
     const DEFAULT_TIP_DELAY = 15000;
     const TIP_DISPLAY_DURATION = 12000;
     const toast = document.getElementById("tipToast");
+    const placeholder = document.querySelector(".tip-area-placeholder");
     const bubble = toast?.querySelector(".tip-toast-bubble");
     const icon = toast?.querySelector(".tip-toast-icon");
 
@@ -31,6 +32,7 @@
     }
 
     function showTip(tip) {
+        if (placeholder) placeholder.hidden = true;
         bubble.textContent = tip;
         toast.classList.remove("is-visible");
         void toast.offsetWidth;
@@ -40,6 +42,7 @@
         window.clearTimeout(hideTipTimer);
         hideTipTimer = window.setTimeout(() => {
             toast.classList.remove("is-visible");
+            if (placeholder) placeholder.hidden = false;
         }, Math.min(TIP_DISPLAY_DURATION, getTipDelay()));
     }
 

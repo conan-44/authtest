@@ -8,8 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/gh/Parcoil/cloak@main/src/index.min.js"></script>
     <link rel="icon" type="image/x-icon" href="./assets/favicon-b.png">
-    <link rel="stylesheet" href="./css/variables.css?v=css-split-v1">
-    <link rel="stylesheet" href="./css/base.css?v=no-page-scroll-v2">
+    <link rel="stylesheet" href="./css/variables.css?v=tip-area-v1">
+    <link rel="stylesheet" href="./css/base.css?v=dashboard-v1">
     <link rel="stylesheet" href="./css/blog.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/settings.css?v=no-page-scroll-v1">
     <link rel="stylesheet" href="./css/chat.css?v=css-split-v1">
@@ -19,11 +19,12 @@
     <link rel="stylesheet" href="./css/achievements.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/games.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/milestones.css?v=css-split-v1">
-    <link rel="stylesheet" href="./css/notifications.css?v=css-split-v1">
-    <link rel="stylesheet" href="./css/sheet.css?v=css-split-v1">
-    <link rel="stylesheet" href="./css/responsive.css?v=no-page-scroll-v2">
+    <link rel="stylesheet" href="./css/notifications.css?v=tip-placeholder-v1">
+    <link rel="stylesheet" href="./css/sheet.css?v=guest-guide-v1">
+    <link rel="stylesheet" href="./css/dashboard.css?v=dashboard-v1">
+    <link rel="stylesheet" href="./css/responsive.css?v=dashboard-v1">
 </head>
-<body>
+<body class="is-guest">
     <main class="page">
         <nav class="tab-bar" aria-label="Main navigation">
             <button class="tab-btn is-active" data-tab="home"><span class="btn-icon tabcon-home"></span>Home</button>
@@ -39,7 +40,40 @@
                 <h1 id="mainmenu-heading">Main Menu</h1>
             </div>
             <div class="panel-body">
-                <p class="main-menu-welcome">Welcome! If you are new, start by creating an account! To sign back in, use the login form to the right.</p>
+                <div class="guest-site-guide" aria-label="Explore the site">
+                    <section>
+                        <h2 class="guest-guide-heading"><span class="guest-guide-icon btn-icon tabcon-achievements" aria-hidden="true"></span><span>Achievements</span></h2>
+                        <p>Collect achievements across different aspects of the site to level up Milestones and compete with other players.</p><br>
+                    </section>
+                    <section>
+                        <h2 class="guest-guide-heading"><span class="guest-guide-icon btn-icon tabcon-chat" aria-hidden="true"></span><span>Chat</span></h2>
+                        <p>Join conversations and channels, share GIFs and emojis, find players, or ask Smiley for help with the website.</p><br>
+                    </section>
+                    <section>
+                        <h2 class="guest-guide-heading"><span class="guest-guide-icon btn-icon tabcon-settings" aria-hidden="true"></span><span>Settings</span></h2>
+                        <p>Customise your profile picture and personalise your experience with a multitude of themes and settings. Choose from a selection of music and sound options to enhance your experience.</p><br>
+                    </section>
+                    <section>
+                        <h2 class="guest-guide-heading"><span class="guest-guide-icon btn-icon tabcon-games" aria-hidden="true"></span><span>Games</span></h2>
+                        <p>Play both classic and original games such as Bulls &amp; Cows, Number Pillars, chess, a variety of card games, Minecraft, and Streetfighter.</p><br>
+                    </section>
+                    <section>
+                        <h2 class="guest-guide-heading"><span class="guest-guide-icon btn-icon tabcon-blog" aria-hidden="true"></span><span>Blog</span></h2>
+                        <p>Read posts and explore community polls and suggestions. Sign in to take part in a world of discussions and community engagement.</p><br>
+                    </section>
+                    <section>
+                        <h2 class="guest-guide-heading"><span class="guest-guide-icon btn-icon tabcon-experimental" aria-hidden="true"></span><span>Experimental</span></h2>
+                        <p>Visit the separate experiments site to explore features still in development.</p>
+                    </section>
+                </div>
+                <div id="homeDashboard" class="home-dashboard" hidden>
+                    <section class="dashboard-card"><h2>Latest blog post</h2><div id="homeLatestPost" aria-live="polite">Loading...</div><button type="button" data-home-blog="posts">Open posts</button></section>
+                    <section class="dashboard-card"><h2>Your most popular suggestion</h2><div id="homeSuggestion" aria-live="polite">Loading...</div><button type="button" data-home-blog="suggestions">Open suggestions</button></section>
+                    <section class="dashboard-card"><h2>Popular polls</h2><div id="homePolls" aria-live="polite">Loading...</div><button type="button" data-home-blog="polls">Open polls</button></section>
+                    <section class="dashboard-card"><h2>Popular joined channels</h2><div id="homeChannels" aria-live="polite">Loading...</div><button type="button" data-home-chat>Open chat</button></section>
+                    <section class="dashboard-card"><h2>Quick Smiley</h2><p>Continue your current or latest chat with Smiley, or start one.</p><form id="homeSmileyForm"><label for="homeSmileyInput">Message Smiley</label><input id="homeSmileyInput" maxlength="2000" placeholder="Ask Smiley..." required><button type="submit">Ask Smiley</button></form><p id="homeSmileyStatus" aria-live="polite"></p></section>
+                    <section class="dashboard-card"><h2>Play by Elo</h2><div id="homeGames" aria-live="polite">Loading...</div></section>
+                </div>
             </div>
         </section>
         <section class="panel tab-panel is-hidden" id="achievementsPanel" aria-labelledby="achievements-heading">
@@ -393,14 +427,40 @@
     </main> 
     <aside id="accountManagement" aria-label="Account Management">
         <div id="authSection" class="box">
-            <h3 id="authSectionHeader">Account Management</h3>
+            <h3 id="authSectionHeader">sign in</h3>
             <input type="email" id="email" placeholder="Email (e.g. test@game.com)" />
             <input type="password" id="password" placeholder="Password (min 6 chars)" />
             <input type="text" id="username" placeholder="Username (e.g. DragonSlayer)" />
             <input type="text" id="flair" placeholder="Flair (e.g. VIP Member)" />
-            <button id="signUpBtn"><span class="btn-icon icon-signup"></span>Create Account</button>
-            <button id="signInBtn" class="btn-secondary"><span class="btn-icon icon-signin"></span>Sign In with Email</button>
-            <button id="googleSignInBtn" class="btn-secondary"><span class="btn-icon icon-google"></span>Sign In with Google</button>
+            <div class="guest-signin-cards" aria-label="Ways to get started">
+                <button type="button" id="signUpBtn" class="achievement-card rarity-common guest-signin-card">
+                    <span class="achievement-card-inner">
+                        <span class="achievement-icon" aria-hidden="true"><span class="btn-icon icon-signup"></span></span>
+                        <span class="guest-signin-card-content">
+                            <span class="achievement-title">Create Account</span>
+                            <span class="achievement-description">Enter your email and password, then choose a username and flair to create an account.</span>
+                        </span>
+                    </span>
+                </button>
+                <button type="button" id="signInBtn" class="achievement-card rarity-common guest-signin-card">
+                    <span class="achievement-card-inner">
+                        <span class="achievement-icon" aria-hidden="true"><span class="btn-icon icon-signin"></span></span>
+                        <span class="guest-signin-card-content">
+                            <span class="achievement-title">Sign In with Email</span>
+                            <span class="achievement-description">Enter the email and password for your existing account.</span>
+                        </span>
+                    </span>
+                </button>
+                <button type="button" id="googleSignInBtn" class="achievement-card rarity-common guest-signin-card">
+                    <span class="achievement-card-inner">
+                        <span class="achievement-icon" aria-hidden="true"><span class="btn-icon icon-google"></span></span>
+                        <span class="guest-signin-card-content">
+                            <span class="achievement-title">Sign In with Google</span>
+                            <span class="achievement-description">Choose Google to sign in or create an account using your Google account.</span>
+                        </span>
+                    </span>
+                </button>
+            </div>
         </div>
 
         <div id="profileSection" class="box" style="display:none;">
@@ -425,10 +485,13 @@
         </div>
     </aside>
     <div id="popupStack" class="popup-stack" aria-live="assertive" aria-atomic="false"></div>
-    <aside id="tipToast" class="tip-toast" role="status" aria-live="polite" aria-atomic="true">
-        <div class="tip-toast-bubble"></div>
-        <span class="tip-toast-icon" aria-hidden="true"></span>
-    </aside>
+    <div class="tip-area">
+        <p class="tip-area-placeholder">Tips will appear here.</p>
+        <aside id="tipToast" class="tip-toast" role="status" aria-live="polite" aria-atomic="true">
+            <div class="tip-toast-bubble"></div>
+            <span class="tip-toast-icon" aria-hidden="true"></span>
+        </aside>
+    </div>
     <!-- data parsers here -->
     <script src="./parsers/metajson.js"></script>
     <script src="./parsers/config.js?v=milestone-profile-v1"></script>
@@ -438,23 +501,24 @@
     <script src="./js/profile-avatars.js?v=profile-pixels-v3"></script>
     <script src="./js/renderers.js?v=achievement-sprites-v4"></script>
     <script src="./js/achievements.js?v=admin-achieve-command-v1"></script>
-    <script src="./js/auth.js?v=chat-emojis-v1"></script>
+    <script src="./js/auth.js?v=dashboard-v1"></script>
     <script src="./js/blog.js"></script>
     <script src="./js/blog-community.js?v=exact-2000-points-v1"></script>
-    <script src="./js/tabs.js"></script>
+    <script src="./js/tabs.js?v=dashboard-v1"></script>
     <script src="./js/settings.js?v=no-scroll-restoration-v3"></script>
-    <script src="./js/games.js?v=streetfighter-elo-budget-v2"></script>
-    <script src="./js/tips.js"></script>
+    <script src="./js/games.js?v=dashboard-v1"></script>
+    <script src="./js/tips.js?v=tip-placeholder-v1"></script>
     <!-- api config stuff -->
     <script src="./api-config/giphy-config.js"></script>
     <script src="./api-config/cloak-config.js?v=main-achievements"></script>
     <!-- chat stuff -->
     <script src="./chat/emojis.js?v=emoji-picker-v2"></script>
-    <script src="./chat/chat.js?v=emoji-picker-v1"></script>
-    <script src="./chat/channels.js?v=community-tabs-v1"></script>
+    <script src="./chat/chat.js?v=dashboard-v1"></script>
+    <script src="./chat/channels.js?v=dashboard-v1"></script>
     <script src="./chat/actions.js?v=chat-emojis-v1"></script>
     <script src="./chat/giphy.js?v=emoji-picker-v1"></script>
     <script src="./chat/profiles.js?v=chat-options-smiley-v1"></script>
-    <script type="module" src="./chat/smiley/smiley.js?v=qwen-browser-v2"></script>
+    <script src="./js/dashboard.js?v=dashboard-v1"></script>
+    <script type="module" src="./chat/smiley/smiley.js?v=dashboard-v1"></script>
 </body>
 </html>

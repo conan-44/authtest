@@ -98,8 +98,33 @@
     animation: notification-label-play 0.5s steps(4) 1;
 }
 
+.tip-area {
+    position: relative;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    min-width: 0;
+    height: var(--tip-area-height);
+    background: var(--color-white);
+}
+
+.tip-area-placeholder {
+    display: grid;
+    height: 100%;
+    margin: 0;
+    padding: var(--control-padding);
+    place-items: center;
+    color: var(--color-muted);
+    font-family: 'lowsmall', sans-serif;
+    text-align: center;
+}
+
+.tip-area-placeholder[hidden] {
+    display: none;
+}
+
 .tip-toast {
-    position: fixed;
+    position: absolute;
     right: 16px;
     bottom: 16px;
     z-index: 1100;

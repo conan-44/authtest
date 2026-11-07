@@ -138,6 +138,14 @@ async function activateChatChannel(channelId) {
   await recordChatRoomFirstJoin(activeChatChannelId);
 }
 
+window.openJoinedChatChannel = async channelId => {
+  await window.initChatTab();
+  if (!joinedChatChannels.some(channel => channel.id === channelId)) {
+    throw new Error("This channel is no longer available in your joined channels.");
+  }
+  await activateChatChannel(channelId);
+};
+
 async function loadJoinedChatChannels() {
   joinedChatChannels = [];
   openChatChannelIds.clear();

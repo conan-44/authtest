@@ -717,21 +717,30 @@ function censorSwearWords(str) {
 
 // 5. LAZY INIT
 let chatInitialized = false;
+let chatInitializationPromise = null;
 const chatPanel = document.getElementById('chatPanel');
 
-window.initChatTab = async function initChatTab() {
-  if (chatInitialized) return;
+window.initChatTab = function initChatTab() {
+  if (chatInitializationPromise) return chatInitializationPromise;
   chatInitialized = true;
-  const { data: { user } } = await _supabase.auth.getUser();
-  currentChatUserId = user?.id || null;
-  await cleanupBlankMessages(currentChatUserId);
-  if (currentChatUserId && !blankMessageCleanupInterval) {
-    blankMessageCleanupInterval = window.setInterval(cleanupBlankMessages, 5 * 60 * 1000);
-  }
-  await loadJoinedChatChannels();
-  initRealtimeChat();
-  await window.setChatPresenceRoom(activeChatChannelId);
-  await recordChatRoomFirstJoin();
+  chatInitializationPromise = (async () => {
+    const { data: { user }, error } = await _supabase.auth.getUser();
+    if (error && error.name !== "AuthSessionMissingError") throw error;
+    currentChatUserId = user?.id || null;
+    await cleanupBlankMessages(currentChatUserId);
+    if (currentChatUserId && !blankMessageCleanupInterval) {
+      blankMessageCleanupInterval = window.setInterval(cleanupBlankMessages, 5 * 60 * 1000);
+    }
+    await loadJoinedChatChannels();
+    initRealtimeChat();
+    await window.setChatPresenceRoom(activeChatChannelId);
+    await recordChatRoomFirstJoin();
+  })().catch(error => {
+    chatInitialized = false;
+    chatInitializationPromise = null;
+    throw error;
+  });
+  return chatInitializationPromise;
 };
 
 async function handleChatAuthChange(userId) {

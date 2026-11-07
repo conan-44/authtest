@@ -1429,8 +1429,11 @@ if ("ResizeObserver" in window) {
   new ResizeObserver(syncHandScrollbar).observe(ownHand);
 }
 
-startBlackjack();
-const inviteCodeFromUrl = new URLSearchParams(window.location.search).get("invite");
+const gameParameters = new URLSearchParams(window.location.search);
+const requestedGame = gameParameters.get("game");
+if (requestedGame === "doudizhu") setGame("doudizhu");
+else startBlackjack();
+const inviteCodeFromUrl = gameParameters.get("invite");
 if (inviteCodeFromUrl) {
   setGame("doudizhu");
   document.getElementById("multiplayerInviteCode").value = inviteCodeFromUrl;

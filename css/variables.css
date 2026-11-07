@@ -1,28 +1,25 @@
 :root {
-      --color-page: #ffffff;
-      --color-panel-surface: #dde2e7;
-      --color-panel-header-surface: #dfe4ea;
-      --color-panel-body-surface: #e9ebed;
-      --color-card-surface: #cfcfcf;
-      --color-control-surface: #eef2f4;
-      --color-control-pressed: #ffffff;
-      --color-text: #000000;
-      --color-heading: #2a4d67;
-      --color-divider: rgba(0, 0, 0, 0.12);
-      --color-divider-highlight: rgba(255, 255, 255, 0.3);
-      --color-input-border: #ffffff;
-      --color-button-border: #ffffff;
-      --color-notification-surface: rgba(255, 255, 255, 0.5);
-      --color-notification-error: rgba(255, 179, 179, 0.5);
-      --color-notification-success: rgba(198, 247, 198, 0.5);
-      --color-notification-warning: rgba(255, 235, 153, 0.5);
-      --color-notification-info: rgba(179, 217, 255, 0.5);
-      --shadow-heading: rgba(26, 37, 49, 0.18);
-      --header-divider-width: 4px;
-      --header-padding-bottom: 8px;
-    }
-
-:root {
+    --color-page: #ffffff;
+    --color-panel-surface: #dde2e7;
+    --color-panel-header-surface: #dfe4ea;
+    --color-panel-body-surface: #e9ebed;
+    --color-card-surface: #cfcfcf;
+    --color-control-surface: #eef2f4;
+    --color-control-pressed: #ffffff;
+    --color-text: #000000;
+    --color-heading: #2a4d67;
+    --color-divider: rgba(0, 0, 0, 0.12);
+    --color-divider-highlight: rgba(255, 255, 255, 0.3);
+    --color-input-border: #ffffff;
+    --color-button-border: #ffffff;
+    --color-notification-surface: rgba(255, 255, 255, 0.5);
+    --color-notification-error: rgba(255, 179, 179, 0.5);
+    --color-notification-success: rgba(198, 247, 198, 0.5);
+    --color-notification-warning: rgba(255, 235, 153, 0.5);
+    --color-notification-info: rgba(179, 217, 255, 0.5);
+    --shadow-heading: rgba(26, 37, 49, 0.18);
+    --header-divider-width: 4px;
+    --header-padding-bottom: 8px;
     --color-panel: #eeeeee;
     --color-panel-header: #eeeeee;
     --color-card: #dddddd;
@@ -56,6 +53,7 @@
     --page-padding: 10px;
     --page-width: 960px;
     --page-gap: 8px;
+    --tip-area-height: clamp(96px, 22vh, 220px);
     --sidebar-min-width: 280px;
     --sidebar-max-width: 400px;
     --panel-header-padding: 10px 12px 8px;
