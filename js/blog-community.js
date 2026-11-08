@@ -238,13 +238,7 @@
         }
         button.disabled = true;
         try {
-            const { error } = await _supabase.rpc("cast_blog_poll_vote", {
-                p_poll_id: pollId,
-                p_option_id: optionId
-            });
-            if (error) throw error;
-            recordCommunityAchievement("poll-voted");
-            pollsLoaded = false;
+            await votePoll(pollId, optionId);
             await loadPolls();
         } catch (error) {
             console.error("Could not submit poll vote.", error);
@@ -255,6 +249,25 @@
             setStatus(pollCreateStatus, message, true);
         }
     }
+
+    async function votePoll(pollId, optionId) {
+        const { error } = await _supabase.rpc("cast_blog_poll_vote", {
+            p_poll_id: pollId,
+            p_option_id: optionId
+        });
+        if (error) throw error;
+        recordCommunityAchievement("poll-voted");
+        pollsLoaded = false;
+    }
+
+    async function postSuggestion(userId, title, body) {
+        const { error } = await _supabase.from("blog_suggestions").insert({ user_id: userId, title, body });
+        if (error) throw error;
+        recordCommunityAchievement("suggestion-created");
+        suggestionsLoaded = false;
+    }
+
+    window.blogCommunityActions = { votePoll, postSuggestion };
 
     async function submitPoll(event) {
         event.preventDefault();
@@ -410,16 +423,9 @@
         submitButton.disabled = true;
         setStatus(suggestionCreateStatus, "Posting suggestion...");
         try {
-            const { error } = await _supabase.from("blog_suggestions").insert({
-                user_id: currentUserId,
-                title,
-                body
-            });
-            if (error) throw error;
+            await postSuggestion(currentUserId, title, body);
             suggestionForm.reset();
-            recordCommunityAchievement("suggestion-created");
             setStatus(suggestionCreateStatus, "Suggestion posted.");
-            suggestionsLoaded = false;
             await loadSuggestions();
         } catch (error) {
             console.error("Could not post community suggestion.", error);

@@ -1,7 +1,7 @@
 {
   "title": "King of the Hill",
   "description": "Be the undisputed top of every game at least once",
-  "successors": [],
+  "successors": ["main:all-game-leaderboards-at-once"],
   "rarity": "legendary",
   "icon": "👑"
 }

@@ -247,4 +247,5 @@
     }
 
     window.initBlogTab = loadBlog;
+    window.renderBlogPost = renderPost;
 })();

@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="./css/milestones.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/notifications.css?v=tip-placeholder-v1">
     <link rel="stylesheet" href="./css/sheet.css?v=guest-guide-v1">
-    <link rel="stylesheet" href="./css/dashboard.css?v=dashboard-v1">
+    <link rel="stylesheet" href="./css/dashboard.css?v=dashboard-style-v3">
     <link rel="stylesheet" href="./css/responsive.css?v=dashboard-v1">
 </head>
 <body class="is-guest">
@@ -67,12 +67,28 @@
                     </section>
                 </div>
                 <div id="homeDashboard" class="home-dashboard" hidden>
-                    <section class="dashboard-card"><h2>Latest blog post</h2><div id="homeLatestPost" aria-live="polite">Loading...</div><button type="button" data-home-blog="posts">Open posts</button></section>
-                    <section class="dashboard-card"><h2>Your most popular suggestion</h2><div id="homeSuggestion" aria-live="polite">Loading...</div><button type="button" data-home-blog="suggestions">Open suggestions</button></section>
-                    <section class="dashboard-card"><h2>Popular polls</h2><div id="homePolls" aria-live="polite">Loading...</div><button type="button" data-home-blog="polls">Open polls</button></section>
-                    <section class="dashboard-card"><h2>Popular joined channels</h2><div id="homeChannels" aria-live="polite">Loading...</div><button type="button" data-home-chat>Open chat</button></section>
-                    <section class="dashboard-card"><h2>Quick Smiley</h2><p>Continue your current or latest chat with Smiley, or start one.</p><form id="homeSmileyForm"><label for="homeSmileyInput">Message Smiley</label><input id="homeSmileyInput" maxlength="2000" placeholder="Ask Smiley..." required><button type="submit">Ask Smiley</button></form><p id="homeSmileyStatus" aria-live="polite"></p></section>
-                    <section class="dashboard-card"><h2>Play by Elo</h2><div id="homeGames" aria-live="polite">Loading...</div></section>
+                    <section class="dashboard-section" aria-labelledby="homeBlogHeading">
+                        <div class="dashboard-section-header"><span class="dashboard-section-icon btn-icon tabcon-blog" aria-hidden="true"></span><h2 id="homeBlogHeading">Blog</h2><button type="button" data-home-blog="posts">Open</button></div>
+                        <div class="dashboard-section-body" tabindex="0" aria-label="Blog dashboard">
+                            <div class="dashboard-card"><h3>Featured post</h3><div id="homeLatestPost" aria-live="polite">Loading...</div></div>
+                            <div class="dashboard-card"><h3>Popular polls</h3><div id="homePolls" aria-live="polite">Loading...</div><button type="button" data-home-blog="polls">All polls</button></div>
+                            <div class="dashboard-card"><h3>Your most popular suggestion</h3><div id="homeSuggestion" aria-live="polite">Loading...</div>
+                                <details><summary>Post a suggestion</summary><form id="homeSuggestionForm"><label for="homeSuggestionTitle">Title</label><input id="homeSuggestionTitle" maxlength="120" required><label for="homeSuggestionBody">Suggestion</label><textarea id="homeSuggestionBody" maxlength="2000" rows="3" required></textarea><button type="submit">Post suggestion</button><p id="homeSuggestionStatus" role="status"></p></form></details>
+                                <button type="button" data-home-blog="suggestions">All suggestions</button>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="dashboard-section" aria-labelledby="homeGamesHeading">
+                        <div class="dashboard-section-header"><span class="dashboard-section-icon btn-icon tabcon-games" aria-hidden="true"></span><h2 id="homeGamesHeading">Games</h2><button type="button" data-home-games>Open</button></div>
+                        <div class="dashboard-section-body" tabindex="0" aria-label="Games dashboard"><div class="dashboard-card"><h3>Play by Elo</h3><div id="homeGames" aria-live="polite">Loading...</div></div></div>
+                    </section>
+                    <section class="dashboard-section" aria-labelledby="homeChatHeading">
+                        <div class="dashboard-section-header"><span class="dashboard-section-icon btn-icon tabcon-chat" aria-hidden="true"></span><h2 id="homeChatHeading">Chat</h2><button type="button" data-home-chat>Open</button></div>
+                        <div class="dashboard-section-body" tabindex="0" aria-label="Chat dashboard">
+                            <div class="dashboard-card"><h3>Quick Smiley</h3><p>Continue your current or latest chat, or start one.</p><form id="homeSmileyForm"><label for="homeSmileyInput">Message Smiley</label><input id="homeSmileyInput" maxlength="2000" placeholder="Ask Smiley..." required><button type="submit">Ask Smiley</button></form><p id="homeSmileyStatus" aria-live="polite"></p></div>
+                            <div class="dashboard-card"><h3>Popular joined channels</h3><div id="homeChannels" aria-live="polite">Loading...</div></div>
+                        </div>
+                    </section>
                 </div>
             </div>
         </section>
@@ -502,8 +518,8 @@
     <script src="./js/renderers.js?v=achievement-sprites-v4"></script>
     <script src="./js/achievements.js?v=admin-achieve-command-v1"></script>
     <script src="./js/auth.js?v=dashboard-v1"></script>
-    <script src="./js/blog.js"></script>
-    <script src="./js/blog-community.js?v=exact-2000-points-v1"></script>
+    <script src="./js/blog.js?v=dashboard-sections-v2"></script>
+    <script src="./js/blog-community.js?v=dashboard-sections-v2"></script>
     <script src="./js/tabs.js?v=dashboard-v1"></script>
     <script src="./js/settings.js?v=no-scroll-restoration-v3"></script>
     <script src="./js/games.js?v=dashboard-v1"></script>
@@ -518,7 +534,7 @@
     <script src="./chat/actions.js?v=chat-emojis-v1"></script>
     <script src="./chat/giphy.js?v=emoji-picker-v1"></script>
     <script src="./chat/profiles.js?v=chat-options-smiley-v1"></script>
-    <script src="./js/dashboard.js?v=dashboard-v1"></script>
+    <script src="./js/dashboard.js?v=dashboard-sections-v2"></script>
     <script type="module" src="./chat/smiley/smiley.js?v=dashboard-v1"></script>
 </body>
 </html>

@@ -16,6 +16,7 @@
     };
     let userId = null;
     let generation = 0;
+    let authGeneration = 0;
     let authReceived = false;
 
     function clear() {
@@ -25,6 +26,10 @@
         });
         document.getElementById('homeSmileyForm').reset();
         document.getElementById('homeSmileyStatus').textContent = '';
+        document.getElementById('homeSuggestionForm').reset();
+        document.getElementById('homeSuggestionStatus').textContent = '';
+        dashboard.querySelectorAll('form button[type="submit"]').forEach(button => { button.disabled = false; });
+        dashboard.querySelectorAll('details').forEach(details => { details.open = false; });
     }
 
     function showText(element, text) {
@@ -77,11 +82,12 @@
             const id = typeof fileName === 'string' ? fileName.replace(/\.siumingboke$/i, '') : '';
             if (!/^[a-z0-9][a-z0-9_-]*$/i.test(id)) throw new Error('The blog index contains an invalid post ID.');
             const markdown = await fetchText(`./data/blog/${encodeURIComponent(id)}.siumingboke`);
-            const title = post.title?.trim() || markdown.match(/^#\s+(.+)$/m)?.[1]?.trim() || id;
+            const title = (typeof post.title === 'string' ? post.title.trim() : '') || markdown.match(/^#\s+(.+)$/m)?.[1]?.trim() || id;
             const date = markdown.match(/^#{1,6}\s+\+\+\s*DATE:\s*(.*?)\s*$/im)?.[1] || post.date || '';
             const timestamp = parseDate(date);
             if (timestamp === null) console.warn(`Invalid blog date for ${id}: ${date || '(missing)'}`);
-            return { title, date, timestamp };
+            const excerpt = markdown.split(/\r?\n/).find(line => line.trim() && !/^\s*(#|```|[-*+] |>|!\[)/.test(line)) || '';
+            return { id, title, date, timestamp, markdown, excerpt };
         }));
         const dated = posts.filter(post => post.timestamp !== null).sort((a, b) => b.timestamp - a.timestamp);
         return { post: dated[0], invalid: dated.length !== posts.length };
@@ -104,21 +110,30 @@
         return matches[0];
     }
 
-    async function loadPolls() {
+    async function loadPolls(id) {
         const { data: polls, error } = await _supabase.from('blog_polls')
             .select('id, title, created_at').order('created_at', { ascending: false }).limit(100);
         if (error) throw error;
         if (!Array.isArray(polls)) throw new Error('The polls service returned an invalid response.');
         if (!polls.length) return [];
-        const options = await readPages(() => _supabase.from('blog_poll_options')
-            .select('id, poll_id, vote_count').in('poll_id', polls.map(poll => poll.id)).order('id'));
+        const pollIds = polls.map(poll => poll.id);
+        const [options, votes] = await Promise.all([
+            readPages(() => _supabase.from('blog_poll_options')
+                .select('id, poll_id, label, vote_count, position').in('poll_id', pollIds).order('position').order('id')),
+            readPages(() => _supabase.from('blog_poll_votes')
+                .select('poll_id, option_id').eq('user_id', id).in('poll_id', pollIds).order('poll_id'))
+        ]);
         const totals = new Map(polls.map(poll => [poll.id, 0]));
         options.forEach(option => {
             const count = Number(option.vote_count);
-            if (!Number.isFinite(count) || count < 0 || !totals.has(option.poll_id)) throw new Error('The polls service returned invalid vote data.');
+            if (!Number.isFinite(count) || count < 0 || !totals.has(option.poll_id) || typeof option.label !== 'string') throw new Error('The polls service returned invalid vote data.');
             totals.set(option.poll_id, totals.get(option.poll_id) + count);
         });
-        return polls.map(poll => ({ ...poll, votes: totals.get(poll.id) }))
+        return polls.map(poll => {
+            const choices = options.filter(option => option.poll_id === poll.id);
+            if (choices.length < 2) throw new Error(`Poll "${poll.title}" has incomplete options.`);
+            return { ...poll, votes: totals.get(poll.id), options: choices, selected: votes.find(vote => vote.poll_id === poll.id)?.option_id };
+        })
             .sort((a, b) => b.votes - a.votes || Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 3);
     }
 
@@ -166,7 +181,7 @@
         ];
         element.replaceChildren();
         groups.forEach(([title, games]) => {
-            const heading = document.createElement('h3');
+            const heading = document.createElement('h4');
             heading.textContent = title;
             element.appendChild(heading);
             if (!games.length) {
@@ -195,21 +210,63 @@
     function refresh() {
         if (!userId || document.body.classList.contains('is-guest')) return;
         const request = ++generation;
+        const authRequest = authGeneration;
         const id = userId;
+        const blogWasOpen = elements.blog.querySelector('details')?.open || false;
         const tasks = {
             blog: [loadBlog, (element, result) => {
                 if (!result.post) showText(element, result.invalid ? 'No posts have a valid date.' : 'No blog posts yet.');
-                else showText(element, `${result.post.title} · ${result.post.date}${result.invalid ? ' (latest valid date; some post dates are invalid)' : ''}`);
+                else {
+                    const note = document.createElement('p');
+                    note.textContent = `Post popularity is not tracked; showing the latest valid date${result.invalid ? ' (some post dates are invalid)' : ''}.`;
+                    const excerpt = document.createElement('p');
+                    excerpt.textContent = result.post.excerpt;
+                    const details = document.createElement('details');
+                    details.open = blogWasOpen;
+                    const summary = document.createElement('summary');
+                    summary.textContent = `${result.post.title} · ${result.post.date} — read post`;
+                    details.append(summary, window.renderBlogPost(result.post, result.post.markdown));
+                    element.replaceChildren(note, details, excerpt);
+                }
             }],
             suggestion: [() => loadSuggestion(id), (element, result) => showText(element,
                 result ? `${result.title} · Score ${Number(result.upvotes) - Number(result.downvotes)}` : 'You have not posted a suggestion yet.')],
-            polls: [loadPolls, (element, polls) => {
+            polls: [() => loadPolls(id), (element, polls) => {
                 if (!polls.length) return showText(element, 'No polls yet.');
                 const note = document.createElement('p');
                 note.textContent = 'Most votes among the latest 100 polls:';
-                element.replaceChildren(note, makeList(polls, (li, poll) => {
-                    li.textContent = `${poll.title} · ${poll.votes} vote${poll.votes === 1 ? '' : 's'}`;
-                }));
+                element.replaceChildren(note);
+                polls.forEach(poll => {
+                    const card = document.createElement('div');
+                    const heading = document.createElement('h4');
+                    heading.textContent = `${poll.title} · ${poll.votes} vote${poll.votes === 1 ? '' : 's'}`;
+                    card.appendChild(heading);
+                    poll.options.forEach(option => {
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.textContent = `${option.label} · ${option.vote_count}${poll.selected === option.id ? ' (your vote)' : ''}`;
+                        button.disabled = Boolean(poll.selected);
+                        button.addEventListener('click', async () => {
+                            const buttons = card.querySelectorAll('button');
+                            buttons.forEach(item => { item.disabled = true; });
+                            try {
+                                await window.blogCommunityActions.votePoll(poll.id, option.id);
+                                if (userId === id && authRequest === authGeneration) refresh();
+                            } catch (error) {
+                                console.error('Could not vote from the dashboard.', error);
+                                if (userId !== id || request !== generation) return;
+                                status.textContent = `Could not submit vote: ${error.message || 'please try again.'}`;
+                                buttons.forEach(item => { item.disabled = false; });
+                            }
+                        });
+                        card.appendChild(button);
+                    });
+                    const status = document.createElement('p');
+                    status.setAttribute('role', 'status');
+                    if (poll.selected) status.textContent = 'You have voted in this poll.';
+                    card.appendChild(status);
+                    element.appendChild(card);
+                });
             }],
             channels: [() => loadChannels(id), (element, channels) => {
                 if (!channels.length) return showText(element, 'You have not joined any channels yet.');
@@ -250,6 +307,7 @@
 
     function setUser(id) {
         generation += 1;
+        authGeneration += 1;
         userId = id || null;
         dashboard.hidden = !userId;
         clear();
@@ -269,6 +327,35 @@
         document.querySelector(`.blog-section-tab[data-blog-section="${button.dataset.homeBlog}"]`).click();
     }));
     document.querySelector('[data-home-chat]').addEventListener('click', () => window.activateTab('chat'));
+    document.querySelector('[data-home-games]').addEventListener('click', () => window.activateTab('games'));
+    document.getElementById('homeSuggestionForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const title = document.getElementById('homeSuggestionTitle').value.trim();
+        const body = document.getElementById('homeSuggestionBody').value.trim();
+        const status = document.getElementById('homeSuggestionStatus');
+        const button = form.querySelector('button');
+        const id = userId;
+        const authRequest = authGeneration;
+        if (!id || !title || !body) {
+            status.textContent = 'Enter a title and suggestion while signed in.';
+            return;
+        }
+        button.disabled = true;
+        status.textContent = 'Posting suggestion...';
+        try {
+            await window.blogCommunityActions.postSuggestion(id, title, body);
+            if (userId !== id || authRequest !== authGeneration) return;
+            form.reset();
+            status.textContent = 'Suggestion posted.';
+            refresh();
+        } catch (error) {
+            console.error('Could not post suggestion from the dashboard.', error);
+            if (userId === id && authRequest === authGeneration) status.textContent = `Could not post suggestion: ${error.message || 'please try again.'}`;
+        } finally {
+            if (authRequest === authGeneration) button.disabled = false;
+        }
+    });
     document.getElementById('homeSmileyForm').addEventListener('submit', async event => {
         event.preventDefault();
         const input = document.getElementById('homeSmileyInput');
@@ -277,21 +364,24 @@
         const prompt = input.value.trim();
         if (!prompt) return;
         const requestUserId = userId;
+        const authRequest = authGeneration;
         button.disabled = true;
         try {
             if (typeof window.openQuickSmiley !== 'function') throw new Error('Smiley is still loading. Please try again.');
             window.activateTab('chat');
             await window.initChatTab();
-            if (!requestUserId || userId !== requestUserId) throw new Error('Your account changed. Please try again.');
+            if (!requestUserId || userId !== requestUserId || authRequest !== authGeneration) throw new Error('Your account changed. Please try again.');
             window.openQuickSmiley(prompt);
             input.value = '';
             status.textContent = '';
         } catch (error) {
             console.error('Could not open Smiley.', error);
-            status.textContent = error.message;
-            if (document.body.classList.contains('is-home-tab') === false && typeof showPopup === 'function') showPopup(error.message, 'error');
+            if (authRequest === authGeneration) {
+                status.textContent = error.message;
+                if (document.body.classList.contains('is-home-tab') === false && typeof showPopup === 'function') showPopup(error.message, 'error');
+            }
         } finally {
-            button.disabled = false;
+            if (authRequest === authGeneration) button.disabled = false;
         }
     });
 

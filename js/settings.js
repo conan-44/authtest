@@ -664,12 +664,6 @@ const APP_THEME_PRESETS = [
                 const text = document.createElement("span");
                 text.className = "settings-toggle-label";
                 text.textContent = `-  ${formatSettingName(key)}`;
-                if (section === "chat" && key === "trusted sources only") {
-                    const hint = document.createElement("span");
-                    hint.className = "settings-toggle-hint";
-                    hint.textContent = "Restricts external search links to Wikipedia and selected publishers. Smiley can only cite sources it actually fetches; currently those are Wikipedia results.";
-                    text.appendChild(hint);
-                }
 
                 label.append(checkbox, icon, text);
                 if (isAudioSection && key.toLowerCase() === "sound effects") {
