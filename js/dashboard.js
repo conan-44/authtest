@@ -93,8 +93,8 @@
         return { post: dated[0], invalid: dated.length !== posts.length };
     }
 
-    async function loadSuggestion(id) {
-        const own = await readPages(() => _supabase.from('blog_suggestions').select('id').eq('user_id', id).order('id'));
+    async function loadSuggestion() {
+        const own = await readPages(() => _supabase.rpc('get_own_blog_suggestion_ids').order('id'));
         if (!own.length) return null;
         const ids = new Set(own.map(row => row.id));
         const suggestions = await readPages(() => _supabase.rpc('get_blog_suggestions', { p_sort: 'popular' }).order('id'));
@@ -229,7 +229,7 @@
                     element.replaceChildren(note, details, excerpt);
                 }
             }],
-            suggestion: [() => loadSuggestion(id), (element, result) => showText(element,
+            suggestion: [loadSuggestion, (element, result) => showText(element,
                 result ? `${result.title} · Score ${Number(result.upvotes) - Number(result.downvotes)}` : 'You have not posted a suggestion yet.')],
             polls: [() => loadPolls(id), (element, polls) => {
                 if (!polls.length) return showText(element, 'No polls yet.');
@@ -333,6 +333,7 @@
         const form = event.currentTarget;
         const title = document.getElementById('homeSuggestionTitle').value.trim();
         const body = document.getElementById('homeSuggestionBody').value.trim();
+        const category = form.querySelector('input[name="category"]:checked')?.value;
         const status = document.getElementById('homeSuggestionStatus');
         const button = form.querySelector('button');
         const id = userId;
@@ -344,7 +345,7 @@
         button.disabled = true;
         status.textContent = 'Posting suggestion...';
         try {
-            await window.blogCommunityActions.postSuggestion(id, title, body);
+            await window.blogCommunityActions.postSuggestion(id, title, body, category);
             if (userId !== id || authRequest !== authGeneration) return;
             form.reset();
             status.textContent = 'Suggestion posted.';

@@ -114,6 +114,12 @@ html[data-tab-icon-style="chiseled"] .dashboard-section-icon.btn-icon {
     color: var(--color-text);
     font: 14px 'lowsmall', sans-serif;
 }
+.dashboard-card .suggestion-categories input[type="radio"] {
+    display: inline-block;
+    width: auto;
+    margin: 0;
+    padding: 0;
+}
 .dashboard-card textarea { resize: vertical; }
 .dashboard-card summary { margin-top: 8px; cursor: pointer; color: var(--color-heading); }
 .dashboard-card .blog-post { margin-top: 8px; }

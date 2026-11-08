@@ -10,7 +10,7 @@
     <link rel="icon" type="image/x-icon" href="./assets/favicon-b.png">
     <link rel="stylesheet" href="./css/variables.css?v=tip-area-v1">
     <link rel="stylesheet" href="./css/base.css?v=dashboard-v1">
-    <link rel="stylesheet" href="./css/blog.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/blog.css?v=suggestion-categories-v1">
     <link rel="stylesheet" href="./css/settings.css?v=no-page-scroll-v1">
     <link rel="stylesheet" href="./css/chat.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/emojis.css?v=emoji-picker-v1">
@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="./css/milestones.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/notifications.css?v=tip-placeholder-v1">
     <link rel="stylesheet" href="./css/sheet.css?v=guest-guide-v1">
-    <link rel="stylesheet" href="./css/dashboard.css?v=dashboard-style-v3">
+    <link rel="stylesheet" href="./css/dashboard.css?v=suggestion-categories-v1">
     <link rel="stylesheet" href="./css/responsive.css?v=dashboard-v1">
 </head>
 <body class="is-guest">
@@ -73,7 +73,7 @@
                             <div class="dashboard-card"><h3>Featured post</h3><div id="homeLatestPost" aria-live="polite">Loading...</div></div>
                             <div class="dashboard-card"><h3>Popular polls</h3><div id="homePolls" aria-live="polite">Loading...</div><button type="button" data-home-blog="polls">All polls</button></div>
                             <div class="dashboard-card"><h3>Your most popular suggestion</h3><div id="homeSuggestion" aria-live="polite">Loading...</div>
-                                <details><summary>Post a suggestion</summary><form id="homeSuggestionForm"><label for="homeSuggestionTitle">Title</label><input id="homeSuggestionTitle" maxlength="120" required><label for="homeSuggestionBody">Suggestion</label><textarea id="homeSuggestionBody" maxlength="2000" rows="3" required></textarea><button type="submit">Post suggestion</button><p id="homeSuggestionStatus" role="status"></p></form></details>
+                                <details><summary>Post a suggestion</summary><form id="homeSuggestionForm"><label for="homeSuggestionTitle">Title</label><input id="homeSuggestionTitle" maxlength="120" required><label for="homeSuggestionBody">Suggestion</label><textarea id="homeSuggestionBody" maxlength="2000" rows="3" required></textarea><fieldset class="suggestion-categories"><legend>Category</legend><label><input type="radio" name="category" value="bug" required><span class="btn-icon label-error" aria-hidden="true"></span>Bug</label><label><input type="radio" name="category" value="enhancement"><span class="btn-icon label-info" aria-hidden="true"></span>Enhancement</label><label><input type="radio" name="category" value="help wanted"><span class="btn-icon label-success" aria-hidden="true"></span>Help wanted</label><label><input type="radio" name="category" value="invalid"><span class="btn-icon label-warn" aria-hidden="true"></span>Invalid</label></fieldset><button type="submit">Post suggestion</button><p id="homeSuggestionStatus" role="status"></p></form></details>
                                 <button type="button" data-home-blog="suggestions">All suggestions</button>
                             </div>
                         </div>
@@ -349,11 +349,19 @@
                 <div id="blogSuggestionsPanel" class="blog-section-panel is-hidden" role="tabpanel" aria-labelledby="blogSuggestionsTab" hidden>
                     <section class="blog-community-create">
                         <h2>Share a suggestion</h2>
+                        <p class="blog-community-meta">Suggestions are synced to GitHub issues in the background. Completing an issue removes its suggestion.</p>
                         <form id="createBlogSuggestionForm" class="blog-community-form">
                             <label for="blogSuggestionTitle">Title</label>
                             <input id="blogSuggestionTitle" name="title" type="text" maxlength="120" required placeholder="A short summary">
                             <label for="blogSuggestionBody">Suggestion</label>
                             <textarea id="blogSuggestionBody" name="body" maxlength="2000" rows="4" required placeholder="What would you like to see?"></textarea>
+                            <fieldset class="suggestion-categories">
+                                <legend>Category</legend>
+                                <label><input type="radio" name="category" value="bug" required><span class="btn-icon label-error" aria-hidden="true"></span>Bug</label>
+                                <label><input type="radio" name="category" value="enhancement"><span class="btn-icon label-info" aria-hidden="true"></span>Enhancement</label>
+                                <label><input type="radio" name="category" value="help wanted"><span class="btn-icon label-success" aria-hidden="true"></span>Help wanted</label>
+                                <label><input type="radio" name="category" value="invalid"><span class="btn-icon label-warn" aria-hidden="true"></span>Invalid</label>
+                            </fieldset>
                             <button type="submit">Post suggestion</button>
                             <p id="blogSuggestionCreateStatus" class="blog-status" aria-live="polite"></p>
                         </form>
@@ -519,7 +527,7 @@
     <script src="./js/achievements.js?v=admin-achieve-command-v1"></script>
     <script src="./js/auth.js?v=dashboard-v1"></script>
     <script src="./js/blog.js?v=dashboard-sections-v2"></script>
-    <script src="./js/blog-community.js?v=dashboard-sections-v2"></script>
+    <script src="./js/blog-community.js?v=suggestion-categories-v1"></script>
     <script src="./js/tabs.js?v=dashboard-v1"></script>
     <script src="./js/settings.js?v=no-scroll-restoration-v3"></script>
     <script src="./js/games.js?v=dashboard-v1"></script>
@@ -534,7 +542,7 @@
     <script src="./chat/actions.js?v=chat-emojis-v1"></script>
     <script src="./chat/giphy.js?v=emoji-picker-v1"></script>
     <script src="./chat/profiles.js?v=chat-options-smiley-v1"></script>
-    <script src="./js/dashboard.js?v=dashboard-sections-v2"></script>
+    <script src="./js/dashboard.js?v=suggestion-categories-v1"></script>
     <script type="module" src="./chat/smiley/smiley.js?v=dashboard-v1"></script>
 </body>
 </html>

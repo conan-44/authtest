@@ -17,6 +17,12 @@
     let pollsLoaded = false;
     let suggestionsLoaded = false;
     let suggestionSort = "newest";
+    const suggestionCategories = {
+        bug: { label: "Bug", icon: "label-error" },
+        enhancement: { label: "Enhancement", icon: "label-info" },
+        "help wanted": { label: "Help wanted", icon: "label-success" },
+        invalid: { label: "Invalid", icon: "label-warn" }
+    };
 
     function setStatus(element, message, isError = false) {
         element.textContent = message;
@@ -260,8 +266,9 @@
         pollsLoaded = false;
     }
 
-    async function postSuggestion(userId, title, body) {
-        const { error } = await _supabase.from("blog_suggestions").insert({ user_id: userId, title, body });
+    async function postSuggestion(userId, title, body, category) {
+        if (!Object.hasOwn(suggestionCategories, category)) throw new Error("Choose a valid suggestion category.");
+        const { error } = await _supabase.from("blog_suggestions").insert({ user_id: userId, title, body, category });
         if (error) throw error;
         recordCommunityAchievement("suggestion-created");
         suggestionsLoaded = false;
@@ -326,7 +333,15 @@
         meta.dateTime = suggestion.created_at;
         meta.textContent = formatExactDate(suggestion.created_at);
         const body = makeMessage("blog-community-body", suggestion.body);
-        card.append(heading, author, meta, body);
+        const category = suggestionCategories[suggestion.category];
+        if (!category) throw new Error(`Unknown category for suggestion "${suggestion.title}".`);
+        const categoryLabel = document.createElement("span");
+        categoryLabel.className = "blog-suggestion-category";
+        const icon = document.createElement("span");
+        icon.className = `btn-icon ${category.icon}`;
+        icon.setAttribute("aria-hidden", "true");
+        categoryLabel.append(icon, document.createTextNode(category.label));
+        card.append(heading, categoryLabel, author, meta, body);
 
         const voteControls = document.createElement("div");
         voteControls.className = "blog-suggestion-votes";
@@ -373,7 +388,14 @@
                 suggestionList.replaceChildren(makeMessage("blog-community-empty", "No suggestions yet. Share the first one."));
                 return;
             }
-            suggestionList.replaceChildren(...data.map(buildSuggestionCard));
+            const { data: categories, error: categoryError } = await _supabase.from("blog_suggestions")
+                .select("id, category").in("id", data.map(suggestion => suggestion.id));
+            if (categoryError) throw categoryError;
+            if (!Array.isArray(categories)) throw new Error("Could not load suggestion categories.");
+            const categoriesById = new Map(categories.map(item => [String(item.id), item.category]));
+            suggestionList.replaceChildren(...data.map(suggestion => buildSuggestionCard({
+                ...suggestion, category: categoriesById.get(String(suggestion.id))
+            })));
         } catch (error) {
             console.error("Could not load community suggestions.", error);
             suggestionsLoaded = false;
@@ -415,6 +437,7 @@
         }
         const title = document.getElementById("blogSuggestionTitle").value.trim();
         const body = document.getElementById("blogSuggestionBody").value.trim();
+        const category = suggestionForm.querySelector('input[name="category"]:checked')?.value;
         if (!title || !body) {
             setStatus(suggestionCreateStatus, "Enter a title and suggestion.", true);
             return;
@@ -423,7 +446,7 @@
         submitButton.disabled = true;
         setStatus(suggestionCreateStatus, "Posting suggestion...");
         try {
-            await postSuggestion(currentUserId, title, body);
+            await postSuggestion(currentUserId, title, body, category);
             suggestionForm.reset();
             setStatus(suggestionCreateStatus, "Suggestion posted.");
             await loadSuggestions();
