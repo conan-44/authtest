@@ -4,7 +4,7 @@
   "rarityWeightRatio": 0.2,
   "shardValues": [1, 5, 25, 125],
   "fragmentValue": 125,
-  "fragmentChance": { "base": 0.001, "growth": 0.049, "scale": 4500 },
+  "fragmentChance": { "base": 0.00025, "growth": 0.00125, "scale": 2700 },
   "packs": [
     { "id": "classic", "name": "Classic", "size": 5, "description": "Original rates", "strategy": "original" },
     { "id": "red", "name": "Red", "size": 7, "description": "More shards", "strategy": "original" },
