@@ -31,5 +31,7 @@ games each have a rating system displayed on a users's profile. two achievements
 ### blog
 the blog includes many community things, such as suggestions linked to the repo's Issues and a polling system. some major updates will be posted on the blog. users may post categorised suggestions
 or create / vote in polls with up to 8 options. some achievements of the **main** namespace will require users to engage in these mechanics
+### gacha
+gacha is a way for players to gamble a currency *orbs* in exchange for a variety of *shards*. among those are **fragments**, which are far rarer.
 ## end
 this is about it. this document was not written using AI in any way or form.

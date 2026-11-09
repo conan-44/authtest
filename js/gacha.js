@@ -56,11 +56,29 @@
     function renderEconomy() {
         if (!economy) {
             balanceLabel.textContent = 'Sign in to see orbs and tickets.';
+            delete balanceLabel.dataset.balance;
             ticketChoice.hidden = true;
             return;
         }
-        balanceLabel.textContent = `${economy.orbs.toLocaleString()} orbs · ` +
-            packs.map(pack => `${pack.name}: ${economy.local.tickets[pack.id]}`).join(' · ');
+        const makeBalance = (label, count, className) => {
+            const item = document.createElement('div');
+            item.className = `gacha-balance-item ${className}`;
+            const name = document.createElement('span');
+            name.className = 'gacha-balance-label';
+            name.textContent = label;
+            const value = document.createElement('strong');
+            value.textContent = count.toLocaleString();
+            item.append(name, value);
+            return item;
+        };
+        const balanceKey = JSON.stringify([economy.orbs, ...packs.map(pack => economy.local.tickets[pack.id])]);
+        if (balanceLabel.dataset.balance !== balanceKey) {
+            balanceLabel.replaceChildren(
+                makeBalance('Orbs', economy.orbs, 'gacha-balance-orbs'),
+                ...packs.map(pack => makeBalance(`${pack.name} tickets`, economy.local.tickets[pack.id], `gacha-balance-${pack.id}`))
+            );
+            balanceLabel.dataset.balance = balanceKey;
+        }
         const available = milestonesToClaim(economy.local);
         ticketChoice.hidden = !available.length;
         if (available.length) ticketLabel.textContent = `${available[0].name} milestone: choose a ticket (${available.length} available)`;
@@ -196,12 +214,15 @@
         const description = document.createElement('span');
         description.className = 'gacha-pack-description';
         description.textContent = `${pack.size} shards · ${pack.description}`;
+        const price = document.createElement('span');
+        price.className = 'gacha-pack-price';
+        price.textContent = '20 orbs / 1 ticket';
         const rates = document.createElement('span');
         rates.className = 'gacha-pack-rates';
         rates.id = `gacha-pack-rates-${pack.id}`;
         rates.setAttribute('role', 'tooltip');
         card.setAttribute('aria-describedby', rates.id);
-        card.append(icon, title, description);
+        card.append(icon, title, description, price);
         document.body.appendChild(rates);
         const showRates = () => {
             const rect = card.getBoundingClientRect();

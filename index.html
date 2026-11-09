@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="./css/profiles.css?v=game-ratings-v1">
     <link rel="stylesheet" href="./css/achievements.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/games.css?v=css-split-v1">
-    <link rel="stylesheet" href="./css/gacha.css?v=gacha-economy-v1">
+    <link rel="stylesheet" href="./css/gacha.css?v=gacha-economy-style-v1">
     <link rel="stylesheet" href="./css/milestones.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/notifications.css?v=tip-placeholder-v1">
     <link rel="stylesheet" href="./css/sheet.css?v=gacha-tab-v1">
@@ -382,31 +382,47 @@
                 <h1 id="gacha-heading">Gacha</h1>
             </div>
             <div class="panel-body gacha-body">
-                <div class="gacha-draw-area">
-                    <button id="gachaDrawButton" class="gacha-draw-button" type="button" disabled>Draw 5 shards</button>
-                    <label class="gacha-draw-count" for="gachaDrawCount">Number of packs (1–24)
-                        <input id="gachaDrawCount" type="number" min="1" max="24" step="1" value="1" required>
-                    </label>
-                    <p id="gachaSelectedPack">Selected pack: Classic</p>
-                    <p id="gachaBalance">Loading orbs and tickets...</p>
-                    <label class="gacha-draw-count" for="gachaPayment">Pay with
-                        <select id="gachaPayment">
-                            <option value="orbs">Orbs</option>
-                            <option value="tickets">Matching tickets</option>
-                        </select>
-                    </label>
-                    <div id="gachaTicketChoice" class="gacha-ticket-choice" hidden>
-                        <label for="gachaTicketColor" id="gachaTicketLabel">Choose a milestone ticket</label>
-                        <select id="gachaTicketColor">
-                            <option value="red">Red</option>
-                            <option value="yellow">Yellow</option>
-                            <option value="green">Green</option>
-                            <option value="blue">Blue</option>
-                        </select>
-                        <button id="gachaClaimTicket" type="button">Claim ticket</button>
+                <div class="gacha-draw-area" tabindex="0" aria-label="Gacha draw and wallet">
+                    <div class="gacha-draw-layout">
+                        <div class="gacha-draw-main">
+                            <p id="gachaSelectedPack" class="gacha-selected-pack">Selected pack: Classic</p>
+                            <button id="gachaDrawButton" class="gacha-draw-button" type="button" disabled>Draw 5 shards</button>
+                            <div class="gacha-draw-controls">
+                                <label class="gacha-draw-count" for="gachaDrawCount">Packs (1–24)
+                                    <input id="gachaDrawCount" type="number" min="1" max="24" step="1" value="1" required>
+                                </label>
+                                <label class="gacha-draw-count" for="gachaPayment">Pay with
+                                    <select id="gachaPayment">
+                                        <option value="orbs">Orbs</option>
+                                        <option value="tickets">Matching tickets</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <p id="gachaStatus" class="gacha-status" role="status">Loading your milestones...</p>
+                        </div>
+                        <div class="gacha-economy">
+                            <section class="gacha-wallet" aria-labelledby="gacha-wallet-heading">
+                                <h2 id="gacha-wallet-heading">Your wallet</h2>
+                                <div id="gachaBalance" class="gacha-balance" aria-live="polite">Loading orbs and tickets...</div>
+                            </section>
+                            <div id="gachaTicketChoice" class="gacha-ticket-choice" hidden>
+                                <label for="gachaTicketColor" id="gachaTicketLabel">Choose a milestone ticket</label>
+                                <div class="gacha-ticket-controls">
+                                    <select id="gachaTicketColor">
+                                        <option value="red">Red</option>
+                                        <option value="yellow">Yellow</option>
+                                        <option value="green">Green</option>
+                                        <option value="blue">Blue</option>
+                                    </select>
+                                    <button id="gachaClaimTicket" type="button">Claim ticket</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <p id="gachaStatus" role="status">Loading your milestones...</p>
-                    <p class="gacha-note">Packs cost 20 orbs each or one matching ticket. Start with 100 orbs; earn 10 per achievement, 25 per milestone and 1 per 25 Elo above your previous high. One Classic ticket is added every 24 hours; choose a colored ticket for each milestone. Tickets are saved on this device; shards and orbs are saved to your account. Tickets and draw results are client-controlled, not tamper-proof. Milestones limit rarities.</p>
+                    <details class="gacha-note">
+                        <summary>How orbs and tickets work</summary>
+                        <p>Packs cost 20 orbs each or one matching ticket. Start with 100 orbs; earn 10 per achievement, 25 per milestone and 1 per 25 Elo above your previous high. One Classic ticket is added every 24 hours; choose a colored ticket for each milestone. Tickets are saved on this device; shards and orbs are saved to your account. Tickets and draw results are client-controlled, not tamper-proof. Milestones limit rarities.</p>
+                    </details>
                 </div>
                 <section class="gacha-collection" aria-label="Shard and fragment collection">
                     <div id="gachaInventory" class="gacha-inventory"></div>
@@ -580,7 +596,7 @@
     <script src="./js/settings.js?v=gacha-tab-v1"></script>
     <script src="./js/games.js?v=gacha-economy-v1"></script>
     <script src="./js/gacha-rules.js?v=gacha-color-packs-v1"></script>
-    <script src="./js/gacha.js?v=gacha-economy-v1"></script>
+    <script src="./js/gacha.js?v=gacha-economy-style-v1"></script>
     <script src="./js/tips.js?v=tip-placeholder-v1"></script>
     <!-- api config stuff -->
     <script src="./api-config/giphy-config.js"></script>
@@ -591,7 +607,7 @@
     <script src="./chat/channels.js?v=dashboard-v1"></script>
     <script src="./chat/actions.js?v=chat-emojis-v1"></script>
     <script src="./chat/giphy.js?v=emoji-picker-v1"></script>
-    <script src="./chat/profiles.js?v=gacha-economy-v1"></script>
+    <script src="./chat/profiles.js?v=gacha-economy-style-v1"></script>
     <script src="./js/dashboard.js?v=suggestion-categories-v1"></script>
     <script type="module" src="./chat/smiley/smiley.js?v=dashboard-v1"></script>
 </body>

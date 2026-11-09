@@ -371,16 +371,22 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
     gameRatingsSection.append(gameRatingsHeading, gameRatingsGrid);
 
     const shardsSection = document.createElement("section");
+    shardsSection.className = "public-profile-shards";
     const shardsHeading = document.createElement("h3");
     shardsHeading.className = "public-profile-rarity-heading";
     shardsHeading.textContent = "Shards and fragments";
     const shardsGrid = document.createElement("div");
-    shardsGrid.className = "public-profile-game-ratings";
+    shardsGrid.className = "public-profile-shards-grid";
     ["silver", "gold", "diamond", "platinum", "nebula", "celeste", "void"].forEach(name => {
       const count = gachaInventory?.[name];
       const label = `${name[0].toUpperCase()}${name.slice(1)}`;
-      shardsGrid.appendChild(makeProfileStat(label, gachaError || (count != null && !Number.isSafeInteger(count))
-        ? "Unavailable" : String(count ?? 0)));
+      const stat = makeProfileStat(label, gachaError || (count != null && !Number.isSafeInteger(count))
+        ? "Unavailable" : (count ?? 0).toLocaleString(), "public-profile-shard");
+      const sprite = document.createElement("span");
+      sprite.className = `gacha-shard gacha-shard-${name}`;
+      sprite.setAttribute("aria-hidden", "true");
+      stat.prepend(sprite);
+      shardsGrid.appendChild(stat);
     });
     shardsSection.append(shardsHeading, shardsGrid);
 
