@@ -198,6 +198,7 @@ function showInputPopup(message, inputType = 'text') {
 
 const LOGIN_BANNER_OAUTH_KEY = 'skvwaffle-login-banner-pending';
 let lastAuthUserId = null;
+let authGeneration = 0;
 let loginBannerTimer = null;
 
 function showLoginBanner() {
@@ -249,9 +250,11 @@ function consumePendingOAuthLogin() {
 }
 
 
-_supabase.auth.onAuthStateChange(async (event, session) => {
+_supabase.auth.onAuthStateChange((event, session) => {
   printLog(`Auth Event: ${event}`);
   const userId = session?.user?.id || null;
+  if (userId !== lastAuthUserId) authGeneration++;
+  const currentGeneration = authGeneration;
   const pendingOAuthLogin = (event === 'INITIAL_SESSION' || event === 'SIGNED_IN')
     && consumePendingOAuthLogin();
   if (userId && userId !== lastAuthUserId && (event === 'SIGNED_IN' || pendingOAuthLogin)) {
@@ -268,8 +271,19 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
 
     updateAuthBadgesAndProviders(session.user);
 
-    await fetchProfile(session.user.id);
     if (typeof window.setTabsGuestMode === "function") window.setTabsGuestMode(false);
+    setTimeout(async () => {
+      if (lastAuthUserId !== userId || authGeneration !== currentGeneration) return;
+      window.dispatchEvent(new CustomEvent("app-auth-state-changed", { detail: { userId } }));
+      try {
+        await fetchProfile(userId, currentGeneration);
+      } catch (error) {
+        console.error('Could not load account profile.', error);
+        if (lastAuthUserId === userId && authGeneration === currentGeneration) {
+          showPopup('Could not load account profile. Please try reloading profile data.', 'warning');
+        }
+      }
+    }, 0);
   } else {
     document.getElementById('authSection').style.display = '';
     document.getElementById('profileSection').style.display = 'none';
@@ -285,9 +299,9 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
     }
   }
 
-  window.dispatchEvent(new CustomEvent("app-auth-state-changed", {
-    detail: { userId: session?.user?.id || null }
-  }));
+  if (!session) {
+    window.dispatchEvent(new CustomEvent("app-auth-state-changed", { detail: { userId: null } }));
+  }
 });
 
 
@@ -421,12 +435,13 @@ document.getElementById('signInBtn').addEventListener('click', async () => {
 
   printLog("Logging in...");
   showPopup("Logging in...", 'info');
-  const { error } = await _supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    printLog("❌ Login Error: " + error.message);
-    showPopup("Login failed ",  'error');
-  } else {
+  try {
+    const { error } = await _supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
     showPopup("Logged in successfully!", 'success');
+  } catch (error) {
+    console.error('Could not sign in.', error);
+    showPopup(`Login failed: ${error?.message || 'Please try again.'}`, 'error');
   }
 });
 
@@ -436,16 +451,18 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
   showPopup("Redirecting to Google...", 'info');
   setPendingOAuthLogin(true);
 
-  const { error } = await _supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: window.location.origin + window.location.pathname
-    }
-  });
-
-  if (error) {
+  try {
+    const { error } = await _supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + window.location.pathname
+      }
+    });
+    if (error) throw error;
+  } catch (error) {
     setPendingOAuthLogin(false);
-    printLog("❌ Google Auth Error: " + error.message);
+    console.error('Could not start Google sign-in.', error);
+    showPopup(`Google sign-in failed: ${error?.message || 'Please try again.'}`, 'error');
   }
 });
 
@@ -840,7 +857,9 @@ setProfileAvatarTool('pencil');
 initializeProfileAvatarPalette();
 drawProfileAvatarEditor();
 
-async function fetchProfile(userId) {
+async function fetchProfile(userId, expectedGeneration = authGeneration) {
+  const isCurrent = () => lastAuthUserId === userId && authGeneration === expectedGeneration;
+  if (!isCurrent()) return;
   activeProfileAvatarUserId = userId;
   printLog("Fetching profile row from SQL table...");
   const { data, error } = await _supabase
@@ -849,8 +868,9 @@ async function fetchProfile(userId) {
     .eq('id', userId)
     .maybeSingle();
 
+  if (!isCurrent()) return;
   if (error) {
-    printLog("❌ Database Query Error: " + error.message);
+    throw error;
   } else if (!data) {
     printLog("⚠️ Connected, but profile row missing.");
     showPopup("Could not load some data", 'warning');
@@ -872,6 +892,7 @@ async function fetchProfile(userId) {
     const { data: rank, error: rankError } = await _supabase.rpc("get_public_profile_rank", {
       p_user_id: userId
     });
+    if (!isCurrent()) return;
     if (rankError) {
       console.error("Could not load account profile rank.", rankError);
       applyAccountProfileRank("BANANA");
@@ -918,7 +939,12 @@ document.getElementById('updateProfileBtn').addEventListener('click', async () =
   } else {
     printLog("✅ Profile updated successfully!");
     showPopup("Saved profile data", 'success');
-    await fetchProfile(user.id);
+    try {
+      await fetchProfile(user.id);
+    } catch (error) {
+      console.error('Could not reload account profile.', error);
+      showPopup('Profile saved, but could not be reloaded.', 'warning');
+    }
   }
 });
 
@@ -1055,8 +1081,15 @@ document.getElementById('deleteAccountBtn').addEventListener('click', async () =
 
 document.getElementById('signOutBtn').addEventListener('click', () => _supabase.auth.signOut());
 document.getElementById('refreshBtn').addEventListener('click', async () => {
-  const { data: { user } } = await _supabase.auth.getUser();
-  if (user) await fetchProfile(user.id);
+  try {
+    const { data: { user }, error } = await _supabase.auth.getUser();
+    if (error) throw error;
+    if (user) await fetchProfile(user.id);
+    else showPopup('Sign in to reload profile data.', 'warning');
+  } catch (error) {
+    console.error('Could not reload account profile.', error);
+    showPopup('Could not reload account profile.', 'error');
+  }
 });
 
 const pressedButtonTimers = new WeakMap();

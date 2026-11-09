@@ -757,7 +757,7 @@ const history_file = "./history/achievements.skvwhist";
         console.error(error);
         gridEl.innerHTML = "<p>Could not load achievements list from data/achievements/index.skvwmeta.</p>";
     });
-    loadVersionIndicator();
+    if (versionEl) loadVersionIndicator();
 
     window.achieve = command => achievements.executeAdminCodeCommand(command);
     window.points = command => achievements.points(command);

@@ -23,6 +23,11 @@ production writes for test fixtures.
 - `js/` contains authentication, settings, achievement state and rendering,
   dashboard, blog, games integration, Gacha, and tips. Most scripts are
   classic browser scripts; their order in `index.html` matters.
+- Supabase auth-state callbacks must return synchronously. Profile queries are
+  deferred until after the callback releases the auth lock; account generation
+  checks prevent an earlier profile request from overwriting a newer session.
+  Sign-in state is dispatched before profile loading, so a failed or stalled
+  profile request cannot block the rest of the app. Profile errors are reported.
 - `chat/` contains messages, channels, actions, GIFs, profiles, emojis, and the
   Smiley interface and worker. Chat uses Supabase realtime and storage.
 - `minigames/` contains standalone game pages. `js/games.js` hosts them in an
