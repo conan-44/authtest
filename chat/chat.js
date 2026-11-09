@@ -1,4 +1,4 @@
-// Core chat state, history, realtime updates, and initialization.
+
 let realtimeChannel = null;
 let currentChatUserId = null;
 let chatHistoryRequestId = 0;
@@ -46,7 +46,7 @@ function isMissingChannelColumn(error) {
     || (error?.message?.includes("messages.channel_id") && error.message?.includes("does not exist"));
 }
 
-// 1. CHAT HISTORY
+
 async function fetchChatHistory(channelId = activeChatChannelId) {
   const requestId = ++chatHistoryRequestId;
   const container = document.getElementById('chatMessages');
@@ -82,7 +82,7 @@ async function fetchChatHistory(channelId = activeChatChannelId) {
   scrollToBottom();
 }
 
-// 2. REALTIME LISTENER
+
 function initRealtimeChat() {
   realtimeChannel = _supabase
     .channel('public:messages')
@@ -433,7 +433,7 @@ async function recordChatRoomFirstJoin(channelId = activeChatChannelId) {
   if (joined?.user_id) appendChatJoinNotice(joined);
 }
 
-// 3. SEND MESSAGE
+
 function recordChatAchievement(eventName) {
   const recorder = window.achievements?.recordGameEvent;
   if (typeof recorder !== "function") {
@@ -548,11 +548,11 @@ function playSendIconAnimation() {
   const icon = document.querySelector('#sendChatBtn .icon-send');
   if (!icon) return;
   icon.classList.remove('is-sending');
-  void icon.offsetWidth; // restart the animation from scratch
+  void icon.offsetWidth;
   icon.classList.add('is-sending');
 }
 
-// 4. UI HELPERS
+
 function appendMessageUI(msg) {
   if (!msg.id || typeof msg.content !== "string" || !msg.content.trim()) return;
 
@@ -580,7 +580,7 @@ function appendMessageUI(msg) {
   const timestamp = msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
   const profileUserId = escapeHTML(String(msg.user_id || ""));
 
-  // Use a dedicated .chat-body wrapper with data-raw storing unescaped/uncensored raw text
+
   div.innerHTML = `<div class="chat-header"><button type="button" class="chat-profile-link" data-chat-profile-user data-user-id="${profileUserId}"></button>${flair}<span class="chat-timestamp">${timestamp}</span><button type="button" class="chat-reply-button" data-message-action="reply" aria-label="Reply"><span class="btn-icon icon-reply" aria-hidden="true"></span></button></div><div class="chat-reply-preview is-hidden"></div><div class="chat-body">${escapeHTML(rawContent)}</div>`;
 
   const profileLink = div.querySelector(".chat-profile-link");
@@ -715,7 +715,7 @@ function censorSwearWords(str) {
   });
 }
 
-// 5. LAZY INIT
+
 let chatInitialized = false;
 let chatInitializationPromise = null;
 const chatPanel = document.getElementById('chatPanel');

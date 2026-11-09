@@ -1,4 +1,4 @@
-// Use the app's labeled notifications when embedded, with a standalone fallback.
+
 function showPopup(message, type = 'info', opts = {}) {
     if (window.parent !== window) {
         try {
@@ -16,7 +16,7 @@ function showPopup(message, type = 'info', opts = {}) {
     popup.textContent = message;
     popup.classList.remove('hidden', 'show', 'shake', 'large');
     if (popupLarge) popup.classList.add('large');
-    void popup.offsetWidth; // force reflow
+    void popup.offsetWidth;
     if (opts.shake) popup.classList.add('shake');
     popup.classList.add('show');
     if (color) { popup.style.color = color; } else { popup.style.color = ''; }
@@ -26,7 +26,7 @@ function showPopup(message, type = 'info', opts = {}) {
     }, opts.duration || 1800);
 }
 
-// confetti effect
+
 function confettiBurst() {
     const canvas = document.getElementById('confetti-canvas');
     if (!canvas) return;
@@ -69,7 +69,7 @@ function confettiBurst() {
     }
     draw();
 }
-// game data
+
 let quizzes = [{
         numbers: [13, 19, 7, 9, 1, 3],
         answer: 11
@@ -101,7 +101,7 @@ let quizzes = [{
     },
 ];
 
-// shuffle list function
+
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -116,7 +116,7 @@ function shuffleAll() {
     });
 }
 
-// game variables
+
 let answer = [];
 let quizIndex = 0;
 let difficulty = "medium";
@@ -124,7 +124,7 @@ let difficultyIndex = 2;
 let newlives = 3;
 const hintCost = 15;
 let usedHint = false;
-// handle UI elements
+
 let levelIndex = document.getElementById("levelIndex");
 let stack = document.getElementById("stack");
 let targetNum = document.getElementById("targetNum");
@@ -157,7 +157,7 @@ if (xp) {
     });
     syncNumberPillarsRating();
 }
-// level editor elements
+
 let levelEditor = document.getElementById('levelEditor');
 let editorNumbers = document.getElementById('editorNumbers');
 let editorTarget = document.getElementById('editorTarget');
@@ -166,7 +166,7 @@ let editorSave = document.getElementById('editorSave');
 let editorClose = document.getElementById('editorClose');
 let customListEl = document.getElementById('customList');
 let customQuizzes = [];
-// handle buttons
+
 let resetBtn = document.getElementById("resetBtn");
 let easyBtn = document.getElementById("easyBtn");
 let mediumBtn = document.getElementById("mediumBtn");
@@ -175,14 +175,14 @@ let hintBtn = document.getElementById("hintBtn");
 let editorToggle = document.getElementById('editorToggle');
 const shareLevelBtn = document.getElementById('shareLevelBtn');
 let versionInfo = document.getElementById('game-info');
-// stats viewer elements
+
 const statsBtn = document.getElementById('statsBtn');
 const statsAchievementsModal = document.getElementById('statsAchievementsModal');
 const statsClose = document.getElementById('statsClose');
 const resetStatsBtn = document.getElementById('resetStatsBtn');
-// handle sfx & music
+
 let clickSfx = new Audio('click.wav');
-// --- Info Modal for README and Version History ---
+
 const infoBtn = document.getElementById('infoBtn');
 const infoModal = document.getElementById('infoModal');
 const infoClose = document.getElementById('infoClose');
@@ -193,7 +193,7 @@ const versionPanel = document.getElementById('versionPanel');
 const readmeContent = document.getElementById('readmeContent');
 const versionContent = document.getElementById('versionContent');
 
-// Preload README and version-history content (static, loaded at build time)
+
 readmeContent.textContent = `# Number Pillars\nA simple math game I got and redesigned to be complex\n## how to play\nclick a box to remove it from the stack. \nTry to make the stack total sum equal to the target number, displayed on the left of the screen\n### more stuff\n - Change difficulty using the difficulty settings (EASY, MEDIUM, HARD)\n - Create your own levels using the level editor!\n - Check your stats in the stats viewer\n - Adjust settings in the settings menu\n## nerd stuff\nI just used nested dictionaries for the main levels\n// game data\nlet quizzes = [{\n        numbers: [13, 19, 7, 9, 1, 3],\n        answer: 11\n    },\n    {\n        numbers: [11, 18, 6, 15, 8, 29, 4],\n        answer: 23\n    },\n    {\n        numbers: [7, 9, 3, 5, 4, 6, 9, 10],\n        answer: 18\n    },\n    {\n        numbers: [4.5, 4.5, 5.5, 7.5, 1.5],\n        answer: 11.5\n    },\n    {\n        numbers: [3.7, 2.3, 5.5, 4.8, 1.2, 8.1],\n        answer: 11.5\n    },\n    {\n        numbers: [2.25, 7.5, 5.25, 1.7, 2.3, 0.25],\n        answer: 11.75\n    },\n    {\n        numbers: [0.125, 3.375, 2.75, 1.25, 0.875, 0.125, 1.625, 3.75, 1.25, 3.475, 3.275],\n        answer: 11.75\n    },\n];\nCustom quizzes are stored in localStorage like so:\nfunction loadCustomQuizzes() {\n    try {\n        const stored = localStorage.getItem('customQuizzes');`;
 versionContent.textContent = `v0.9 INDEV: initial commit\nv1.0 PRE-ALPHA: added 3 new levels\nv1.1 ALPHA: added 2 new levels; added sound effects\nv1.1-2 BETA: added fonts\nv1.2: added 2 new levels\nv1.2-2: changed description\nv1.2-3: fixed minor bugs\nv1.2-20: redid layout; added reset button\nv1.3: added more fonts\nv1.4: added coins display\nv1.4-2: added level display\nv1.4-3: changed level display to show current level, not index\nv1.4-4: changed coin calculation formula\nv1.5: added lives system; fixed coin calculation bug\nv1.5-2: fixed lives not resetting on game over bug\nv1.5-3: changed game over behavior to reset level and coins\nv1.6: added styles to new displays\nv1.6-2: updated css for new displays\nv1.6-3: adjusted layout margins for better appearance\nv1.7: added animated background blobs\nv1.7-2: changed css display opacity\nv1.8: quiz data refactored\nv1.8-2: quiz answers are now shuffled every attempt\nv1.9: added button drop animation\nv1.9-2: fixed drop animation bugs; changed speed and distance\nv1.9-3: added button drop animation for other buttons\nv1.9-4: fixed button drop animation bugs\nv1.9-20: generateLevel function refactored\nv2.0: added difficulty settings (easy, medium, hard)\nv2.0-2: added difficulty buttons and related css\nv2.0-3: added modular resetGame function\nv2.0-20: reset game on difficulty change\nv2.0-21: fixed lives not resetting properly bug; refactored resetGame function\nv2.0-22: refactored resetBtn in css and html\nv2.1: changed difficulty-container layout; changed fonts for score displays\nv2.1-2: adjusted difficulty-container margins; changed button font size to 1rem\nv2.1-20: fixed some button hover bugs\nv2.1-21: fixed more button hover bugs\nv2.1-22: coins calculation now factors difficulty level\nv2.2: coins renamed to xp\nv2.2-2: updated css for xp display; closed bg div in html\nv2.3: added stack-container\nv2.3-1: added styles for stack-container in css; refactored difficulty-container in css\nv2.3-2: adjusted stack-container position; fixed xp integer display bug\nv2.3-3: changed fonts\nv2.4: on hard difficulty, answer sum is hidden\nv2.5: added hint button that costs xp; added mute button\nv2.5-2: adjusted hint button styles\nv2.5-20: hint button disabled on hard difficulty\nv2.5-21: added updateHintUI function; fixed bugs`;
 
@@ -227,7 +227,7 @@ function closeInfoModal() {
 if (infoBtn) infoBtn.addEventListener('click', openInfoModal);
 if (infoClose) infoClose.addEventListener('click', closeInfoModal);
 
-// Tab switching for info modal
+
 if (readmeTab && versionTab && readmePanel && versionPanel) {
     readmeTab.addEventListener('click', () => {
         readmeTab.classList.add('active');
@@ -250,7 +250,7 @@ bgMusic.loop = true;
 bgMusic.volume = 0.5;
 let overlay = document.body;
 
-// dim background
+
 function setDim(on, edit=null) {
     const bg = document.getElementById('bg');
     if (!bg) return;
@@ -264,11 +264,11 @@ function setDim(on, edit=null) {
         if (on) child.classList.add('dimmed'); else child.classList.remove('dimmed');
     });
 }
-// open/close with animation
+
 function openEditor() {
     if (!levelEditor) return;
     if (!levelEditor.classList.contains('hidden')) return;
-    // prep
+
     levelEditor.classList.remove('hidden');
     levelEditor.offsetHeight;
     levelEditor.classList.add('open');
@@ -297,7 +297,7 @@ function closeEditor() {
     }, 420);
 }
 
-// editor close keybinds
+
 window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         if (levelEditor && !levelEditor.classList.contains('hidden')) {
@@ -305,7 +305,7 @@ window.addEventListener('keydown', (e) => {
         }
     }
 });
-// sound state persisted
+
 let soundEffectsEnabled = true;
 let confettiEnabled = true;
 let musicEnabled = false;
@@ -351,7 +351,7 @@ document.addEventListener('pointerdown', () => {
     });
 });
 
-// tooltip helper
+
 function attachTooltip(el, getMessage) {
     if (!el) return () => {};
     let _prevTitle = null;
@@ -361,7 +361,7 @@ function attachTooltip(el, getMessage) {
         _prevTitle = el.getAttribute('title');
         if (_prevTitle !== null) el.removeAttribute('title');
         if (msg) el.setAttribute('data-tooltip', msg);
-        // mark visible for css
+
         el.setAttribute('data-tooltip-visible', 'true');
     };
     const hide = () => {
@@ -376,7 +376,7 @@ function attachTooltip(el, getMessage) {
     el.addEventListener('focus', show);
     el.addEventListener('mouseleave', hide);
     el.addEventListener('blur', hide);
-    // return a detach function
+
     return () => {
         el.removeEventListener('mouseenter', show);
         el.removeEventListener('focus', show);
@@ -387,13 +387,13 @@ function attachTooltip(el, getMessage) {
 }
 
 
-// attach generic tooltips
+
 attachTooltip(resetBtn, 'Reset the level');
 attachTooltip(easyBtn, 'EASY mode - 5 lives, hints enabled');
 attachTooltip(mediumBtn, 'MEDIUM mode - 3 lives, hints enabled');
 attachTooltip(hardBtn, 'HARD mode - 1 life, no hints. Sum is hidden');
 attachTooltip(editorToggle, 'LEVEL EDITOR - Create and save your own levels!');
-// hint button with dynamic message
+
 attachTooltip(hintBtn, () => {
     if (difficulty === 'hard') return 'Hints disabled in HARD mode';
     if (parseInt(xp.innerText) < hintCost) return `You need ${hintCost - parseInt(xp.innerText)} more XP for a hint`;
@@ -410,14 +410,14 @@ attachTooltip(answerSum, () => {
 }
 );
 
-// Level editor: storage and UI
+
 function loadCustomQuizzes() {
     try {
         const stored = localStorage.getItem('customQuizzes');
         if (stored) {
             customQuizzes = JSON.parse(stored);
             console.log(customQuizzes);
-            // push to quizzes
+
             customQuizzes.forEach(q => quizzes.push(q));
         }
     } catch (e) { customQuizzes = []; }
@@ -439,7 +439,7 @@ function renderCustomList() {
         const play = document.createElement('button'); play.textContent = 'Play';
         const del = document.createElement('button'); del.textContent = 'Delete';
         play.addEventListener('click', () => {
-            // push to quizzes (avoid duplicating if already present)
+
             quizzes.push(quiz);
             quizIndex = quizzes.length - 1;
             recordNumberPillarsAchievementEvent('custom-level-played');
@@ -447,9 +447,9 @@ function renderCustomList() {
             closeEditor();
         });
         del.addEventListener('click', () => {
-            // remove from custom list and from quizzes
+
             customQuizzes.splice(i, 1);
-            // remove first matching quiz from quizzes array
+
             const idx = quizzes.findIndex(x => x.answer === quiz.answer && JSON.stringify(x.numbers) === JSON.stringify(quiz.numbers));
             if (idx !== -1) quizzes.splice(idx, 1);
             storeCustomQuizzes();
@@ -501,7 +501,7 @@ if (editorSave) {
         quizIndex = quizzes.length - 1;
         recordNumberPillarsAchievementEvent('custom-level-played');
         generateLevel();
-        // close with animation
+
         closeEditor();
     });
 }
@@ -531,7 +531,7 @@ if (shareLevelBtn) {
     });
 }
 
-// load stored custom quizzes at startup
+
 loadCustomQuizzes();
 
 function loadSharedLevel() {
@@ -629,11 +629,11 @@ function updateHintUI() {
     }
 }
 
-// initial UI update
+
 updateHintUI();
 
 function generateLevel() {
-    // setup quiz
+
     if (difficulty != "easy") {
         shuffleAll();
     }
@@ -650,12 +650,12 @@ function generateLevel() {
         li.dataset.index = index;
         li.innerText = num;
         li.addEventListener("click", (e) => {
-            // prevent double-clicks
+
             li.style.pointerEvents = 'none';
-            // update answer for this index now, but defer level logic until after animation
+
             answer[index] = 0;
 
-            // animate removal
+
             const liStyle = getComputedStyle(li);
             const liHeight = li.offsetHeight;
             const liMargin = parseFloat(liStyle.marginBottom) || 0;
@@ -677,7 +677,7 @@ function generateLevel() {
             clone.style.margin = '0';
             clone.style.zIndex = 10000;
 
-            // safe finalize to run findAnswerSum once after animation completes
+
             let finalized = false;
             const finalize = () => {
                 if (finalized) return;
@@ -686,11 +686,11 @@ function generateLevel() {
                 findAnswerSum();
             };
 
-            // replace block (this will always run before generateLevel can clear stack because we defer calling it)
+
             try {
                 stack.replaceChild(placeholder, li);
             } catch (err) {
-                // if replaceChild fails (li not found), quietly insert placeholder at end
+
                 if (stack.contains(li)) stack.replaceChild(placeholder, li);
             }
 
@@ -698,12 +698,12 @@ function generateLevel() {
             requestAnimationFrame(() => {
                 placeholder.classList.add('collapse');
                 clone.classList.add('drop-out');
-                // cleanup & finalize
+
                 clone.addEventListener('animationend', () => {
                     if (clone.parentElement === overlay) overlay.removeChild(clone);
                     finalize();
                 }, { once: true });
-                // fallback: if animationend doesn't fire, remove after animation duration
+
                 setTimeout(() => {
                     if (clone.parentElement === overlay) overlay.removeChild(clone);
                     finalize();
@@ -716,7 +716,7 @@ function generateLevel() {
 
         stack.appendChild(li);
     });
-    // Do NOT call findAnswerSum() here!
+
 }
 
 function findAnswerSum() {
@@ -729,7 +729,7 @@ function findAnswerSum() {
     } else {
         answerSum.innerText = sum;
     }
-    // check if the sum matches the target number
+
     if (sum == quizzes[quizIndex].answer) {
         setTimeout(() => {
             showPopup('Correct', 'success');
@@ -764,7 +764,7 @@ function giveHint() {
     usedHint = true;
     updateHintUI();
 
-    // find removal candidates
+
     const target = quizzes[quizIndex].answer;
     const sum = answer.reduce((a,b)=>a+b, 0);
     const diff = sum - target;
@@ -777,28 +777,28 @@ function giveHint() {
     if (candidates.length > 0) {
         chosen = candidates.reduce((a,b) => (b.num > a.num ? b : a));
     } else {
-        // fallback: choose smallest positive number
+
         const pos = answer.map((n,i)=>({n,i})).filter(x=>x.n>0).sort((a,b)=>a.n-b.n);
         chosen = pos[0];
     }
     console.log('giveHint: chosen', chosen);
 
-    // Remove previous hint glows
+
     document.querySelectorAll('#stack li.hint').forEach(el => el.classList.remove('hint'));
-    // Add hint glow to the chosen box
+
     if (chosen && typeof chosen.i === 'number') {
         const stackItems = document.querySelectorAll('#stack li');
-        // stack is rendered in reverse, so find the correct index
+
         const idx = answer.length - 1 - chosen.i;
         if (stackItems[idx]) {
             stackItems[idx].classList.add('hint');
         }
     }
-    // tooltip handling done above
+
     updateHintUI();
 }
 
-// advance to the next quiz/level
+
 function nextQuiz() {
     console.log('nextQuiz: current index', quizIndex);
     const completedQuiz = quizzes[quizIndex];
@@ -810,7 +810,7 @@ function nextQuiz() {
     levelIndex.innerText = quizIndex + 1;
     generateLevel();
     passSfx.play();
-    // showPopup and confetti handled in findAnswerSum
+
     if (usedHint) {
         xp.innerText = parseInt(xp.innerText) + (difficultyIndex*2) + (quizIndex * 1) - 2;
     } else {
@@ -825,7 +825,7 @@ function nextQuiz() {
         customLevel: Boolean(completedQuiz?.name)
     });
     usedHint = false;
-    // Remove any hint glows from previous level
+
     setTimeout(() => {
         document.querySelectorAll('#stack li.hint').forEach(el => el.classList.remove('hint'));
     }, 0);
@@ -877,10 +877,10 @@ function updateDifficultyButtons() {
     }
 }
 
-// Call on startup and after reset
+
 updateDifficultyButtons();
 
-// Stats/Achievements Modal logic
+
 
 function openStatsModal() {
     if (!statsAchievementsModal) return;

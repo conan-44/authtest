@@ -1,4 +1,4 @@
-// GIPHY message rendering, search, pagination, and send controls.
+
 const GIF_MESSAGE_PREFIX = "gif:v1:";
 const SHARED_GAME_MESSAGE_PREFIX = "game:v1:";
 const GAME_INVITE_MESSAGE_PREFIX = "game-invite:v1:";

@@ -1,6 +1,6 @@
 window.AchievementLib = window.AchievementLib || {};
 
-// Builds the fetch functions bound to one module instance's state and file paths.
+
 window.AchievementLib.createLoaders = function createLoaders(state, config) {
     const { parseJsonWithComments, parseYamlSimple, parseMilestonesConfig, sanitizeRarity } = window.AchievementLib;
 

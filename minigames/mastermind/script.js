@@ -7,7 +7,7 @@ const DIFFICULTY_SETTINGS = {
     hard: { digits: 5, allowRepeats: false }
 };
 
-// Utility functions
+
 function getBullsAndCows(secret, guess) {
     let bulls = 0, cows = 0;
     for (let i = 0; i < secret.length; i++) {
@@ -116,7 +116,7 @@ function addRevealedSecretToList() {
     guessInput.disabled = true;
     document.getElementById('submit-guess').disabled = true;
 }
-// Universal elements
+
 let secret = num.getRandomNumber(4, 'string');
 let guesses = [];
 let attemptCount = 0;
@@ -128,7 +128,7 @@ const guessesList = document.getElementById('guesses-list');
 const revealSecretBtn = document.getElementById('reveal-secret');
 const bullsElem = document.getElementById('bulls');
 const cowsElem = document.getElementById('cows');
-//AI solve elements
+
 const aiSolveBtn = document.getElementById('ai-solve-btn');
 const youBtn = document.getElementById('you-btn');
 const aiSolveModal = document.getElementById('ai-solve-modal');
@@ -230,7 +230,7 @@ function applyDifficulty(level, btn) {
     resetGameState();
 }
 
-// Set 'You' as default pressed on load
+
 setModeButtonActive(youBtn);
 setDifficultyButtonActive(mediumBtn);
 updateInputRules();
@@ -306,7 +306,7 @@ if (closeAiSolveBtn && aiSolveModal) {
 if (youBtn) {
     youBtn.addEventListener('click', () => {
         setModeButtonActive(youBtn);
-        // Optionally reset UI for user mode
+
     });
 }
 if (startAiSolveBtn && userSecretInput) {
@@ -336,7 +336,7 @@ if (startAiSolveBtn && userSecretInput) {
             addGuess(guess, bulls, cows, 'computer');
             bullsElem.textContent = bulls;
             cowsElem.textContent = cows;
-            if (bulls === digits) setModeButtonActive(youBtn); // Return to You mode after solve
+            if (bulls === digits) setModeButtonActive(youBtn);
         }, { digits, allowRepeats });
     });
 }

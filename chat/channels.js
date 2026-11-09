@@ -1,4 +1,4 @@
-// Channel state, membership, invite flows, and channel tab controls.
+
 let activeChatChannelId = null;
 let joinedChatChannels = [];
 let openChatChannelIds = new Set();

@@ -1,4 +1,4 @@
-// Public profile search and profile cards for the Chat Options panel.
+
 const profileSearchForm = document.getElementById("profileSearchForm");
 const profileSearchInput = document.getElementById("profileSearchInput");
 const profileSearchStatus = document.getElementById("profileSearchStatus");

@@ -1,4 +1,4 @@
-// Change file paths here.
+
 const pointscfg_file = "./data/achievements/config/points.skvwcfgml";
 const milestonescfg_file = "./data/achievements/config/milestones.skvwcfgml";
 const indexmeta_file = "./data/achievements/index.skvwmeta";
@@ -107,7 +107,7 @@ const history_file = "./history/achievements.skvwhist";
                 achievementsLoadPromise = (async () => {
                     const list = await loaders.loadAllFromDirectoryIndex();
                     await loadUserProfile();
-                    // Baseline so existing progress doesn't retrigger popups on page load.
+
                     state.lastMilestonePoints = getSummary(state).unlockedPoints;
                     renderers.renderAll();
                     renderers.renderMilestones();
@@ -420,7 +420,7 @@ const history_file = "./history/achievements.skvwhist";
 
             if (!userId) {
                 const user = await getAuthenticatedUser();
-                if (!user) return null; // Guest mode / not logged in
+                if (!user) return null;
                 userId = user.id;
             }
 
@@ -634,7 +634,7 @@ const history_file = "./history/achievements.skvwhist";
         async function syncPointsToSupabase(amount) {
             if (typeof _supabase === "undefined") return;
             const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) return; // Guest mode / not logged in
+            if (!user) return;
 
             const stats = await getUserStats(user.id);
             const newTotal = (stats?.points || 0) + amount;
@@ -721,7 +721,7 @@ const history_file = "./history/achievements.skvwhist";
                 .at(-1);
             if (!lastEntry) throw new Error("History file contains no version entries.");
             let entry = lastEntry.split(":", 1)[0];
-            let entrytempa = entry.slice(0, 4); 
+            let entrytempa = entry.slice(0, 4);
             let entrytempb = entry.slice(4);
             entry = entrytempa.concat(" v", entrytempb);
             if (entry.includes("pr")) versionEl.textContent = `prerelease ${entry.split("pr", 1)[0]}`;

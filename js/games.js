@@ -1,6 +1,6 @@
-// GAMES TAB (loads the actual game in place of the game list, same panel slot as achievements)
+
 (() => {
-    // Change this to adjust the embedded game frame size (any CSS size, e.g. '100%', '900px')
+
     const GAME_FRAME_WIDTH = '100%';
     const GAME_FRAME_HEIGHT = '100%';
 

@@ -44,27 +44,27 @@
                 <div class="guest-site-guide" aria-label="Explore the site">
                     <section>
                         <h2 class="guest-guide-heading"><span class="guest-guide-icon btn-icon tabcon-achievements" aria-hidden="true"></span><span>Achievements</span></h2>
-                        <p>Collect achievements across different aspects of the site to level up Milestones and compete with other players.</p><br>
+                        <p data-guest-guide="achievements">Loading description...</p><br>
                     </section>
                     <section>
                         <h2 class="guest-guide-heading"><span class="guest-guide-icon btn-icon tabcon-chat" aria-hidden="true"></span><span>Chat</span></h2>
-                        <p>Join conversations and channels, share GIFs and emojis, find players, or ask Smiley for help with the website.</p><br>
+                        <p data-guest-guide="chat">Loading description...</p><br>
                     </section>
                     <section>
                         <h2 class="guest-guide-heading"><span class="guest-guide-icon btn-icon tabcon-settings" aria-hidden="true"></span><span>Settings</span></h2>
-                        <p>Customise your profile picture and personalise your experience with a multitude of themes and settings. Choose from a selection of music and sound options to enhance your experience.</p><br>
+                        <p data-guest-guide="settings">Loading description...</p><br>
                     </section>
                     <section>
                         <h2 class="guest-guide-heading"><span class="guest-guide-icon btn-icon tabcon-games" aria-hidden="true"></span><span>Games</span></h2>
-                        <p>Play both classic and original games such as Bulls &amp; Cows, Number Pillars, chess, a variety of card games, Minecraft, and Streetfighter.</p><br>
+                        <p data-guest-guide="games">Loading description...</p><br>
                     </section>
                     <section>
                         <h2 class="guest-guide-heading"><span class="guest-guide-icon btn-icon tabcon-blog" aria-hidden="true"></span><span>Blog</span></h2>
-                        <p>Read posts and explore community polls and suggestions. Sign in to take part in a world of discussions and community engagement.</p><br>
+                        <p data-guest-guide="blog">Loading description...</p><br>
                     </section>
                     <section>
                         <h2 class="guest-guide-heading"><span class="guest-guide-icon btn-icon tabcon-gacha" aria-hidden="true"></span><span>Gacha</span></h2>
-                        <p>Draw shards and unlock rarer possibilities as you reach new milestones.</p>
+                        <p data-guest-guide="gacha">Loading description...</p>
                     </section>
                 </div>
                 <div id="homeDashboard" class="home-dashboard" hidden>
@@ -234,7 +234,7 @@
                             <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-bulls" aria-hidden="true"></span></div>
                             <div class="game-card-copy">
                                 <h3 class="achievement-title rarity-common">Bulls & Cows</h3>
-                                <p class="achievement-description">Number guessing game like Mastermind.</p>
+                                <p class="achievement-description" data-game-description="mastermind">Loading description...</p>
                             </div>
                         </div>
                     </article>
@@ -243,7 +243,7 @@
                             <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-number-pillars" aria-hidden="true"></span></div>
                             <div class="game-card-copy">
                                 <h3 class="achievement-title rarity-common">Number Pillars</h3>
-                                <p class="achievement-description">Match your sum to the target</p>
+                                <p class="achievement-description" data-game-description="number-pillars">Loading description...</p>
                             </div>
                         </div>
                     </article>
@@ -252,7 +252,7 @@
                             <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-chess" aria-hidden="true"></span></div>
                             <div class="game-card-copy">
                                 <h3 class="achievement-title rarity-common">Chess</h3>
-                                <p class="achievement-description">A 2-player game. Better than checkers</p>
+                                <p class="achievement-description" data-game-description="chess">Loading description...</p>
                             </div>
                         </div>
                     </article>
@@ -261,7 +261,7 @@
                             <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-cards" aria-hidden="true"></span></div>
                             <div class="game-card-copy">
                                 <h3 class="achievement-title rarity-common">Card Games</h3>
-                                <p class="achievement-description">Let's go gambling! Sign your soul away with multiple card games.</p>
+                                <p class="achievement-description" data-game-description="cards">Loading description...</p>
                             </div>
                         </div>
                     </article>
@@ -270,7 +270,7 @@
                             <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-minecraft" aria-hidden="true"></span></div>
                             <div class="game-card-copy">
                                 <h3 class="achievement-title rarity-common">Minecraft</h3>
-                                <p class="achievement-description">Mine and craft on the latest updates</p>
+                                <p class="achievement-description" data-game-description="mc">Loading description...</p>
                             </div>
                         </div>
                     </article>
@@ -279,7 +279,7 @@
                             <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-street-fighter" aria-hidden="true"></span></div>
                             <div class="game-card-copy">
                                 <h3 class="achievement-title rarity-common">Wafflr</h3>
-                                <p class="achievement-description">Fight your opponents</p>
+                                <p class="achievement-description" data-game-description="street-fighter">Loading description...</p>
                             </div>
                         </div>
                     </article>
@@ -288,7 +288,7 @@
                             <div class="game-card-icon-area"><span class="game-card-icon game-card-icon-bulls" aria-hidden="true"></span></div>
                             <div class="game-card-copy">
                                 <h3 class="achievement-title rarity-common">Bulls & Cows</h3>
-                                <p class="achievement-description">Number guessing game like Mastermind.</p>
+                                <p class="achievement-description" data-game-description="mastermind">Loading description...</p>
                             </div>
                         </div>
                     </div>
@@ -586,6 +586,7 @@
     <script src="./js/loaders.js"></script>
     <!-- core scripts + utils here -->
     <script src="./js/utils.js"></script>
+    <script src="./js/site-content.js?v=site-content-v1"></script>
     <script src="./js/profile-avatars.js?v=profile-pixels-v3"></script>
     <script src="./js/renderers.js?v=gacha-achievements-v1"></script>
     <script src="./js/achievements.js?v=gacha-economy-v1"></script>
@@ -595,8 +596,8 @@
     <script src="./js/tabs.js?v=gacha-packs-v1"></script>
     <script src="./js/settings.js?v=gacha-tab-v1"></script>
     <script src="./js/games.js?v=gacha-economy-v1"></script>
-    <script src="./js/gacha-rules.js?v=gacha-color-packs-v1"></script>
-    <script src="./js/gacha.js?v=gacha-economy-style-v1"></script>
+    <script src="./js/gacha-rules.js?v=gacha-data-v1"></script>
+    <script src="./js/gacha.js?v=gacha-data-v1"></script>
     <script src="./js/tips.js?v=tip-placeholder-v1"></script>
     <!-- api config stuff -->
     <script src="./api-config/giphy-config.js"></script>

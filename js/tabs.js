@@ -1,4 +1,4 @@
-// TAB NAVIGATION (main menu shown by default)
+
 (() => {
     const TAB_PANELS = {
         home: document.getElementById('mainMenuPanel'),
@@ -43,7 +43,7 @@
         if (tabName === 'gacha') window.dispatchEvent(new Event('gacha-tab-opened'));
     }
 
-    // Called by auth.js on sign in/out: non-home tabs slide/fade in or out.
+
     function setTabsGuestMode(isGuest) {
         tabBar.classList.toggle('is-guest', isGuest);
         if (isGuest) {

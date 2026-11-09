@@ -1,4 +1,4 @@
-// Reply, edit, delete, and message action controls.
+
 const REPLY_MESSAGE_PREFIX = "reply:v1:";
 const chatReplyContext = document.getElementById("chatReplyContext");
 const chatReplyText = document.getElementById("chatReplyText");

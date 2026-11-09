@@ -1,4 +1,4 @@
-// 1. YOUR SUPABASE CREDENTIALS
+
 const SUPABASE_URL = 'https://opjceioyxodjsmnkmipu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_AngjLShSQFSj9qlj_jdFng_pgp4gGty';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -248,7 +248,7 @@ function consumePendingOAuthLogin() {
   }
 }
 
-// 2. LISTEN FOR AUTH CHANGES
+
 _supabase.auth.onAuthStateChange(async (event, session) => {
   printLog(`Auth Event: ${event}`);
   const userId = session?.user?.id || null;
@@ -260,12 +260,12 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
   lastAuthUserId = userId;
   document.body.classList.toggle('is-guest', !userId);
   window.dispatchEvent(new CustomEvent("home-dashboard-auth-changed", { detail: { userId } }));
-  
+
   if (session) {
     document.getElementById('authSection').style.display = 'none';
     document.getElementById('profileSection').style.display = 'block';
-    
-    // Evaluate providers & badge state
+
+
     updateAuthBadgesAndProviders(session.user);
 
     await fetchProfile(session.user.id);
@@ -290,7 +290,7 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
   }));
 });
 
-// Detect linked sign-in providers and whether the account can add a password.
+
 function updateAuthBadgesAndProviders(user) {
   const addPwContainer = document.getElementById('addPasswordContainer');
 
@@ -384,7 +384,7 @@ function applyAccountProfileRank(value) {
   }
 }
 
-// 3. SIGN UP FUNCTION
+
 document.getElementById('signUpBtn').addEventListener('click', async () => {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
@@ -414,7 +414,7 @@ document.getElementById('signUpBtn').addEventListener('click', async () => {
   }
 });
 
-// 4. SIGN IN FUNCTION
+
 document.getElementById('signInBtn').addEventListener('click', async () => {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
@@ -430,12 +430,12 @@ document.getElementById('signInBtn').addEventListener('click', async () => {
   }
 });
 
-// GOOGLE SIGN IN
+
 document.getElementById('googleSignInBtn').addEventListener('click', async () => {
   printLog("Redirecting to Google...");
   showPopup("Redirecting to Google...", 'info');
   setPendingOAuthLogin(true);
-  
+
   const { error } = await _supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -449,7 +449,7 @@ document.getElementById('googleSignInBtn').addEventListener('click', async () =>
   }
 });
 
-// 5. FETCH PROFILE FROM DATABASE
+
 const PROFILE_AVATAR_DEFAULT_PALETTE = window.ProfileAvatars.defaultPalette;
 const profileAvatarCanvas = document.getElementById('profileAvatarCanvas');
 const profileAvatarPaletteEl = document.getElementById('profileAvatarPalette');
@@ -878,17 +878,17 @@ async function fetchProfile(userId) {
     } else {
       applyAccountProfileRank(rank);
     }
-    
+
     document.getElementById('editUsername').value = data.username || '';
     document.getElementById('editFlair').value = data.flair || '';
     loadProfileAvatarEditor(data.avatar);
-    
+
     printLog("✅ Profile loaded: " + JSON.stringify(data));
     showPopup("All data was loaded successfully", 'success');
   }
 }
 
-// 6. UPDATE PROFILE FUNCTION
+
 document.getElementById('updateProfileBtn').addEventListener('click', async () => {
   const { data: { user } } = await _supabase.auth.getUser();
 
@@ -903,7 +903,7 @@ document.getElementById('updateProfileBtn').addEventListener('click', async () =
 
   printLog("Updating profile in database...");
   showPopup("Updating profile...", 'info');
-  
+
   const { error } = await _supabase
     .from('profiles')
     .update({
@@ -985,7 +985,7 @@ document.getElementById('clearProfileAvatarBtn').addEventListener('click', async
   }
 });
 
-// 7. ADD PASSWORD TO GOOGLE ACCOUNT
+
 document.getElementById('addPasswordBtn')?.addEventListener('click', async () => {
   const newPassword = document.getElementById('newPasswordInput').value;
 
@@ -1003,13 +1003,13 @@ document.getElementById('addPasswordBtn')?.addEventListener('click', async () =>
   } else {
     printLog("✅ Password attached! Your account can now sign in with Email + Password.");
     showPopup("Password added successfully", 'success');
-    // Refresh provider state after adding email/password sign-in.
+
     const { data: { user } } = await _supabase.auth.getUser();
     if (user) updateAuthBadgesAndProviders(user);
   }
 });
 
-// 8. DELETE ACCOUNT WITH PASSWORD CONFIRMATION
+
 document.getElementById('deleteAccountBtn').addEventListener('click', async () => {
   const { data: { user } } = await _supabase.auth.getUser();
   if (!user) return;
@@ -1022,8 +1022,8 @@ document.getElementById('deleteAccountBtn').addEventListener('click', async () =
   }
 
   printLog("Verifying credentials before deletion...");
-  
-  // Re-authenticate user with entered password
+
+
   const { error: authError } = await _supabase.auth.signInWithPassword({
     email: user.email,
     password: password
@@ -1037,7 +1037,7 @@ document.getElementById('deleteAccountBtn').addEventListener('click', async () =
 
   printLog("Password verified. Calling SQL RPC function to delete account...");
 
-  // Call the database function to purge the user from auth.users and public.profiles
+
   const { error: rpcError } = await _supabase.rpc('delete_user_account');
 
   if (rpcError) {
@@ -1052,7 +1052,7 @@ document.getElementById('deleteAccountBtn').addEventListener('click', async () =
 
 });
 
-// 9. OTHER UTILITY LISTENERS
+
 document.getElementById('signOutBtn').addEventListener('click', () => _supabase.auth.signOut());
 document.getElementById('refreshBtn').addEventListener('click', async () => {
   const { data: { user } } = await _supabase.auth.getUser();

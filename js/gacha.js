@@ -1,4 +1,4 @@
-(() => {
+(async () => {
     const button = document.getElementById('gachaDrawButton');
     const drawCount = document.getElementById('gachaDrawCount');
     const status = document.getElementById('gachaStatus');
@@ -17,7 +17,16 @@
     const ticketLabel = document.getElementById('gachaTicketLabel');
     const ticketColor = document.getElementById('gachaTicketColor');
     const claimTicket = document.getElementById('gachaClaimTicket');
-    const { shards, fragments, packs, chances, drawBatch } = window.GachaRules;
+    let rules;
+    try {
+        rules = await window.GachaRulesReady;
+    } catch (error) {
+        console.error('Could not load Gacha pack configuration.', error);
+        status.textContent = `Could not load Gacha packs: ${error.message}`;
+        balanceLabel.textContent = 'Gacha is unavailable.';
+        return;
+    }
+    const { shards, fragments, packs, chances, drawBatch } = rules;
     const names = [...shards, ...fragments];
     const revealInterval = 20;
     let userId = null;

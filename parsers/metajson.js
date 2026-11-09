@@ -1,6 +1,6 @@
 window.AchievementLib = window.AchievementLib || {};
 
-// Strips // and /* */ comments that live outside of string literals, then parses as JSON.
+
 window.AchievementLib.parseJsonWithComments = function parseJsonWithComments(text) {
     let cleanText = "";
     let inString = false;
