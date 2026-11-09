@@ -228,6 +228,8 @@ const history_file = "./history/achievements.skvwhist";
                 if (details.optionCount === 8) unlockedIds.push("main:eight-options");
             } else if (gameName === "main" && eventName === "suggestion-created") {
                 unlockedIds.push("main:idea-person");
+            } else if (gameName === "main" && eventName === "gacha-collection") {
+                unlockedIds.push(...window.GachaRules.achievementIds(details.collection));
             } else if (gameName === "mastermind" && eventName === "solved") {
                 gameProgress.mastermind.solves += 1;
                 mastermindSessionSolves += 1;
@@ -575,6 +577,7 @@ const history_file = "./history/achievements.skvwhist";
             if (onRender) onRender(getSummary(state));
             console.log(`[Achievement] Unlocked: ${id} (+${achievement.points} pts)`);
             await syncUnlockToSupabase(id);
+            window.dispatchEvent(new Event('gacha-economy-refresh'));
             return true;
         }
 

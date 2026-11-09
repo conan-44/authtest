@@ -1,0 +1,7 @@
+{
+  "title": "Shard Collector",
+  "description": "Draw 50 Gacha shards.",
+  "successors": ["main:gacha-fifty-draws"],
+  "rarity": "rare",
+  "icon": "✦"
+}

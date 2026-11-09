@@ -18,10 +18,11 @@
     <link rel="stylesheet" href="./css/profiles.css?v=game-ratings-v1">
     <link rel="stylesheet" href="./css/achievements.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/games.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/gacha.css?v=gacha-economy-v1">
     <link rel="stylesheet" href="./css/milestones.css?v=css-split-v1">
     <link rel="stylesheet" href="./css/notifications.css?v=tip-placeholder-v1">
-    <link rel="stylesheet" href="./css/sheet.css?v=guest-guide-v1">
-    <link rel="stylesheet" href="./css/dashboard.css?v=suggestion-categories-v1">
+    <link rel="stylesheet" href="./css/sheet.css?v=gacha-tab-v1">
+    <link rel="stylesheet" href="./css/dashboard.css?v=gacha-tab-v1">
     <link rel="stylesheet" href="./css/responsive.css?v=dashboard-v1">
 </head>
 <body class="is-guest">
@@ -33,7 +34,7 @@
             <button class="tab-btn" data-tab="settings"><span class="btn-icon tabcon-settings"></span>Settings</button>
             <button class="tab-btn" data-tab="games"><span class="btn-icon tabcon-games"></span>Games</button>
             <button class="tab-btn" data-tab="blog"><span class="btn-icon tabcon-blog"></span>Blog</button>
-            <button class="tab-btn" data-tab="experimental"><span class="btn-icon tabcon-experimental"></span>Experimental</button>
+            <button class="tab-btn" data-tab="gacha"><span class="btn-icon tabcon-gacha"></span>Gacha</button>
         </nav>
         <section class="panel tab-panel" id="mainMenuPanel" aria-labelledby="mainmenu-heading">
             <div class="panel-header">
@@ -62,8 +63,8 @@
                         <p>Read posts and explore community polls and suggestions. Sign in to take part in a world of discussions and community engagement.</p><br>
                     </section>
                     <section>
-                        <h2 class="guest-guide-heading"><span class="guest-guide-icon btn-icon tabcon-experimental" aria-hidden="true"></span><span>Experimental</span></h2>
-                        <p>Visit the separate experiments site to explore features still in development.</p>
+                        <h2 class="guest-guide-heading"><span class="guest-guide-icon btn-icon tabcon-gacha" aria-hidden="true"></span><span>Gacha</span></h2>
+                        <p>Draw shards and unlock rarer possibilities as you reach new milestones.</p>
                     </section>
                 </div>
                 <div id="homeDashboard" class="home-dashboard" hidden>
@@ -376,11 +377,58 @@
                 </div>
             </div>
         </section>
-         <section class="panel tab-panel is-hidden" id="experimentalPanel" aria-labelledby="experimental-heading">
+        <section class="panel tab-panel is-hidden" id="gachaPanel" aria-labelledby="gacha-heading">
             <div class="panel-header">
-                <h1 id="experimental-heading">Experimental Features</h1>
+                <h1 id="gacha-heading">Gacha</h1>
             </div>
-                <p class="main-menu-welcome">You are being redirected; please wait...<br>Explore experimental features that are still in development. Use with caution!</p>
+            <div class="panel-body gacha-body">
+                <div class="gacha-draw-area">
+                    <button id="gachaDrawButton" class="gacha-draw-button" type="button" disabled>Draw 5 shards</button>
+                    <label class="gacha-draw-count" for="gachaDrawCount">Number of packs (1–24)
+                        <input id="gachaDrawCount" type="number" min="1" max="24" step="1" value="1" required>
+                    </label>
+                    <p id="gachaSelectedPack">Selected pack: Classic</p>
+                    <p id="gachaBalance">Loading orbs and tickets...</p>
+                    <label class="gacha-draw-count" for="gachaPayment">Pay with
+                        <select id="gachaPayment">
+                            <option value="orbs">Orbs</option>
+                            <option value="tickets">Matching tickets</option>
+                        </select>
+                    </label>
+                    <div id="gachaTicketChoice" class="gacha-ticket-choice" hidden>
+                        <label for="gachaTicketColor" id="gachaTicketLabel">Choose a milestone ticket</label>
+                        <select id="gachaTicketColor">
+                            <option value="red">Red</option>
+                            <option value="yellow">Yellow</option>
+                            <option value="green">Green</option>
+                            <option value="blue">Blue</option>
+                        </select>
+                        <button id="gachaClaimTicket" type="button">Claim ticket</button>
+                    </div>
+                    <p id="gachaStatus" role="status">Loading your milestones...</p>
+                    <p class="gacha-note">Packs cost 20 orbs each or one matching ticket. Start with 100 orbs; earn 10 per achievement, 25 per milestone and 1 per 25 Elo above your previous high. One Classic ticket is added every 24 hours; choose a colored ticket for each milestone. Tickets are saved on this device; shards and orbs are saved to your account. Tickets and draw results are client-controlled, not tamper-proof. Milestones limit rarities.</p>
+                </div>
+                <section class="gacha-collection" aria-label="Shard and fragment collection">
+                    <div id="gachaInventory" class="gacha-inventory"></div>
+                </section>
+            </div>
+        </section>
+        <dialog id="gachaDrawDialog" class="gacha-draw-dialog" aria-labelledby="gacha-results-heading" aria-describedby="gachaResultsStatus">
+            <div class="gacha-dialog-header">
+                <h2 id="gacha-results-heading">your draw</h2>
+                <button id="gachaCloseDialog" type="button" aria-label="Close draw results">Close</button>
+            </div>
+            <p id="gachaResultsStatus" role="status"></p>
+            <p id="gachaFragmentStatus" class="gacha-fragment-status" role="status" aria-atomic="true"></p>
+            <p id="gachaSoundStatus" class="gacha-sound-status" role="status"></p>
+            <div id="gachaResults" class="gacha-results" aria-label="Draw results"></div>
+        </dialog>
+        <section class="panel is-hidden" id="gachaPacksPanel" aria-labelledby="gacha-packs-heading">
+            <div class="panel-header">
+                <h1 id="gacha-packs-heading">Packs</h1>
+            </div>
+            <div class="panel-body gacha-packs-body">
+                <div id="gachaPacks" class="gacha-packs" role="group" aria-label="Select a pack"></div>
             </div>
         </section>
         <section class="panel" id="milestonesPanel" aria-labelledby="milestones-heading">
@@ -523,14 +571,16 @@
     <!-- core scripts + utils here -->
     <script src="./js/utils.js"></script>
     <script src="./js/profile-avatars.js?v=profile-pixels-v3"></script>
-    <script src="./js/renderers.js?v=achievement-sprites-v4"></script>
-    <script src="./js/achievements.js?v=admin-achieve-command-v1"></script>
+    <script src="./js/renderers.js?v=gacha-achievements-v1"></script>
+    <script src="./js/achievements.js?v=gacha-economy-v1"></script>
     <script src="./js/auth.js?v=dashboard-v1"></script>
     <script src="./js/blog.js?v=dashboard-sections-v2"></script>
     <script src="./js/blog-community.js?v=suggestion-categories-v1"></script>
-    <script src="./js/tabs.js?v=dashboard-v1"></script>
-    <script src="./js/settings.js?v=no-scroll-restoration-v3"></script>
-    <script src="./js/games.js?v=dashboard-v1"></script>
+    <script src="./js/tabs.js?v=gacha-packs-v1"></script>
+    <script src="./js/settings.js?v=gacha-tab-v1"></script>
+    <script src="./js/games.js?v=gacha-economy-v1"></script>
+    <script src="./js/gacha-rules.js?v=gacha-color-packs-v1"></script>
+    <script src="./js/gacha.js?v=gacha-economy-v1"></script>
     <script src="./js/tips.js?v=tip-placeholder-v1"></script>
     <!-- api config stuff -->
     <script src="./api-config/giphy-config.js"></script>
@@ -541,7 +591,7 @@
     <script src="./chat/channels.js?v=dashboard-v1"></script>
     <script src="./chat/actions.js?v=chat-emojis-v1"></script>
     <script src="./chat/giphy.js?v=emoji-picker-v1"></script>
-    <script src="./chat/profiles.js?v=chat-options-smiley-v1"></script>
+    <script src="./chat/profiles.js?v=gacha-economy-v1"></script>
     <script src="./js/dashboard.js?v=suggestion-categories-v1"></script>
     <script type="module" src="./chat/smiley/smiley.js?v=dashboard-v1"></script>
 </body>

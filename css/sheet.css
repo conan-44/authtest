@@ -4,7 +4,7 @@
       height: 8px;
       min-width: 8px;
       min-height: 8px;
-      background-image: url('../assets/icons.png');
+      background-image: url('../assets/icons.png?v=gacha-tab-v1');
       background-repeat: no-repeat;
       background-position-y: -24px;
       transform: scale(4);
@@ -58,46 +58,6 @@ button:hover .btn-icon { animation: playSprite 0.5s steps(4); }
 
 .tab-btn .btn-icon {
     margin: 0 8px 0 0;
-}
-
-html[data-tab-icon-style="chiseled"] .tab-btn .btn-icon {
-    width: 16px;
-    height: 16px;
-    min-width: 16px;
-    min-height: 16px;
-    background-image: url("../assets/tabcons-16xchisled.png");
-    background-position-y: 0;
-    transform: scale(2);
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-}
-
-html[data-tab-icon-style="chiseled"] .guest-guide-icon.btn-icon {
-    width: 16px;
-    height: 16px;
-    min-width: 16px;
-    min-height: 16px;
-    background-image: url("../assets/tabcons-16xchisled.png");
-    background-position-y: 0;
-    transform: scale(2);
-}
-
-html[data-tab-icon-style="chiseled"] .tabcon-chat { background-position-x: 0; }
-
-html[data-tab-icon-style="chiseled"] .tabcon-achievements { background-position-x: -16px; }
-
-html[data-tab-icon-style="chiseled"] .tabcon-settings { background-position-x: -32px; }
-
-html[data-tab-icon-style="chiseled"] .tabcon-games { background-position-x: -48px; }
-
-html[data-tab-icon-style="chiseled"] .tabcon-home { background-position-x: -64px; }
-
-html[data-tab-icon-style="chiseled"] .tabcon-experimental { background-position-x: -80px; }
-
-html[data-tab-icon-style="chiseled"] .tabcon-blog { background-position-x: -96px; }
-
-html[data-tab-icon-style="chiseled"] .tab-btn:hover .btn-icon {
-    animation: none;
 }
 
 .settings-toggle-icon {
@@ -218,7 +178,7 @@ html[data-tab-icon-style="chiseled"] .tab-btn:hover .btn-icon {
 
 .tabcon-home { background-position-x: -216px; }
 
-.tabcon-experimental { background-position-x: -232px; }
+.tabcon-gacha { background-position-x: -296px; }
 
 .tabcon-blog { background-position-x: -248px; }
 

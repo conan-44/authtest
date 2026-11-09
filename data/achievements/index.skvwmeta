@@ -13,6 +13,10 @@
   "main:poll-regular",
   "main:all-game-leaderboards",
   "main:all-game-leaderboards-at-once",
+  "main:gacha-first-draw",
+  "main:gacha-ten-draws",
+  "main:gacha-fifty-draws",
+  "main:gacha-paragon-fragment",
   // bulls & cows
   "mastermind:beginner",
   "mastermind:codebreaker",

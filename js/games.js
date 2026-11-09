@@ -164,6 +164,7 @@
                 p_rating: rating
             });
             if (error) throw new Error(`Could not save your ${game} rating: ${error.message}`);
+            window.dispatchEvent(new Event('gacha-economy-refresh'));
             window.dispatchEvent(new Event('home-dashboard-refresh'));
             checkGameRatingAchievements().catch(error => {
                 console.error('Could not update leaderboard achievements.', error);

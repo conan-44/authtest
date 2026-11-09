@@ -195,6 +195,7 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
       { data: stats, error: statsError },
       { data: rawRank, error: rankError },
       { data: gameRatings, error: gameRatingsError },
+      { data: gachaInventory, error: gachaError },
       achievements,
       milestones
     ] = await Promise.all([
@@ -208,6 +209,10 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
         .from("game_ratings")
         .select("game, rating")
         .eq("user_id", profile.id),
+      _supabase.from("gacha_inventory")
+        .select("silver, gold, diamond, platinum, nebula, celeste, void")
+        .eq("user_id", profile.id)
+        .maybeSingle(),
       Promise.resolve(window.achievements.getAchievements()),
       Promise.resolve(window.achievements.getMilestones())
     ]);
@@ -215,6 +220,7 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
     if (statsError) console.error("Could not load public profile achievement stats.", statsError);
     if (rankError) console.error("Could not load the public profile rank.", rankError);
     if (gameRatingsError) console.error("Could not load public game ratings.", gameRatingsError);
+    if (gachaError) console.error("Could not load public shard collection.", gachaError);
     const rank = rankError ? null : normalizeProfileRank(rawRank);
     if (!rankError && !rank) console.error("Supabase returned an invalid public profile rank.", rawRank);
 
@@ -364,6 +370,20 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
     });
     gameRatingsSection.append(gameRatingsHeading, gameRatingsGrid);
 
+    const shardsSection = document.createElement("section");
+    const shardsHeading = document.createElement("h3");
+    shardsHeading.className = "public-profile-rarity-heading";
+    shardsHeading.textContent = "Shards and fragments";
+    const shardsGrid = document.createElement("div");
+    shardsGrid.className = "public-profile-game-ratings";
+    ["silver", "gold", "diamond", "platinum", "nebula", "celeste", "void"].forEach(name => {
+      const count = gachaInventory?.[name];
+      const label = `${name[0].toUpperCase()}${name.slice(1)}`;
+      shardsGrid.appendChild(makeProfileStat(label, gachaError || (count != null && !Number.isSafeInteger(count))
+        ? "Unavailable" : String(count ?? 0)));
+    });
+    shardsSection.append(shardsHeading, shardsGrid);
+
     const joined = profile.created_at ? new Date(profile.created_at) : null;
     const joinedText = joined && Number.isFinite(joined.getTime())
       ? joined.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })
@@ -390,6 +410,7 @@ async function openChatProfile(userId, { keepSearchResults = false } = {}) {
       headingRow,
       flair,
       statsGrid,
+      shardsSection,
       gameRatingsSection,
       rarityHeading,
       rarityList

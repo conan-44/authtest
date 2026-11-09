@@ -1,0 +1,7 @@
+{
+  "title": "First Draw",
+  "description": "Draw your first Gacha pack.",
+  "successors": ["main:gacha-ten-draws", "main:gacha-paragon-fragment"],
+  "rarity": "common",
+  "icon": "✦"
+}

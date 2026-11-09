@@ -14,7 +14,7 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
     let treeMode = false;
 
     const ACHIEVEMENT_SPRITES = {
-        icons: { url: "./assets/icons.png", width: 296, height: 32, tileWidth: 8, tileHeight: 8, columns: 36 },
+        icons: { url: "./assets/icons.png", width: 304, height: 32, tileWidth: 8, tileHeight: 8, columns: 36 },
         main: { url: "./assets/minigames/games.png", width: 48, height: 8, tileWidth: 8, tileHeight: 8, columns: 6 },
         mastermind: { url: "./assets/minigames/bots.png", width: 32, height: 8, tileWidth: 8, tileHeight: 8, columns: 4 },
         "number-pillars": { url: "./assets/minigames/games.png", width: 48, height: 8, tileWidth: 8, tileHeight: 8, columns: 6 },
@@ -27,6 +27,7 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
         const key = achievement.key.toLowerCase();
         if (key === "codebreaker") return { sheet: "mastermind", column: 0, row: 0 };
         if (key === "team-fort") return { sheet: "main", column: 4, row: 0 };
+        if (key.startsWith("gacha-")) return { column: 37, row: 3 };
         if (/beginning|suit-up/.test(key)) return { column: 25, row: 3 };
         if (/profile/.test(key)) return { column: 3, row: 3 };
         if (/poll|suggestion|idea|eight-options/.test(key)) return { column: 31, row: 3 };
