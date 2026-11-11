@@ -1,0 +1,8 @@
+{
+    "name": "cookie",
+    "description": "shoot chocolate chips at enemies",
+    "note": "they're technically baked, not cooked",
+    "category": "ranged",
+    "damage": 10,
+    "cost": 5
+}

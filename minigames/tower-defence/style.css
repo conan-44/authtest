@@ -1,0 +1,109 @@
+.tower-toolbar {
+    justify-content: center;
+    padding: 8px;
+}
+
+.tower-tools {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tool {
+    display: grid;
+    width: 48px;
+    height: 56px;
+    padding: 4px;
+    place-items: center;
+    border: 2px solid transparent;
+    background: var(--surface-raised);
+    cursor: pointer;
+}
+
+.tool:hover {
+    background: var(--color-control-pressed, #fff);
+}
+
+.tool[aria-pressed="true"] {
+    border-color: var(--accent);
+    background: var(--color-control-pressed, #fff);
+}
+
+.remove-tool {
+    font: 2rem/1 "capsmall", sans-serif;
+}
+
+.tower-board {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.tower-details {
+    padding: 16px;
+}
+
+.tower-details dl {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 16px;
+    margin: 4px 0;
+}
+
+.tower-details dt { color: var(--muted); }
+.tower-details dd { margin: 0; text-align: right; }
+.tower-details .opening-book-status { font-style: italic; }
+
+.tower-sprite {
+    display: block;
+    width: 32px;
+    height: 48px;
+    background-image: url("../../assets/minigames/tower-defence/towers.png");
+    background-size: 500% 100%;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+
+.square .tower-sprite {
+    position: absolute;
+    z-index: 1;
+    bottom: 2px;
+    left: 16.666667%;
+    width: 66.666667%;
+    height: 100%;
+}
+
+.square[data-tower]:not([data-tower=""])::before {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 16%);
+    content: "";
+}
+
+.square .placed-sprite { filter: drop-shadow(0 2px 0 rgb(0 0 0 / 25%)); }
+
+.square .preview-sprite {
+    z-index: 3;
+    opacity: 0;
+}
+
+.square:hover::after,
+.square:focus-visible::after {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    background: var(--highlight);
+    box-shadow: inset 0 0 0 2px var(--secondary);
+    pointer-events: none;
+    content: "";
+}
+
+@media (hover: hover) {
+    .square:hover .preview-sprite { opacity: .55; }
+}
+
+.square:focus-visible .preview-sprite { opacity: .55; }
+
+@media (max-width: 680px) {
+    .tower-layout .game-sidebar { grid-template-columns: minmax(0, 1fr); }
+}

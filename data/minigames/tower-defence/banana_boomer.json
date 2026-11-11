@@ -1,0 +1,8 @@
+{
+    "name": "banana boom",
+    "description": "make bananas explode on impact",
+    "note": "big banana go boom",
+    "category": "melee",
+    "damage": 10,
+    "cost": 5
+}

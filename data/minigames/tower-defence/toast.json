@@ -1,0 +1,8 @@
+{
+    "name": "toast",
+    "description": "crunch and smash enemies with toast",
+    "note": "that is still not enough butter",
+    "category": "melee",
+    "damage": 15,
+    "cost": 12
+}

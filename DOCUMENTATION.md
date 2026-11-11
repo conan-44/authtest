@@ -110,6 +110,14 @@ blog, and suggestion database objects.
 
 ## Game and animation invariants
 
+Tower Defence is a local placement sandbox: choose one of the five 8-by-12
+sprites in `assets/minigames/tower-defence/towers.png` and place, replace, or
+remove towers on the 12-by-12 grid. The board resets when the game is closed or reset;
+there are no waves, enemies, or saved progress.
+`data/minigames/tower-defence/index.json` lists tower IDs and sprite positions;
+each ID has a matching JSON file with its name, description, note, category,
+damage, and cost. These attributes are informational until gameplay is added.
+
 Number Pillars updates the selected answer before its removal animation but
 defers checking the sum and advancing the level until that removal finishes;
 an animation timeout provides a fallback. Its rendered stack is reversed when

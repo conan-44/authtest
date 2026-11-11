@@ -1,0 +1,7 @@
+[
+  { "id": "cookie", "sprite": 0 },
+  { "id": "muffin", "sprite": 1 },
+  { "id": "toast", "sprite": 2 },
+  { "id": "banana_boomer", "sprite": 3 },
+  { "id": "banana_boomerang", "sprite": 4 }
+]

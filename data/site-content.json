@@ -3,7 +3,7 @@
     "achievements": "Collect achievements across different aspects of the site to level up Milestones and compete with other players.",
     "chat": "Join conversations and channels, share GIFs and emojis, find players, or ask Smiley for help with the website.",
     "settings": "Customise your profile picture and personalise your experience with a multitude of themes and settings. Choose from a selection of music and sound options to enhance your experience.",
-    "games": "Play both classic and original games such as Bulls & Cows, Number Pillars, chess, a variety of card games, Minecraft, and Streetfighter.",
+    "games": "Play both classic and original games such as Bulls & Cows, Number Pillars, chess, card games, Minecraft, Streetfighter, and Tower Defence.",
     "blog": "Read posts and explore community polls and suggestions. Sign in to take part in a world of discussions and community engagement.",
     "gacha": "Draw shards and unlock rarer possibilities as you reach new milestones."
   },
@@ -13,6 +13,7 @@
     "chess": "A 2-player game. Better than checkers",
     "cards": "Let's go gambling! Sign your soul away with multiple card games.",
     "mc": "Mine and craft on the latest updates",
-    "street-fighter": "Fight your opponents"
+    "street-fighter": "Fight your opponents",
+    "tower-defence": "Build your own tower layout on a grid."
   }
 }

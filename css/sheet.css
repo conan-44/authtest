@@ -116,7 +116,7 @@ button:hover .btn-icon { animation: playSprite 0.5s steps(4); }
     height: 8px;
     transform: scale(32);
     image-rendering: pixelated;
-    background-image: url("../assets/minigames/games.png");
+    background-image: url("../assets/minigames/games.png?v=tower-defence-v1");
     background-repeat: no-repeat;
 }
 

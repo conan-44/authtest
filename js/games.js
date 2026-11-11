@@ -542,6 +542,12 @@
     function snapToSlide(index, resumeAfterSnap = false, visualCard = gameCards[index], force = false) {
         if (!gameCards[index]) return;
         const animation = getCarouselAnimation();
+        if (!animation) {
+            selectedVisualCard = visualCard;
+            updateGamesPagination(index);
+            gamesGrid.style.transform = `translateX(${-getSlideOffset(visualCard)}px)`;
+            return;
+        }
         if (resumeAfterSnap) animation?.pause();
         snapAnimation?.cancel();
         snapAnimation = null;

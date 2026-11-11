@@ -1,0 +1,8 @@
+{
+    "name": "backwards banana",
+    "description": "throw boomeranging bananas at enemies",
+    "note": "banana banana",
+    "category": "ranged",
+    "damage": 10,
+    "cost": 5
+}

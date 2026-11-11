@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>tower defence</title>
+    <link rel="stylesheet" href="../chess/style.css?v=game-theme-v1">
+    <link rel="stylesheet" href="./style.css?v=tower-details-v1">
+    <script src="./script.js?v=tower-details-v1" defer></script>
+</head>
+<body>
+    <main class="chess-app">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">PLACEMENT SANDBOX</p>
+                <h1>tower defence</h1>
+            </div>
+            <button type="button" id="clear-board" class="primary-button">Clear board</button>
+        </header>
+        <section class="game-layout tower-layout" aria-label="Tower placement">
+            <div class="board-column">
+                <div class="turn-card tower-toolbar">
+                    <div id="tower-tools" class="tower-tools" role="group" aria-label="Choose a tower or remove tool"></div>
+                </div>
+                <div class="board-frame">
+                    <div id="board" class="chess-board tower-board" aria-label="Tower placement grid"></div>
+                </div>
+                <div class="board-footer">
+                    <span id="status" role="status">Loading towers...</span>
+                    <span id="tower-count">0 towers</span>
+                </div>
+            </div>
+            <aside class="game-sidebar">
+                <section class="sidebar-card opening-card tower-details" aria-labelledby="tower-name">
+                    <h2 id="tower-name">Loading towers...</h2>
+                    <p id="tower-description" class="opening-name"></p>
+                    <dl id="tower-attributes"></dl>
+                    <p id="tower-note" class="opening-book-status"></p>
+                </section>
+            </aside>
+        </section>
+    </main>
+</body>
+</html>

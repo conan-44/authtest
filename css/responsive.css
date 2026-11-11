@@ -7,11 +7,11 @@
 }
 
 @media (max-width: 700px) {
-    #gamesGrid.games-carousel { width: calc(700% + 48px); }
+    #gamesGrid.games-carousel { width: calc(800% + 56px); }
     #gamesPanel .game-card,
     #gamesPanel .game-card-clone {
-        flex-basis: calc(14.2857143% - 6.8571429px);
-        width: calc(14.2857143% - 6.8571429px);
+        flex-basis: calc(12.5% - 7px);
+        width: calc(12.5% - 7px);
     }
 }
 

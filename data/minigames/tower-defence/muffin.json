@@ -1,0 +1,8 @@
+{
+    "name": "muffin",
+    "description": "protect allies and block enemies",
+    "note": "his name is cupcake. he doesn't bite.",
+    "category": "defensive",
+    "damage": 2,
+    "cost": 8
+}

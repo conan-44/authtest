@@ -590,7 +590,7 @@ body.is-guest .guest-signin-cards {
 
 #gamesGrid.games-carousel {
     display: flex;
-    width: calc(700% + 48px);
+    width: calc(800% + 56px);
     height: 100%;
     margin: 0;
     gap: 8px;
