@@ -67,6 +67,7 @@
             balanceLabel.textContent = 'Sign in to see orbs and tickets.';
             delete balanceLabel.dataset.balance;
             ticketChoice.hidden = true;
+            window.dispatchEvent(new CustomEvent('gacha-ticket-availability', { detail: { available: false } }));
             return;
         }
         const makeBalance = (label, count, className) => {
@@ -90,6 +91,7 @@
         }
         const available = milestonesToClaim(economy.local);
         ticketChoice.hidden = !available.length;
+        window.dispatchEvent(new CustomEvent('gacha-ticket-availability', { detail: { available: available.length > 0 } }));
         if (available.length) ticketLabel.textContent = `${available[0].name} milestone: choose a ticket (${available.length} available)`;
         updateDrawButton();
     }
@@ -133,6 +135,9 @@
             }
             local.tickets.classic += data.granted;
             local.dailyAt = data.next_at;
+            if (data.granted > 0 && id === userId) {
+                window.dispatchEvent(new CustomEvent('app-new-activity', { detail: { kind: 'gacha' } }));
+            }
         } else if (pending.kind === 'ticket') {
             try {
                 await applyTicketClaim(id, pending);

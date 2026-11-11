@@ -41,6 +41,7 @@
         if (tabName === 'blog' && typeof window.initBlogCommunity === 'function') window.initBlogCommunity();
         if (tabName === 'home') window.dispatchEvent(new Event('home-dashboard-opened'));
         if (tabName === 'gacha') window.dispatchEvent(new Event('gacha-tab-opened'));
+        window.dispatchEvent(new CustomEvent('app-tab-opened', { detail: { tab: tabName } }));
     }
 
 
@@ -59,6 +60,6 @@
     window.activateTab = activateTab;
     window.setTabsGuestMode = setTabsGuestMode;
 
-    setTabsGuestMode(true);
+    setTabsGuestMode(document.body.classList.contains('is-guest'));
     activateTab('home');
 })();

@@ -28,6 +28,12 @@ production writes for test fixtures.
   checks prevent an earlier profile request from overwriting a newer session.
   Sign-in state is dispatched before profile loading, so a failed or stalled
   profile request cannot block the rest of the app. Profile errors are reported.
+- Activity indicators store unread flags and last-viewed times per account on
+  this device. They watch new accessible chat messages, polls and suggestions,
+  and show local achievement unlocks and Gacha ticket activity. Opening a tab or
+  community section clears its unread flag; unclaimed milestone tickets remain
+  indicated until claimed. Realtime notifications require the corresponding
+  tables to be enabled in the Supabase Realtime publication and allowed by RLS.
 - `chat/` contains messages, channels, actions, GIFs, profiles, emojis, and the
   Smiley interface and worker. Chat uses Supabase realtime and storage.
 - `minigames/` contains standalone game pages. `js/games.js` hosts them in an

@@ -322,14 +322,14 @@ body.is-guest .guest-signin-cards {
     height: auto;
     aspect-ratio: 1;
     margin: 0;
-    background-size: 3700% 400%;
+    background-size: 3900% 400%;
     background-position-y: 100%;
     transform: none;
 }
 
-.guest-signin-card .icon-signup { background-position-x: 8.333333%; }
-.guest-signin-card .icon-signin { background-position-x: 11.111111%; }
-.guest-signin-card .icon-google { background-position-x: 13.888889%; }
+.guest-signin-card .icon-signup { background-position-x: 7.894737%; }
+.guest-signin-card .icon-signin { background-position-x: 10.526316%; }
+.guest-signin-card .icon-google { background-position-x: 13.157895%; }
 
 .guest-signin-card:hover .btn-icon,
 .guest-signin-card:focus-visible .btn-icon {

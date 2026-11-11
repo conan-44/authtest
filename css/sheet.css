@@ -4,7 +4,7 @@
       height: 8px;
       min-width: 8px;
       min-height: 8px;
-      background-image: url('../assets/icons.png?v=gacha-tab-v1');
+      background-image: url('../assets/icons.png?v=activity-indicators-v1');
       background-repeat: no-repeat;
       background-position-y: -24px;
       transform: scale(4);
@@ -58,6 +58,24 @@ button:hover .btn-icon { animation: playSprite 0.5s steps(4); }
 
 .tab-btn .btn-icon {
     margin: 0 8px 0 0;
+}
+
+.tab-btn.has-new-activity,
+.blog-section-tab.has-new-activity {
+    position: relative;
+}
+
+.tab-btn.has-new-activity::after,
+.blog-section-tab.has-new-activity::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    background: url('../assets/icons.png?v=activity-indicators-v1') -608px -48px / 624px 64px no-repeat;
+    image-rendering: pixelated;
+    pointer-events: none;
+    content: "";
 }
 
 .settings-toggle-icon {

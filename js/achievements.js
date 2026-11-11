@@ -573,6 +573,7 @@ const history_file = "./history/achievements.skvwhist";
             state.completionMap[id] = { unlockedAt: Date.now() };
             saveCompletionMap();
             renderers.renderAll(); renderers.showUnlockPopup(achievement);
+            window.dispatchEvent(new CustomEvent('app-new-activity', { detail: { kind: 'achievements' } }));
             checkMilestones();
             if (onRender) onRender(getSummary(state));
             console.log(`[Achievement] Unlocked: ${id} (+${achievement.points} pts)`);

@@ -83,7 +83,18 @@
         });
         if (sectionName === "polls") loadPolls();
         if (sectionName === "suggestions") loadSuggestions();
+        window.dispatchEvent(new CustomEvent("blog-section-opened", { detail: { section: sectionName } }));
     }
+
+    window.addEventListener("community-new-activity", event => {
+        if (event.detail?.section === "polls") {
+            pollsLoaded = false;
+            if (!sectionPanels.polls.hidden && !document.getElementById("blogPanel").classList.contains("is-hidden")) loadPolls();
+        } else if (event.detail?.section === "suggestions") {
+            suggestionsLoaded = false;
+            if (!sectionPanels.suggestions.hidden && !document.getElementById("blogPanel").classList.contains("is-hidden")) loadSuggestions();
+        }
+    });
 
     function showSignedInStatus() {
         if (currentUserId) {
