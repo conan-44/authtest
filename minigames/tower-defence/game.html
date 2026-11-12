@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>tower defence</title>
     <link rel="stylesheet" href="../chess/style.css?v=game-theme-v1">
-    <link rel="stylesheet" href="./style.css?v=enemy-waves-v1">
+    <link rel="stylesheet" href="./style.css?v=tower-combat-v4">
     <script src="./level.js?v=path-editor-v1" defer></script>
     <script src="./waves.js?v=enemy-waves-v1" defer></script>
-    <script src="./script.js?v=enemy-waves-v1" defer></script>
+    <script src="./combat.js?v=tower-combat-v4" defer></script>
+    <script src="./script.js?v=tower-combat-v4" defer></script>
 </head>
 <body>
     <main class="chess-app">
@@ -26,7 +27,9 @@
                 </div>
                 <div class="board-frame">
                     <div id="board" class="chess-board tower-board" aria-label="Tower placement grid"></div>
+                    <div class="reticle-layer" aria-hidden="true"><span id="tower-reticle" hidden></span></div>
                     <div id="enemy-layer" class="enemy-layer" aria-hidden="true"></div>
+                    <div id="projectile-layer" class="enemy-layer" aria-hidden="true"></div>
                 </div>
                 <div class="board-footer">
                     <span id="status" role="status">Loading towers...</span>
@@ -41,7 +44,7 @@
                         <button id="start-waves" type="button" class="primary-button" disabled>Start waves</button>
                         <button id="reset-waves" type="button" class="quiet-button" disabled>Reset waves</button>
                     </div>
-                    <p class="opening-book-status">Enemies follow the path. Towers are placement-only for now.</p>
+                    <p class="opening-book-status">Select a placed tower to change its targeting.</p>
                 </section>
                 <section id="level-editor" class="sidebar-card opening-card level-editor" hidden>
                     <h2>Level editor</h2>
@@ -61,6 +64,19 @@
                     <p id="tower-description" class="opening-name"></p>
                     <dl id="tower-attributes"></dl>
                     <p id="tower-note" class="opening-book-status"></p>
+                    <div id="tower-targeting" hidden>
+                        <label for="target-mode">Target priority</label>
+                        <select id="target-mode">
+                            <option value="first">First on path</option>
+                            <option value="last">Last on path</option>
+                            <option value="highest">Highest HP</option>
+                            <option value="lowest">Lowest HP</option>
+                            <option value="closest">Closest</option>
+                            <option value="furthest">Furthest</option>
+                        </select>
+                        <button id="remove-placed-tower" type="button" class="quiet-button">Remove tower</button>
+                        <button id="replace-placed-tower" type="button" class="quiet-button">Replace with selected tool</button>
+                    </div>
                 </section>
             </aside>
         </section>

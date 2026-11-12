@@ -40,6 +40,7 @@
         let remaining = 0;
         const visible = [];
         enemies.forEach(enemy => {
+            if (enemy.hp !== undefined && enemy.hp <= 0) return;
             const distance = (time - enemy.spawn) * enemy.speed;
             if (distance < 0) {
                 remaining++;
@@ -51,6 +52,7 @@
                 const to = path[index + 1];
                 visible.push({
                     ...enemy,
+                    progress: distance,
                     row: from[0] + (to[0] - from[0]) * fraction,
                     column: from[1] + (to[1] - from[1]) * fraction
                 });

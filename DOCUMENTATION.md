@@ -119,10 +119,10 @@ blog, and suggestion database objects.
 Tower Defence is a local placement sandbox: choose one of the five 8-by-12
 sprites in `assets/minigames/tower-defence/towers.png` and place, replace, or
 remove towers on the 12-by-12 grid. The board resets when the game is closed;
-there is no saved progress or tower combat yet.
+there is no saved progress.
 `data/minigames/tower-defence/index.json` lists tower IDs and sprite positions;
 each ID has a matching JSON file with its name, description, note, category,
-damage, and cost. These attributes are informational until gameplay is added.
+damage, and cost. Damage is applied by attacks; costs are informational for now.
 The default level string is in `data/minigames/tower-defence/level.json`. Its
 `TD1:` format lists zero-based `row,column` pairs separated by semicolons; the
 first and last tiles are the start and end. Paths must be connected, cannot
@@ -138,6 +138,21 @@ enemies. A group specifies the sprite column (0–4), count, spawn interval in
 seconds, size in tiles, and speed in tiles per second. The sprite sheet has two
 rows of animation frames. Waves run in sequence after starting; reset them
 before editing or loading a different path.
+`combat.js` owns tower range, attack intervals, enemy health, and targeting.
+Select a placed tower to choose first/last on the path, highest/lowest health,
+or closest/furthest within range. The reticle previews a tower's attack range
+while placing or inspecting it; the non-attacking muffin uses a one-tile marker.
+Muffins do not attack. Target-following projectiles disappear if their target
+escapes; banana boom creates explosions directly on its target, damaging nearby
+enemies. Boomerangs travel through enemies to their maximum range and return to
+their launch point, damaging each enemy at most once per throw, even if the
+original target dies or escapes. They slow down at the turnaround and accelerate
+on their return, cycling through four frames and rotating 90 degrees after each
+cycle. Enemies briefly flash white when hit; defeated enemies fade out white
+without remaining targetable or counting toward the wave. Resetting waves clears
+attacks and enemy health while preserving towers and their targets.
+Select a tower tool, then inspect an existing tower and choose Replace to change
+its type; replacement resets that tower's targeting priority.
 
 Number Pillars updates the selected answer before its removal animation but
 defers checking the sum and advancing the level until that removal finishes;

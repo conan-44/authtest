@@ -1,6 +1,6 @@
 {
     "name": "banana boom",
-    "description": "make bananas explode on impact",
+    "description": "cause explosions around nearby enemies",
     "note": "big banana go boom",
     "category": "melee",
     "damage": 10,
