@@ -5,14 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>tower defence</title>
     <link rel="stylesheet" href="../chess/style.css?v=game-theme-v1">
-    <link rel="stylesheet" href="./style.css?v=tower-details-v1">
-    <script src="./script.js?v=tower-details-v1" defer></script>
+    <link rel="stylesheet" href="./style.css?v=enemy-waves-v1">
+    <script src="./level.js?v=path-editor-v1" defer></script>
+    <script src="./waves.js?v=enemy-waves-v1" defer></script>
+    <script src="./script.js?v=enemy-waves-v1" defer></script>
 </head>
 <body>
     <main class="chess-app">
         <header class="topbar">
             <div>
-                <p class="eyebrow">PLACEMENT SANDBOX</p>
+                <p class="eyebrow">TOWER DEFENCE</p>
                 <h1>tower defence</h1>
             </div>
             <button type="button" id="clear-board" class="primary-button">Clear board</button>
@@ -24,6 +26,7 @@
                 </div>
                 <div class="board-frame">
                     <div id="board" class="chess-board tower-board" aria-label="Tower placement grid"></div>
+                    <div id="enemy-layer" class="enemy-layer" aria-hidden="true"></div>
                 </div>
                 <div class="board-footer">
                     <span id="status" role="status">Loading towers...</span>
@@ -31,6 +34,28 @@
                 </div>
             </div>
             <aside class="game-sidebar">
+                <section class="sidebar-card opening-card wave-panel" aria-labelledby="wave-heading">
+                    <h2 id="wave-heading">Enemy waves</h2>
+                    <p id="wave-status" role="status">Loading waves...</p>
+                    <div class="editor-actions">
+                        <button id="start-waves" type="button" class="primary-button" disabled>Start waves</button>
+                        <button id="reset-waves" type="button" class="quiet-button" disabled>Reset waves</button>
+                    </div>
+                    <p class="opening-book-status">Enemies follow the path. Towers are placement-only for now.</p>
+                </section>
+                <section id="level-editor" class="sidebar-card opening-card level-editor" hidden>
+                    <h2>Level editor</h2>
+                    <p>Click or drag connected tiles. The first is the start and the last is the end. Select the previous tile to undo.</p>
+                    <div class="editor-actions">
+                        <button id="editor-undo" type="button" class="quiet-button">Undo</button>
+                        <button id="editor-clear" type="button" class="quiet-button">Clear path</button>
+                        <button id="editor-apply" type="button" class="primary-button">Apply &amp; export</button>
+                        <button id="editor-cancel" type="button" class="quiet-button">Cancel</button>
+                    </div>
+                    <label for="level-code">Level string</label>
+                    <textarea id="level-code" readonly rows="3" aria-label="Exported level string"></textarea>
+                    <p id="editor-status" role="status"></p>
+                </section>
                 <section class="sidebar-card opening-card tower-details" aria-labelledby="tower-name">
                     <h2 id="tower-name">Loading towers...</h2>
                     <p id="tower-description" class="opening-name"></p>

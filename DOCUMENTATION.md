@@ -118,11 +118,26 @@ blog, and suggestion database objects.
 
 Tower Defence is a local placement sandbox: choose one of the five 8-by-12
 sprites in `assets/minigames/tower-defence/towers.png` and place, replace, or
-remove towers on the 12-by-12 grid. The board resets when the game is closed or reset;
-there are no waves, enemies, or saved progress.
+remove towers on the 12-by-12 grid. The board resets when the game is closed;
+there is no saved progress or tower combat yet.
 `data/minigames/tower-defence/index.json` lists tower IDs and sprite positions;
 each ID has a matching JSON file with its name, description, note, category,
 damage, and cost. These attributes are informational until gameplay is added.
+The default level string is in `data/minigames/tower-defence/level.json`. Its
+`TD1:` format lists zero-based `row,column` pairs separated by semicolons; the
+first and last tiles are the start and end. Paths must be connected, cannot
+repeat tiles, and cannot overlap towers. In the game's own browser console, use
+`towerDefence.enableEditor()` to draw a new path, then Apply & export to copy its
+string. `towerDefence.exportLevel()` returns the current draft or level, and
+`towerDefence.loadLevel("TD1:...")` validates and loads a string. When the game
+is in the main site's iframe, access the API via
+`document.getElementById('gameFrame').contentWindow.towerDefence`. Changes are
+temporary unless the exported string is placed in the default level JSON.
+`waves.skvwameta` is a JSON array of waves, each containing ordered `groups` of
+enemies. A group specifies the sprite column (0–4), count, spawn interval in
+seconds, size in tiles, and speed in tiles per second. The sprite sheet has two
+rows of animation frames. Waves run in sequence after starting; reset them
+before editing or loading a different path.
 
 Number Pillars updates the selected answer before its removal animation but
 defers checking the sum and advancing the level until that removal finishes;

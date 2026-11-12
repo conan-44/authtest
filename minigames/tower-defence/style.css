@@ -36,6 +36,79 @@
 
 .tower-board {
     grid-template-columns: repeat(12, minmax(0, 1fr));
+    --dark-square: color-mix(in srgb, var(--light-square) 50%, #77889a);
+}
+
+.board-frame { position: relative; }
+
+.enemy-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.enemy-sprite {
+    position: absolute;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    background-image: url("../../assets/minigames/tower-defence/enemies/bob.png");
+    background-size: 500% 200%;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    animation: enemy-frames .4s steps(1, end) infinite;
+}
+
+@keyframes enemy-frames {
+    0% { background-position-y: 0%; }
+    50% { background-position-y: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .enemy-sprite { animation: none; background-position-y: 0%; }
+}
+
+.wave-panel { padding: 16px; }
+.wave-panel p { margin: 0; }
+
+.tower-board.is-editing {
+    touch-action: none;
+}
+
+.tower-board .square[data-path]:not([data-path=""]) {
+    background: color-mix(in srgb, var(--secondary) 45%, #a49478);
+}
+
+.tower-board .square[data-path="start"],
+.tower-board .square[data-path="end"] {
+    background: color-mix(in srgb, var(--secondary) 60%, var(--accent));
+}
+
+.path-marker {
+    z-index: 1;
+    color: #fff;
+    font: clamp(.55rem, 1.5vw, .9rem) "capsmall", sans-serif;
+    text-shadow: 1px 1px 2px #000;
+    pointer-events: none;
+}
+
+.level-editor {
+    padding: 16px;
+}
+
+.level-editor[hidden] { display: none; }
+.level-editor p { margin: 0; line-height: 1.4; }
+.editor-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.editor-actions button { min-height: 34px; font-size: .75rem; }
+.level-editor textarea {
+    width: 100%;
+    resize: vertical;
+    font: .8rem/1.4 monospace;
+    color: var(--color-text, #000);
+    background: var(--color-control-surface, #fff);
+    border: 2px solid var(--border);
+    padding: 6px;
 }
 
 .tower-details {
