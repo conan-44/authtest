@@ -636,7 +636,7 @@
         resetWaveState();
     }
 
-    Promise.all([loadTowers(), readJson('level.json'), readJson('waves.skvwameta')]).then(([loaded, level, waveData]) => {
+    Promise.all([loadTowers(), readJson('level.json'), readJson('waves.skvwmeta')]).then(([loaded, level, waveData]) => {
         path = levels.decode(level.path);
         waves = waveRules.validate(waveData);
         towers = loaded;

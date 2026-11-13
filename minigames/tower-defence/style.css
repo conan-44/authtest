@@ -102,7 +102,7 @@
     image-rendering: pixelated;
 }
 
-.combat-chip { background-position: 0 0; }
+.combat-chip { background-position: 0 0; transform: scale(0.25); }
 .combat-crumb { background-position: 20% 0; width: 3%; }
 .combat-toast { background-position: 40% 0; }
 .combat-boomerang {
