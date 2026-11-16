@@ -3,6 +3,10 @@
     const levels = window.TowerDefenceLevels;
     const waveRules = window.TowerDefenceWaves;
     const combat = window.TowerDefenceCombat;
+    const upgradeRules = window.TowerDefenceUpgrades;
+    const modeRules = window.TowerDefenceModes;
+    const progression = window.TowerDefenceProgression;
+    const matchProgress = progression.create();
     const DATA_ROOT = '../../data/minigames/tower-defence/';
     const HIT_FLASH_DURATION = 0.1;
     const DEFEAT_FADE_DURATION = 0.3;
@@ -22,7 +26,17 @@
     const reticle = document.getElementById('tower-reticle');
     const targeting = document.getElementById('tower-targeting');
     const targetMode = document.getElementById('target-mode');
+    const targetModeLabel = document.getElementById('target-mode-label');
+    const upgrades = document.getElementById('tower-upgrades');
+    const upgradePanel = document.getElementById('upgrade-panel');
+    const bitsDisplay = document.getElementById('bits');
+    const butterDisplay = document.getElementById('butter');
+    const butterIcon = document.getElementById('butter-icon');
     const waveStatus = document.getElementById('wave-status');
+    const modeSelect = document.getElementById('game-mode');
+    const modeDescription = document.getElementById('mode-description');
+    const ratingStatus = document.getElementById('rating-status');
+    const seedInput = document.getElementById('wave-seed');
     const startWaves = document.getElementById('start-waves');
     const resetWaves = document.getElementById('reset-waves');
     const cells = [];
@@ -39,7 +53,9 @@
     let waveTime = 0;
     let lastFrameTime = null;
     let waveEnemies = [];
+    let waveSeed = null;
     let pauseUntil = null;
+    let waveButterAward = 0;
     const enemyElements = new Map();
     const placedTowers = new Map();
     let inspectedTower = null;
@@ -47,6 +63,68 @@
     let focusedCell = null;
     let projectiles = [];
     let effects = [];
+    let economy;
+    let gameModes = [];
+    let gameMode;
+    let modeLocked = false;
+    let bits = 0;
+    let butter = 0;
+    const rewardedEnemies = new Set();
+    const rewardedWaves = new Set();
+    const ratedWaves = new Set();
+    let ranked = true;
+    let ratingQueue = Promise.resolve();
+
+    function recordAchievements(ids) {
+        if (!ids.length || window.parent === window) return;
+        const recorder = window.parent.achievements?.recordGameEvent;
+        if (typeof recorder !== 'function') {
+            console.error('Tower Defence achievement tracker is unavailable.');
+            return;
+        }
+        ids.forEach(id => recorder('tower-defence', 'achievement', { id }).catch(error => {
+            console.error('Could not record Tower Defence achievement.', error);
+            ratingStatus.textContent = 'Could not save an achievement. Check your connection.';
+        }));
+    }
+
+    async function showRating() {
+        if (window.parent === window) {
+            ratingStatus.textContent = 'Elo: open from the site to save.';
+            return;
+        }
+        const ratings = window.parent.gameRatings;
+        if (!ratings) throw new Error('Game rating tracker is unavailable.');
+        if (!await ratings.signedIn()) {
+            ratingStatus.textContent = 'Elo: sign in to save.';
+            return;
+        }
+        const rating = await ratings.get('tower-defence');
+        ratingStatus.textContent = ranked ? `Elo ${rating}` : `Elo ${rating} · custom path, unranked`;
+    }
+
+    function rateWave(number, perfect) {
+        if (!ranked || ratedWaves.has(number)) return;
+        ratedWaves.add(number);
+        ratingQueue = ratingQueue.then(async () => {
+            if (window.parent === window || !await window.parent.gameRatings.signedIn()) return;
+            const ratings = window.parent.gameRatings;
+            const current = await ratings.get('tower-defence');
+            const delta = progression.ratingDelta(current, number, perfect);
+            const updated = await ratings.adjust('tower-defence', delta);
+            ratingStatus.textContent = `Elo ${updated} (${delta >= 0 ? '+' : ''}${delta})`;
+        }).catch(error => {
+            console.error('Could not update Tower Defence Elo.', error);
+            ratingStatus.textContent = 'Could not save Elo. Check your connection.';
+        });
+    }
+    const reticlePixel = new Image();
+    reticlePixel.onload = () => renderReticle();
+    reticlePixel.onerror = () => {
+        console.error('Could not load the tower range reticle.');
+        status.textContent = 'Could not load the range reticle. Please reload the game.';
+    };
+    reticlePixel.src = '../../assets/minigames/tower-defence/recticle.png';
 
     async function readJson(path) {
         const response = await fetch(`${DATA_ROOT}${path}`, { cache: 'no-store' });
@@ -66,11 +144,110 @@
             const data = await readJson(`${item.id}.json`);
             if (!combat.settings[item.id] || !data || ['name', 'description', 'note', 'category'].some(key =>
                 typeof data[key] !== 'string' || !data[key].trim())
-                || ['damage', 'cost'].some(key => typeof data[key] !== 'number' || !Number.isFinite(data[key]) || data[key] < 0)) {
+                || ['damage', 'cost'].some(key => typeof data[key] !== 'number' || !Number.isFinite(data[key]) || data[key] < 0)
+                || (item.id === 'muffin' && (!Number.isFinite(data.blockSeconds) || data.blockSeconds <= 0))) {
                 throw new Error(`Invalid tower data: ${item.id}.json`);
             }
             return { ...data, id: item.id, sprite: item.sprite };
         }));
+    }
+
+    function upgradeValue(tower, id, fallback) {
+        const level = tower.levels[id] || 0;
+        return level ? upgradeRules.value(economy.upgrades[id], level, fallback) : fallback;
+    }
+
+    function towerStats(type) {
+        return modeRules.stats(gameMode, towers[type], combat.settings[towers[type].id]);
+    }
+
+    function showMode() {
+        modeDescription.textContent = `${gameMode.description} ${modeLocked ? 'Reload to change.' : 'Locks on build/start.'}`;
+        modeSelect.querySelectorAll('button').forEach(button => {
+            button.disabled = modeLocked;
+            button.setAttribute('aria-pressed', String(button.dataset.mode === gameMode.id));
+        });
+        enemyLayer.style.setProperty('--enemy-sprite', `url("../../assets/minigames/tower-defence/enemies/${gameMode.id}.png")`);
+        enemyLayer.style.setProperty('--enemy-animation-duration', `${0.4 / gameMode.enemySpeed}s`);
+    }
+
+    function lockMode() {
+        modeLocked = true;
+        showMode();
+    }
+
+    function updateCurrency() {
+        bitsDisplay.textContent = String(bits);
+        butterDisplay.textContent = String(butter);
+        if (inspectedTower !== null && placedTowers.has(inspectedTower)) renderUpgrades();
+    }
+
+    function renderUpgrades() {
+        const tower = placedTowers.get(inspectedTower);
+        const focused = upgrades.contains(document.activeElement) ? document.activeElement.dataset.upgrade : null;
+        upgrades.replaceChildren();
+        if (!tower) return;
+        tower.choices.forEach(id => {
+            const upgrade = economy.upgrades[id];
+            const level = tower.levels[id] || 0;
+            const next = upgradeRules.next(economy, id, level);
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'upgrade-button';
+            button.dataset.upgrade = id;
+            button.disabled = !Number.isSafeInteger(next.cost) || butter < next.cost;
+            const title = document.createElement('span');
+            title.className = 'upgrade-name';
+            title.textContent = `${upgrade.name} · ${upgradeRules.formatLevel(level)} → ${upgradeRules.formatLevel(level + 1)}`;
+            const detail = document.createElement('span');
+            detail.className = 'upgrade-description';
+            const number = value => Number(value.toFixed(2)).toString();
+            const valueText = ({
+                damage: `${number(next.value)}× damage`,
+                rate: `${number((1 - next.value) * 100)}% shorter cooldown`,
+                pierce: `${number(next.value)} enemies per shot on average`,
+                range: `${number((next.value - 1) * 100)}% more range`,
+                speed: `${number((next.value - 1) * 100)}% faster shots`,
+                blast: `${number((next.value - 1) * 100)}% larger blast`,
+                yield: `${number(next.value)} Bits per production`,
+                productionRate: `${number((1 - next.value) * 100)}% shorter interval`,
+                block: `${number(next.value)}× block duration`,
+                waveBonus: `${number(next.value * 100)}% bonus Butter`
+            })[id];
+            detail.textContent = `${upgrade.description} Next: ${valueText}.`;
+            const price = document.createElement('span');
+            price.className = 'upgrade-cost';
+            const icon = document.createElement('span');
+            icon.className = 'currency-icon currency-butter';
+            icon.setAttribute('aria-hidden', 'true');
+            price.append(icon, document.createTextNode(`${next.cost} Butter${level === 10 ? ' · breakthrough' : ''}`));
+            button.append(title, detail, price);
+            button.addEventListener('click', () => {
+                if (butter < next.cost) {
+                    status.textContent = `Not enough Butter. ${next.cost} required.`;
+                    return;
+                }
+                butter -= next.cost;
+                tower.levels[id] = level + 1;
+                recordAchievements(matchProgress.upgrade(level + 1));
+                tower.choices = upgradeRules.choices(economy.towerUpgrades[tower.id], tower.choices);
+                showDetails(towers[tower.type], tower);
+                updateCurrency();
+                renderReticle();
+                status.textContent = `${upgrade.name} upgraded to level ${upgradeRules.formatLevel(level + 1)}.`;
+            });
+            upgrades.append(button);
+        });
+        if (focused) {
+            const button = upgrades.querySelector(`[data-upgrade="${focused}"]`);
+            if (button && !button.disabled) button.focus();
+        }
+    }
+
+    function makePlacedTower(type, row, column) {
+        return { id: towers[type].id, type, row, column, mode: 'first', nextShot: waveTime,
+            nextIncome: waveTime + economy.muffinInterval / gameMode.towerSpeed, incomeRemainder: 0, levels: {},
+            choices: upgradeRules.choices(economy.towerUpgrades[towers[type].id]) };
     }
 
     function sprite(tower, className = '') {
@@ -81,7 +258,7 @@
         return element;
     }
 
-    function showDetails(tower) {
+    function showDetails(tower, placedTower = null) {
         attributes.replaceChildren();
         if (!tower) {
             name.textContent = 'Remove tower';
@@ -92,7 +269,15 @@
         name.textContent = tower.name;
         description.textContent = tower.description;
         note.textContent = tower.note;
-        [['Category', tower.category], ['Damage', tower.id === 'muffin' ? 'None' : tower.damage], ['Cost', tower.cost]].forEach(([label, value]) => {
+        const stats = modeRules.stats(gameMode, tower, combat.settings[tower.id]);
+        const damage = stats.damage * (placedTower ? upgradeValue(placedTower, 'damage', 1) : 1);
+        const reach = stats.range * (placedTower ? upgradeValue(placedTower, 'range', 1) : 1);
+        const block = stats.block * (placedTower ? upgradeValue(placedTower, 'block', 1) : 1);
+        const rangeOrBlock = tower.id === 'muffin'
+            ? ['Block', `${Number(block.toFixed(2))}s`]
+            : ['Range', Number(reach.toFixed(2))];
+        [['Category', tower.category], ['Damage', tower.id === 'muffin' ? 'None' : Number(damage.toFixed(2))],
+            rangeOrBlock, ['Cost', `${stats.cost} Bits`]].forEach(([label, value]) => {
             const term = document.createElement('dt');
             const detail = document.createElement('dd');
             term.textContent = label;
@@ -105,6 +290,7 @@
         selected = id;
         inspectedTower = null;
         targeting.hidden = true;
+        upgradePanel.hidden = true;
         tools.querySelectorAll('button').forEach(button => {
             button.setAttribute('aria-pressed', String(button.dataset.tool === String(id)));
         });
@@ -123,7 +309,7 @@
         cell.dataset.tower = towerId;
         cell.dataset.path = pathName;
         if (tower) cell.append(sprite(tower, 'placed-sprite'));
-        if (selected !== 'remove' && !pathName && !draft) cell.append(sprite(towers[selected], 'preview-sprite'));
+        if (selected !== 'remove' && (!pathName || towers[selected].id === 'muffin') && !draft && !tower) cell.append(sprite(towers[selected], 'preview-sprite'));
         if (pathName === 'start' || pathName === 'end') {
             const marker = document.createElement('span');
             marker.className = 'path-marker';
@@ -131,7 +317,7 @@
             marker.setAttribute('aria-hidden', 'true');
             cell.append(marker);
         }
-        cell.setAttribute('aria-label', `Row ${row + 1}, column ${column + 1}: ${pathName || (tower ? tower.name : 'empty')}`);
+        cell.setAttribute('aria-label', `Row ${row + 1}, column ${column + 1}: ${tower ? `${tower.name}${pathName ? ` on ${pathName}` : ''}` : pathName || 'empty'}`);
     }
 
     function renderBoard() {
@@ -142,20 +328,37 @@
     function renderReticle() {
         const index = hoveredCell ?? focusedCell ?? inspectedTower;
         const cell = cells[index];
-        if (draft || !cell || cell.element.dataset.path) {
+        if (draft || !cell) {
             reticle.hidden = true;
             return;
         }
         const tower = placedTowers.get(index);
         const type = tower ? tower.type : selected;
-        if (type === 'remove') {
+        if (type === 'remove' || (cell.element.dataset.path && towers[type].id !== 'muffin')) {
             reticle.hidden = true;
             return;
         }
-        const diameter = Math.max(1, combat.settings[towers[type].id].range * 2);
-        reticle.style.width = `${diameter * 100 / GRID_SIZE}%`;
-        reticle.style.left = `${(cell.column + 0.5) * 100 / GRID_SIZE}%`;
-        reticle.style.top = `${(cell.row + 0.5) * 100 / GRID_SIZE}%`;
+        const range = towerStats(type).range * (tower ? upgradeValue(tower, 'range', 1) : 1);
+        const diameter = Math.max(1, range * 2);
+        const size = reticle.parentElement.clientWidth;
+        const pixels = Math.max(1, Math.ceil(size / 3));
+        reticle.width = pixels;
+        reticle.height = pixels;
+        reticle.style.width = `${pixels * 3}px`;
+        reticle.style.height = `${pixels * 3}px`;
+        const context = reticle.getContext('2d');
+        const centerX = (cell.column + 0.5) * size / (3 * GRID_SIZE);
+        const centerY = (cell.row + 0.5) * size / (3 * GRID_SIZE);
+        const radius = diameter * size / (6 * GRID_SIZE);
+        if (reticlePixel.complete && reticlePixel.naturalWidth) {
+            for (let y = 0; y < pixels; y++) {
+                for (let x = 0; x < pixels; x++) {
+                    if (Math.abs(Math.hypot(x + 0.5 - centerX, y + 0.5 - centerY) - radius) <= 0.5) {
+                        context.drawImage(reticlePixel, x, y, 1, 1);
+                    }
+                }
+            }
+        }
         reticle.hidden = false;
     }
 
@@ -187,10 +390,18 @@
     function applyPath(next) {
         if (waveRunning) throw new Error('Reset waves before changing the path.');
         const validated = levels.validate(next);
-        if (validated.some(([row, column]) => cells[row * GRID_SIZE + column].element.dataset.tower !== '')) {
-            throw new Error('Remove towers from the new path first.');
+        if (validated.some(([row, column]) => {
+            const tower = placedTowers.get(row * GRID_SIZE + column);
+            return tower && tower.id !== 'muffin';
+        })) {
+            throw new Error('Remove non-muffin towers from the new path first.');
         }
         path = validated;
+        ranked = false;
+        showRating().catch(error => {
+            console.error('Could not load Tower Defence Elo.', error);
+            ratingStatus.textContent = 'Could not load Elo.';
+        });
         draft = null;
         drawing = false;
         editor.hidden = true;
@@ -227,15 +438,16 @@
         waveTime = 0;
         lastFrameTime = null;
         pauseUntil = null;
+        waveButterAward = 0;
         waveEnemies = [];
         clearEnemies();
         projectiles = [];
         effects = [];
         projectileLayer.replaceChildren();
-        placedTowers.forEach(tower => { tower.nextShot = 0; });
+        placedTowers.forEach(tower => { tower.nextShot = 0; tower.nextIncome = economy.muffinInterval / gameMode.towerSpeed; delete tower.blockUntil; });
         startWaves.disabled = false;
         resetWaves.disabled = true;
-        waveStatus.textContent = `${waves.length} waves ready.`;
+        waveStatus.textContent = 'Endless waves ready.';
     }
 
     function renderEnemies(visible) {
@@ -267,7 +479,7 @@
             art.style.filter = defeated || waveTime - enemy.hitAt < HIT_FLASH_DURATION ? 'brightness(0) invert(1)' : '';
             art.style.opacity = defeated ? String(Math.max(0, 1 - (waveTime - enemy.defeatedAt) / DEFEAT_FADE_DURATION)) : '';
             health.hidden = defeated;
-            health.style.width = `${enemy.hp / combat.hpBySprite[enemy.sprite] * 100}%`;
+            health.style.width = `${enemy.hp / enemy.maxHp * 100}%`;
             element.style.left = `${(enemy.column + 0.5) * 100 / GRID_SIZE}%`;
             element.style.top = `${(enemy.row + 0.5) * 100 / GRID_SIZE}%`;
         });
@@ -276,10 +488,13 @@
     function inspectTower(index) {
         inspectedTower = index;
         const tower = placedTowers.get(index);
-        showDetails(towers[tower.type]);
+        showDetails(towers[tower.type], tower);
         targeting.hidden = false;
+        upgradePanel.hidden = false;
         targetMode.value = tower.mode;
-        targetMode.disabled = tower.id === 'muffin';
+        targetMode.hidden = tower.id === 'muffin';
+        targetModeLabel.hidden = tower.id === 'muffin';
+        renderUpgrades();
         renderReticle();
         status.textContent = `Selected ${towers[tower.type].name} at row ${tower.row + 1}, column ${tower.column + 1}.`;
     }
@@ -298,7 +513,7 @@
             element.style.left = `${(item.column + 0.5) * 100 / GRID_SIZE}%`;
             element.style.top = `${(item.row + 0.5) * 100 / GRID_SIZE}%`;
             if (item.kind === 'boomerang') {
-                const frame = combat.boomerangFrame(item.age);
+                const frame = combat.boomerangFrame(item.age * gameMode.towerSpeed);
                 element.style.backgroundPositionY = `${frame.row * 10 / 38 * 100}%`;
                 element.style.transform = `translate(-50%, -50%) rotate(${frame.rotation}deg)`;
             } else if (item.kind === 'toast') {
@@ -307,6 +522,16 @@
                 element.style.backgroundPositionY = `${Math.min(2, Math.floor(item.age / 0.12)) * 50}%`;
             } else if (item.kind === 'crumb') {
                 element.style.top = `${(item.row + 0.5 + item.age * 0.65) * 100 / GRID_SIZE}%`;
+            } else if (item.kind === 'dust') {
+                element.style.left = `${(item.column + 0.5 + item.age * item.dx) * 100 / GRID_SIZE}%`;
+                element.style.top = `${(item.row + 0.5 + item.age * item.dy) * 100 / GRID_SIZE}%`;
+                element.style.opacity = String(Math.max(0, 1 - item.age / item.duration));
+            } else if (item.kind === 'bit') {
+                element.style.top = `${(item.row + 0.5 - item.age * 1.2) * 100 / GRID_SIZE}%`;
+                element.style.opacity = String(Math.max(0, 1 - item.age / item.duration));
+                const icon = document.createElement('span');
+                icon.className = 'currency-icon currency-bit';
+                element.append(icon, document.createTextNode(`+${item.amount}`));
             }
             projectileLayer.append(element);
         });
@@ -319,6 +544,10 @@
             shot.age += delta;
             if (shot.kind === 'boomerang') {
                 combat.advanceBoomerang(shot, enemies, delta);
+                return;
+            }
+            if (shot.hitEnemies) {
+                combat.advancePiercingShot(shot, enemies, delta);
                 return;
             }
             const target = enemies.find(enemy => enemy.id === shot.target && enemy.hp > 0);
@@ -338,6 +567,15 @@
         projectiles = projectiles.filter(shot => !shot.done);
         placedTowers.forEach(tower => {
             const config = combat.settings[tower.id];
+            const stats = towerStats(tower.type);
+            if (tower.id === 'muffin' && waveTime >= tower.nextIncome) {
+                const earned = tower.incomeRemainder + upgradeValue(tower, 'yield', 1);
+                const whole = Math.floor(earned + 1e-9);
+                tower.incomeRemainder = earned - whole;
+                bits += whole;
+                tower.nextIncome = waveTime + economy.muffinInterval / gameMode.towerSpeed * upgradeValue(tower, 'productionRate', 1);
+                updateCurrency();
+            }
             if (waveTime < tower.nextShot) return;
             if (tower.id === 'muffin') {
                 for (let i = 0; i < 3; i++) effects.push({
@@ -345,29 +583,92 @@
                     age: 0, duration: 0.65
                 });
             } else {
-                const target = combat.chooseTarget(tower, enemies, tower.mode);
+                const reach = upgradeValue(tower, 'range', 1);
+                const speed = upgradeValue(tower, 'speed', 1);
+                const target = combat.chooseTarget(tower, enemies, tower.mode, stats.range * reach);
                 if (!target) return;
+                const damage = stats.damage * upgradeValue(tower, 'damage', 1);
                 if (config.projectile === 'explosion') {
-                    combat.impact({ damage: towers[tower.type].damage, splash: config.splash }, target, enemies);
+                    combat.impact({ damage, splash: stats.splash * upgradeValue(tower, 'blast', 1) }, target, enemies);
                     effects.push({ kind: 'explosion', row: target.row, column: target.column, age: 0, duration: 0.36 });
                 } else if (config.projectile === 'boomerang') {
-                    projectiles.push(combat.createBoomerang(tower, target, towers[tower.type].damage));
+                    const shot = combat.createBoomerang(tower, target, damage, stats.range * reach);
+                    shot.speed = stats.projectileSpeed * speed;
+                    projectiles.push(shot);
+                } else if (tower.levels.pierce || tower.id === 'toast') {
+                    const average = upgradeValue(tower, 'pierce', 1);
+                    const pierce = Math.floor(average) + (Math.random() < average % 1 ? 1 : 0);
+                    projectiles.push(combat.createPiercingShot(tower, target,
+                        { ...config, range: stats.range * reach, speed: stats.projectileSpeed * speed }, damage, pierce));
                 } else {
                     projectiles.push({
                         kind: config.projectile, row: tower.row, column: tower.column,
-                        target: target.id, speed: config.speed, damage: towers[tower.type].damage,
+                        target: target.id, speed: stats.projectileSpeed * speed, damage,
                         splash: config.splash, age: 0
                     });
                 }
             }
-            tower.nextShot = waveTime + config.cooldown;
+            tower.nextShot = waveTime + stats.cooldown * upgradeValue(tower, tower.id === 'muffin' ? 'productionRate' : 'rate', 1);
         });
         renderCombat();
+    }
+
+    function startWave() {
+        const wave = waveRules.generate(waves, waveSeed, waveIndex);
+        waveButterAward = 0;
+        waveEnemies = waveRules.schedule({
+            ...wave,
+            groups: wave.groups.map(group => ({
+                ...group, speed: group.speed * gameMode.enemySpeed, interval: group.interval / gameMode.enemySpeed
+            }))
+        });
+        waveEnemies.forEach(enemy => {
+            enemy.maxHp = combat.hpBySprite[enemy.sprite] * wave.healthMultiplier;
+            enemy.hp = enemy.maxHp;
+        });
+        placedTowers.forEach(tower => {
+            tower.nextShot = 0;
+            tower.nextIncome = economy.muffinInterval / gameMode.towerSpeed;
+            delete tower.blockUntil;
+        });
+    }
+
+    function advanceBlockers(previousTime) {
+        const blockers = [];
+        path.forEach(([row, column], pathIndex) => {
+            const index = row * GRID_SIZE + column;
+            const tower = placedTowers.get(index);
+            if (tower && tower.id === 'muffin') blockers.push({
+                index, pathIndex, tower, duration: towerStats(tower.type).block * upgradeValue(tower, 'block', 1)
+            });
+        });
+        const duration = towers.find(tower => tower.id === 'muffin').blockSeconds;
+        const expired = waveRules.blockEnemies(waveEnemies, path, blockers, previousTime, waveTime, duration);
+        expired.forEach(({ index, tower }) => {
+            placedTowers.delete(index);
+            placed--;
+            const cell = cells[index];
+            updateCell(cell.element, cell.row, cell.column, '');
+            if (inspectedTower === index) {
+                inspectedTower = null;
+                targeting.hidden = true;
+                upgradePanel.hidden = true;
+            }
+            for (let i = 0; i < 7; i++) effects.push({
+                kind: 'dust', row: tower.row, column: tower.column,
+                dx: (i - 3) * 0.28, dy: -0.8 + Math.abs(i - 3) * 0.16,
+                age: 0, duration: 0.5
+            });
+            updateCount();
+            renderReticle();
+            status.textContent = 'Muffin blocked the path and crumbled.';
+        });
     }
 
     function tickWave(timestamp) {
         if (!waveRunning) return;
         const delta = lastFrameTime === null ? 0 : Math.min((timestamp - lastFrameTime) / 1000, 0.1);
+        const previousTime = waveTime;
         waveTime += delta;
         lastFrameTime = timestamp;
         if (pauseUntil !== null) {
@@ -375,12 +676,11 @@
                 waveIndex++;
                 waveTime = 0;
                 pauseUntil = null;
-                waveEnemies = waveRules.schedule(waves[waveIndex]);
-                waveEnemies.forEach(enemy => { enemy.hp = combat.hpBySprite[enemy.sprite]; });
-                placedTowers.forEach(tower => { tower.nextShot = 0; });
+                startWave();
                 clearCombatVisuals();
             }
         } else {
+            advanceBlockers(previousTime);
             const result = waveRules.atTime(waveEnemies, path, waveTime);
             const byId = new Map(waveEnemies.map(enemy => [enemy.id, enemy]));
             const visible = result.visible.map(enemy => {
@@ -395,32 +695,80 @@
             visible.forEach(enemy => {
                 if (enemy.hp < previousHealth.get(enemy.id)) {
                     enemy.hitAt = waveTime;
-                    if (enemy.hp <= 0) enemy.defeatedAt = waveTime;
+                    if (enemy.hp <= 0) {
+                        enemy.defeatedAt = waveTime;
+                        const rewardId = `${waveIndex}:${enemy.id}`;
+                        if (!rewardedEnemies.has(rewardId)) {
+                            rewardedEnemies.add(rewardId);
+                            recordAchievements(matchProgress.kill());
+                            bits += economy.bitsPerEnemy;
+                            effects.push({ kind: 'bit', row: enemy.row, column: enemy.column,
+                                age: 0, duration: 0.9, amount: economy.bitsPerEnemy });
+                            updateCurrency();
+                        }
+                    }
                 }
             });
             const fading = waveEnemies.filter(enemy => enemy.defeatedAt !== undefined
                 && waveTime - enemy.defeatedAt < DEFEAT_FADE_DURATION);
             renderEnemies([...visible.filter(enemy => enemy.hp > 0), ...fading]);
             const remaining = waveRules.atTime(waveEnemies, path, waveTime).remaining;
-            waveStatus.textContent = `Wave ${waveIndex + 1} / ${waves.length} · ${remaining} remaining`;
-            if (!remaining && !fading.length && !effects.some(effect => effect.kind === 'explosion')
+            if (!remaining) {
+                const bonus = [...placedTowers.values()].reduce((sum, tower) => sum + upgradeValue(tower, 'waveBonus', 0), 0);
+                const reward = upgradeRules.waveReward(waveEnemies, waveIndex, rewardedWaves, economy, bonus);
+                if (reward > 0) {
+                    rewardedWaves.add(waveIndex);
+                    butter += reward;
+                    waveButterAward = reward;
+                    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                        butterIcon.getAnimations().forEach(animation => animation.cancel());
+                        butterIcon.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.7)' }, { transform: 'scale(1)' }],
+                            { duration: 450, easing: 'ease-out' });
+                    }
+                    updateCurrency();
+                }
+            }
+            waveStatus.textContent = `Wave ${waveIndex + 1} · ${remaining} remaining`;
+            if (!remaining && !fading.length && !effects.some(effect => ['explosion', 'dust', 'bit'].includes(effect.kind))
+                && ![...placedTowers.values()].some(tower => tower.blockUntil !== undefined)
                 && !projectiles.some(shot => shot.kind === 'boomerang')) {
                 clearCombatVisuals();
-                if (waveIndex === waves.length - 1) {
-                    waveRunning = false;
-                    waveFrame = null;
-                    clearEnemies();
-                    waveStatus.textContent = 'All waves complete. Reset to play again.';
-                    return;
-                }
                 pauseUntil = waveTime + 1.5;
-                waveStatus.textContent = `Wave ${waveIndex + 1} complete. Next wave incoming.`;
+                const perfect = !waveEnemies.some(enemy => enemy.hp > 0);
+                recordAchievements(matchProgress.wave(waveIndex + 1, perfect, gameMode.id));
+                rateWave(waveIndex + 1, perfect);
+                const outcome = !perfect ? 'enemies escaped; no Butter'
+                    : waveButterAward ? `+${waveButterAward} Butter` : 'Butter already claimed';
+                waveStatus.textContent = `Wave ${waveIndex + 1} complete · ${outcome}. Next wave incoming.`;
             }
         }
         waveFrame = requestAnimationFrame(tickWave);
     }
 
     function initialize() {
+        new ResizeObserver(renderReticle).observe(reticle.parentElement);
+        gameModes.forEach((mode, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'mode-button';
+            button.dataset.mode = mode.id;
+            button.title = mode.name;
+            button.setAttribute('aria-label', mode.name);
+            const icon = document.createElement('span');
+            icon.className = 'mode-icon';
+            icon.style.backgroundPositionX = `${-24 * index}px`;
+            icon.setAttribute('aria-hidden', 'true');
+            button.append(icon);
+            button.addEventListener('click', () => {
+                if (modeLocked) return;
+                gameMode = mode;
+                showMode();
+                showDetails(selected === 'remove' ? null : towers[selected]);
+                renderReticle();
+            });
+            modeSelect.append(button);
+        });
+        showMode();
         towers.forEach((tower, index) => {
             const button = document.createElement('button');
             button.type = 'button';
@@ -483,16 +831,21 @@
                         if (event.detail === 0) appendPath(row, column);
                         return;
                     }
-                    if (cell.dataset.path) {
-                        status.textContent = 'Towers cannot be placed on the path.';
-                        return;
-                    }
                     if (cell.dataset.tower !== '' && selected !== 'remove') {
                         inspectTower(index);
                         return;
                     }
                     const hadTower = cell.dataset.tower !== '';
                     const nextTower = selected === 'remove' ? '' : String(selected);
+                    if (cell.dataset.path && nextTower !== '' && towers[selected].id !== 'muffin') {
+                        status.textContent = 'Only muffins can be placed on the path.';
+                        return;
+                    }
+                    const cost = nextTower === '' ? 0 : towerStats(selected).cost;
+                    if (nextTower !== '' && bits < cost) {
+                        status.textContent = `Not enough Bits. ${cost} required.`;
+                        return;
+                    }
                     if (!hadTower && nextTower !== '') placed++;
                     if (hadTower && nextTower === '') placed--;
                     if (nextTower === '') {
@@ -500,9 +853,14 @@
                         if (inspectedTower === index) {
                             inspectedTower = null;
                             targeting.hidden = true;
+                            upgradePanel.hidden = true;
                         }
                     } else {
-                        placedTowers.set(index, { id: towers[selected].id, type: selected, row, column, mode: 'first', nextShot: waveTime });
+                        lockMode();
+                        bits -= cost;
+                        placedTowers.set(index, makePlacedTower(selected, row, column));
+                        recordAchievements(matchProgress.build(towers[selected].id));
+                        updateCurrency();
                     }
                     updateCell(cell, row, column, nextTower);
                     if (nextTower !== '') inspectTower(index);
@@ -521,6 +879,7 @@
             placedTowers.clear();
             inspectedTower = null;
             targeting.hidden = true;
+            upgradePanel.hidden = true;
             cells.forEach(({ element, row, column }) => updateCell(element, row, column, ''));
             renderReticle();
             placed = 0;
@@ -544,6 +903,7 @@
             placed--;
             inspectedTower = null;
             targeting.hidden = true;
+            upgradePanel.hidden = true;
             updateCell(cell.element, cell.row, cell.column, '');
             renderReticle();
             updateCount();
@@ -557,7 +917,20 @@
             }
             const index = inspectedTower;
             const cell = cells[index];
-            placedTowers.set(index, { id: towers[selected].id, type: selected, row: cell.row, column: cell.column, mode: 'first', nextShot: waveTime });
+            if (cell.element.dataset.path && towers[selected].id !== 'muffin') {
+                status.textContent = 'Only muffins can be placed on the path.';
+                return;
+            }
+            const cost = towerStats(selected).cost;
+            if (bits < cost) {
+                status.textContent = `Not enough Bits. ${cost} required.`;
+                return;
+            }
+            lockMode();
+            bits -= cost;
+            placedTowers.set(index, makePlacedTower(selected, cell.row, cell.column));
+            recordAchievements(matchProgress.build(towers[selected].id));
+            updateCurrency();
             updateCell(cell.element, cell.row, cell.column, String(selected));
             inspectTower(index);
             status.textContent = `Replaced tower with ${towers[selected].name}.`;
@@ -609,14 +982,24 @@
                 waveStatus.textContent = 'Finish or cancel the level editor before starting waves.';
                 return;
             }
+            const seed = seedInput.value.trim();
+            if (!seed) {
+                waveStatus.textContent = 'Enter a wave seed before starting.';
+                seedInput.focus();
+                return;
+            }
+            if (waveSeed === null) {
+                waveSeed = seed;
+                seedInput.value = seed;
+                seedInput.readOnly = true;
+            }
+            lockMode();
             waveRunning = true;
             waveIndex = 0;
             waveTime = 0;
             lastFrameTime = null;
             pauseUntil = null;
-            waveEnemies = waveRules.schedule(waves[0]);
-            waveEnemies.forEach(enemy => { enemy.hp = combat.hpBySprite[enemy.sprite]; });
-            placedTowers.forEach(tower => { tower.nextShot = 0; });
+            startWave();
             startWaves.disabled = true;
             resetWaves.disabled = false;
             waveFrame = requestAnimationFrame(tickWave);
@@ -632,14 +1015,25 @@
             }
         };
         showDetails(towers[selected]);
+        seedInput.value = String(Math.floor(Math.random() * 4294967296));
+        updateCurrency();
+        showRating().catch(error => {
+            console.error('Could not load Tower Defence Elo.', error);
+            ratingStatus.textContent = 'Could not load Elo.';
+        });
         status.textContent = `${towers[selected].name} selected. Choose a tile.`;
         resetWaveState();
     }
 
-    Promise.all([loadTowers(), readJson('level.json'), readJson('waves.skvwmeta')]).then(([loaded, level, waveData]) => {
+    Promise.all([loadTowers(), readJson('level.json'), readJson('waves.skvwmeta'), readJson('economy.json'), readJson('modes.json')]).then(([loaded, level, waveData, economyData, modeData]) => {
         path = levels.decode(level.path);
         waves = waveRules.validate(waveData);
         towers = loaded;
+        economy = upgradeRules.validate(economyData, towers);
+        gameModes = modeRules.validate(modeData);
+        gameMode = gameModes.find(mode => mode.id === 'bob');
+        bits = economy.startingBits;
+        butter = economy.startingButter;
         initialize();
     }).catch(error => {
         console.error('Could not initialize Tower Defence.', error);

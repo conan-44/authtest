@@ -122,25 +122,56 @@ remove towers on the 12-by-12 grid. The board resets when the game is closed;
 there is no saved progress.
 `data/minigames/tower-defence/index.json` lists tower IDs and sprite positions;
 each ID has a matching JSON file with its name, description, note, category,
-damage, and cost. Damage is applied by attacks; costs are informational for now.
+damage, and Bit cost. `economy.json` configures starting currencies, rewards,
+Muffin production, and the upgrade pool for each tower. Placement
+and replacement spend Bits; removal and clearing do not refund purchases.
+Each defeated enemy awards Bits once per wave slot, even across wave resets.
+Butter is awarded once per wave when every enemy is defeated; an escaped enemy
+forfeits that wave's reward, but a reset allows another attempt. The base reward
+increases with the wave number. A wave reset preserves currencies, towers, and
+upgrades; closing the game resets the match. Muffins produce Bits during active
+waves and may improve perfect-wave Butter rewards without attacking.
+Before building or starting waves, select one of the modes in `modes.json`.
+Bob uses normal balance; Banana makes both banana towers 30% cheaper (rounded
+up to whole Bits) and reduces their damage by 25%; Beryl increases tower fire,
+production, projectile and enemy movement/spawn speeds by 25%; Bot increases
+damage by 50% but reduces attack range, explosion radius and muffin block time
+by 25%. Each mode uses its matching enemy sprite sheet. The selection locks on
+the first build or wave start and survives wave resets; reload to change it.
+The four icon buttons at the top use the shared bot sprite sheet.
+Toast fires only horizontally along its row, with larger piercing projectiles.
+Signed-in players start at 1000 Tower Defence Elo. Each unique wave in a match
+is rated once: defeating every enemy is a win, an escape is a loss, and the
+opponent rating is 1000 plus 25 per wave after the first (Elo K=24).
+Wave resets cannot rate the same wave twice; custom paths are unranked.
+Elo and achievements use the site's existing account services. The rating
+database requires `supabase/tower_defence_ratings.sql`. Match counters reset
+on reload, while unlocked achievements and account Elo persist.
 The default level string is in `data/minigames/tower-defence/level.json`. Its
 `TD1:` format lists zero-based `row,column` pairs separated by semicolons; the
 first and last tiles are the start and end. Paths must be connected, cannot
-repeat tiles, and cannot overlap towers. In the game's own browser console, use
+repeat tiles, and cannot overlap non-muffin towers. Muffins may be placed on
+path tiles: on first enemy contact they hold enemies at the tile entrance for
+the `blockSeconds` in `muffin.json`, modified by their Sturdiness upgrade, then disappear in crumb dust. Removing one
+early releases its enemies; a muffin off the path keeps producing resources.
+In the game's own browser console, use
 `towerDefence.enableEditor()` to draw a new path, then Apply & export to copy its
 string. `towerDefence.exportLevel()` returns the current draft or level, and
 `towerDefence.loadLevel("TD1:...")` validates and loads a string. When the game
 is in the main site's iframe, access the API via
 `document.getElementById('gameFrame').contentWindow.towerDefence`. Changes are
 temporary unless the exported string is placed in the default level JSON.
-`waves.skvwameta` is a JSON array of waves, each containing ordered `groups` of
-enemies. A group specifies the sprite column (0–4), count, spawn interval in
-seconds, size in tiles, and speed in tiles per second. The sprite sheet has two
-rows of animation frames. Waves run in sequence after starting; reset them
-before editing or loading a different path.
+`waves.skvwmeta` contains enemy group templates: sprite column (0–4), count,
+spawn interval, size and speed. `waves.js` generates endless waves independently
+from the displayed seed and wave number, unlocking more templates and gradually
+increasing health, numbers, size and speed. Group counts, sizes and speeds are
+bounded to keep the game manageable. Enter a seed before starting to reproduce a
+sequence; it stays locked across wave resets so rewards cannot be collected
+again by changing it. Reload to start a new match with another seed. The sprite
+sheet has two animation rows. Reset waves before editing or loading a new path.
 `combat.js` owns tower range, attack intervals, enemy health, and targeting.
 Select a placed tower to choose first/last on the path, highest/lowest health,
-or closest/furthest within range. The reticle previews a tower's attack range
+or closest/furthest within range. The pixelated reticle previews a tower's attack range
 while placing or inspecting it; the non-attacking muffin uses a one-tile marker.
 Muffins do not attack. Target-following projectiles disappear if their target
 escapes; banana boom creates explosions directly on its target, damaging nearby
@@ -153,6 +184,13 @@ without remaining targetable or counting toward the wave. Resetting waves clears
 attacks and enemy health while preserving towers and their targets.
 Select a tower tool, then inspect an existing tower and choose Replace to change
 its type; replacement resets that tower's targeting priority.
+Three randomly selected upgrades are offered per tower and rerolled after each
+purchase. Damage, fire rate, range, projectile speed, blast radius, pierce,
+Muffin production, block duration and perfect-wave Butter bonuses apply to
+appropriate towers. The first ten levels are I–X; level 11 costs a large
+breakthrough fee, and later levels use smaller but increasing prices for small
+incremental gains. Beyond X, fractional pierce is the expected number of enemies
+hit, and fractional Muffin production accumulates until it yields whole Bits.
 
 Number Pillars updates the selected answer before its removal animation but
 defers checking the sum and advancing the level until that removal finishes;

@@ -12,7 +12,8 @@
         chess: 'Chess',
         blackjack: 'Blackjack',
         doudizhu: 'Dou Dizhu',
-        streetfighter: 'Street Fighter'
+        streetfighter: 'Street Fighter',
+        'tower-defence': 'Tower Defence'
     };
     let userId = null;
     let generation = 0;

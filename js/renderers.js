@@ -15,9 +15,10 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
 
     const ACHIEVEMENT_SPRITES = {
         icons: { url: "./assets/icons.png", width: 312, height: 32, tileWidth: 8, tileHeight: 8, columns: 36 },
-        main: { url: "./assets/minigames/games.png", width: 48, height: 8, tileWidth: 8, tileHeight: 8, columns: 6 },
+        main: { url: "./assets/minigames/games.png", width: 56, height: 8, tileWidth: 8, tileHeight: 8, columns: 6 },
         mastermind: { url: "./assets/minigames/bots.png", width: 32, height: 8, tileWidth: 8, tileHeight: 8, columns: 4 },
-        "number-pillars": { url: "./assets/minigames/games.png", width: 48, height: 8, tileWidth: 8, tileHeight: 8, columns: 6 },
+        "number-pillars": { url: "./assets/minigames/games.png", width: 56, height: 8, tileWidth: 8, tileHeight: 8, columns: 6 },
+        "tower-defence": { url: "./assets/minigames/tower-defence/towers.png", width: 40, height: 12, tileWidth: 8, tileHeight: 12, columns: 5 },
         chess: { url: "./assets/minigames/chess/pieces.png", width: 48, height: 32, tileWidth: 8, tileHeight: 16, columns: 6 },
         blackjack: { url: "./assets/minigames/cards.png", width: 24, height: 24, tileWidth: 8, tileHeight: 12, columns: 3 },
         "dou-dizhu": { url: "./assets/minigames/cards.png", width: 24, height: 24, tileWidth: 8, tileHeight: 12, columns: 3 }
@@ -158,7 +159,8 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
             chess: "Chess",
             "dou-dizhu": "Dou Dizhu",
             mastermind: "Bulls & Cows",
-            "number-pillars": "Number Pillars"
+            "number-pillars": "Number Pillars",
+            "tower-defence": "Tower Defence"
         };
         namespaces.forEach(namespace => {
             const button = document.createElement("button");

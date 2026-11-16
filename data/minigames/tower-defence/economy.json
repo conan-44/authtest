@@ -1,0 +1,92 @@
+{
+  "startingBits": 30,
+  "startingButter": 3,
+  "bitsPerEnemy": 2,
+  "butterPerWave": 5,
+  "butterPerWaveGrowth": 1,
+  "muffinInterval": 5,
+  "breakthroughCost": 300,
+  "postBreakthroughCost": 35,
+  "postBreakthroughCostGrowth": 10,
+  "upgrades": {
+    "damage": {
+      "name": "Damage",
+      "description": "increase damage.",
+      "costs": [2, 4, 7, 11, 16, 22, 29, 37, 46, 56],
+      "values": [1.5, 2, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5],
+      "postStep": 0.02
+    },
+    "rate": {
+      "name": "Fire rate",
+      "description": "attack more often.",
+      "costs": [2, 4, 7, 11, 16, 22, 29, 37, 46, 56],
+      "values": [0.85, 0.7, 0.55, 0.5, 0.45, 0.4, 0.36, 0.32, 0.29, 0.26],
+      "postStep": 0.005,
+      "postMode": "inverse"
+    },
+    "pierce": {
+      "name": "Pierce",
+      "description": "hit more enemies.",
+      "costs": [3, 6, 10, 15, 21, 28, 36, 45, 55, 66],
+      "values": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "postStep": 0.1
+    },
+    "range": {
+      "name": "Reach",
+      "description": "increase attack range.",
+      "costs": [3, 6, 10, 15, 21, 28, 36, 45, 55, 66],
+      "values": [1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2],
+      "postStep": 0.005
+    },
+    "speed": {
+      "name": "Shot speed",
+      "description": "projectiles fly faster.",
+      "costs": [2, 4, 7, 11, 16, 22, 29, 37, 46, 56],
+      "values": [1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2],
+      "postStep": 0.005
+    },
+    "blast": {
+      "name": "Blast",
+      "description": "increase explosion radius.",
+      "costs": [3, 6, 10, 15, 21, 28, 36, 45, 55, 66],
+      "values": [1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3],
+      "postStep": 0.01
+    },
+    "yield": {
+      "name": "Bit production",
+      "description": "produce more Bits.",
+      "costs": [2, 4, 7, 11, 16, 22, 29, 37, 46, 56],
+      "values": [2, 3, 5, 6, 7, 8, 9, 10, 11, 12],
+      "postStep": 0.05
+    },
+    "productionRate": {
+      "name": "Production rate",
+      "description": "produce and shed crumbs faster.",
+      "costs": [2, 4, 7, 11, 16, 22, 29, 37, 46, 56],
+      "values": [0.85, 0.7, 0.55, 0.5, 0.45, 0.4, 0.36, 0.32, 0.29, 0.26],
+      "postStep": 0.005,
+      "postMode": "inverse"
+    },
+    "block": {
+      "name": "Sturdiness",
+      "description": "block enemies for longer.",
+      "costs": [2, 4, 7, 11, 16, 22, 29, 37, 46, 56],
+      "values": [1.15, 1.3, 1.45, 1.6, 1.75, 1.9, 2.05, 2.2, 2.35, 2.5],
+      "postStep": 0.005
+    },
+    "waveBonus": {
+      "name": "Butter bonus",
+      "description": "earn more Butter on perfect waves.",
+      "costs": [3, 6, 10, 15, 21, 28, 36, 45, 55, 66],
+      "values": [0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2],
+      "postStep": 0.01
+    }
+  },
+  "towerUpgrades": {
+    "cookie": ["damage", "rate", "pierce", "range", "speed"],
+    "muffin": ["yield", "productionRate", "block", "waveBonus"],
+    "toast": ["damage", "rate", "pierce", "range", "speed"],
+    "banana_boomer": ["damage", "rate", "range", "blast"],
+    "banana_boomerang": ["damage", "rate", "range", "speed"]
+  }
+}

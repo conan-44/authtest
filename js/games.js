@@ -63,7 +63,8 @@
         doudizhu: 1000,
         'number-pillars': 0,
         minecraft: 0,
-        streetfighter: 1000
+        streetfighter: 1000,
+        'tower-defence': 1000
     };
     const leaderboardGames = [
         { game: 'mastermind', achievement: 'mastermind:leaderboard-champion' },
@@ -76,6 +77,12 @@
     let leaderboardCheck = Promise.resolve();
 
     window.gameRatings = {
+        async signedIn() {
+            const { data: { user }, error } = await _supabase.auth.getUser();
+            if (error?.name === 'AuthSessionMissingError') return false;
+            if (error) throw new Error(`Could not verify your sign-in for game ratings: ${error.message}`);
+            return Boolean(user);
+        },
         async get(game) {
             if (!Object.hasOwn(gameRatingDefaults, game)) {
                 throw new Error(`Unknown game rating: ${game}`);
@@ -158,7 +165,7 @@
             const { data: { user }, error: authError } = await _supabase.auth.getUser();
             if (authError) throw new Error(`Could not verify your sign-in for game ratings: ${authError.message}`);
             if (!user) throw new Error('Sign in to save game ratings to your profile.');
-            const { error } = await _supabase.rpc('update_game_rating', {
+            const { data, error } = await _supabase.rpc('update_game_rating', {
                 p_game: game,
                 p_delta: delta,
                 p_rating: rating
@@ -169,6 +176,7 @@
             checkGameRatingAchievements().catch(error => {
                 console.error('Could not update leaderboard achievements.', error);
             });
+            return data;
         });
         gameRatingQueues.set(game, update);
         return update.finally(() => {
@@ -424,7 +432,8 @@
             chess: 'chess',
             blackjack: 'cards',
             doudizhu: 'cards',
-            streetfighter: 'street-fighter'
+            streetfighter: 'street-fighter',
+            'tower-defence': 'tower-defence'
         };
         const card = document.querySelector(`.game-card[data-game="${routes[game] || ''}"]`);
         if (!card) throw new Error('This rated game is unavailable.');

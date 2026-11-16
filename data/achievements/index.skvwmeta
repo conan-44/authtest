@@ -80,5 +80,30 @@
   "dou-dizhu:twenty-five-games",
   "dou-dizhu:leaderboard-champion",
   // street fighter
-  "streetfighter:leaderboard-champion"
+  "streetfighter:leaderboard-champion",
+  // tower defence
+  "tower-defence:first-tower",
+  "tower-defence:build-cookie",
+  "tower-defence:build-muffin",
+  "tower-defence:build-toast",
+  "tower-defence:build-boom",
+  "tower-defence:build-boomerang",
+  "tower-defence:all-towers",
+  "tower-defence:first-upgrade",
+  "tower-defence:five-upgrades",
+  "tower-defence:level-ten",
+  "tower-defence:kills-1",
+  "tower-defence:kills-50",
+  "tower-defence:kills-250",
+  "tower-defence:kills-1000",
+  "tower-defence:wave-1",
+  "tower-defence:wave-5",
+  "tower-defence:wave-10",
+  "tower-defence:wave-25",
+  "tower-defence:wave-50",
+  "tower-defence:perfect-five",
+  "tower-defence:mode-bob",
+  "tower-defence:mode-banana",
+  "tower-defence:mode-beryl",
+  "tower-defence:mode-bot"
 ]

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "bob", "name": "Bob", "description": "Normal balance.",
+    "towerSpeed": 1, "enemySpeed": 1, "damage": 1, "range": 1, "block": 1,
+    "bananaCost": 1, "bananaDamage": 1
+  },
+  {
+    "id": "banana", "name": "Banana", "description": "Bananas: -30% cost, -25% damage.",
+    "towerSpeed": 1, "enemySpeed": 1, "damage": 1, "range": 1, "block": 1,
+    "bananaCost": 0.7, "bananaDamage": 0.75
+  },
+  {
+    "id": "beryl", "name": "Beryl", "description": "Towers and enemies: +25% speed.",
+    "towerSpeed": 1.25, "enemySpeed": 1.25, "damage": 1, "range": 1, "block": 1,
+    "bananaCost": 1, "bananaDamage": 1
+  },
+  {
+    "id": "bot", "name": "Bot", "description": "Damage +50%; range/block -25%.",
+    "towerSpeed": 1, "enemySpeed": 1, "damage": 1.5, "range": 0.75, "block": 0.75,
+    "bananaCost": 1, "bananaDamage": 1
+  }
+]

@@ -20,7 +20,8 @@ const publicGameRatingDefaults = {
   doudizhu: 1000,
   "number-pillars": 0,
   minecraft: 0,
-  streetfighter: 1000
+  streetfighter: 1000,
+  "tower-defence": 1000
 };
 const publicGameRatingLabels = {
   mastermind: "Bulls & Cows",
@@ -29,7 +30,8 @@ const publicGameRatingLabels = {
   doudizhu: "Dou Dizhu",
   "number-pillars": "Number Pillars",
   minecraft: "Minecraft",
-  streetfighter: "Street Fighter"
+  streetfighter: "Street Fighter",
+  "tower-defence": "Tower Defence"
 };
 
 async function queryPublicProfiles(buildQuery) {

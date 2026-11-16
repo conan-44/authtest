@@ -18,7 +18,7 @@
         return { row: frame % 4, rotation: Math.floor(frame / 4) * 90 };
     }
 
-    function createBoomerang(tower, target, damage) {
+    function createBoomerang(tower, target, damage, range = settings.banana_boomerang.range) {
         const config = settings.banana_boomerang;
         const row = target.row - tower.row;
         const column = target.column - tower.column;
@@ -28,9 +28,54 @@
             originRow: tower.row, originColumn: tower.column,
             directionRow: distance ? row / distance : 0,
             directionColumn: distance ? column / distance : 1,
-            range: config.range, speed: config.speed, damage,
+            range, speed: config.speed, damage,
             distance: 0, phaseTime: 0, returning: false, hitEnemies: new Set(), age: 0
         };
+    }
+
+    function createPiercingShot(tower, target, config, damage, pierce) {
+        const row = target.row - tower.row;
+        const column = target.column - tower.column;
+        const sideways = config.projectile === 'toast';
+        const distance = sideways ? Math.abs(column) : Math.hypot(row, column);
+        return {
+            kind: config.projectile, row: tower.row, column: tower.column,
+            directionRow: sideways ? 0 : distance ? row / distance : 0,
+            directionColumn: distance ? column / distance : 1,
+            range: config.range, distance: 0, speed: config.speed, damage,
+            hitRadius: sideways ? 2 / 3 : 1 / 3, pierce, hitEnemies: new Set(), age: 0
+        };
+    }
+
+    function hitAlongSegment(shot, enemies, nextRow, nextColumn, limit = Infinity) {
+        const row = nextRow - shot.row;
+        const column = nextColumn - shot.column;
+        const lengthSquared = row * row + column * column;
+        const hits = [];
+        enemies.forEach(enemy => {
+            if (enemy.hp <= 0 || shot.hitEnemies.has(enemy.id)) return;
+            const fraction = lengthSquared
+                ? Math.max(0, Math.min(1, ((enemy.row - shot.row) * row + (enemy.column - shot.column) * column) / lengthSquared))
+                : 0;
+            const separation = Math.hypot(enemy.row - shot.row - fraction * row, enemy.column - shot.column - fraction * column);
+            if (separation <= enemy.size / 2 + (shot.hitRadius ?? 1 / 3)) hits.push({ enemy, fraction });
+        });
+        hits.sort((a, b) => a.fraction - b.fraction || a.enemy.id - b.enemy.id);
+        hits.slice(0, limit).forEach(({ enemy }) => {
+            impact(shot, enemy, enemies);
+            shot.hitEnemies.add(enemy.id);
+        });
+    }
+
+    function advancePiercingShot(shot, enemies, delta) {
+        const step = Math.min(shot.speed * delta, shot.range - shot.distance);
+        const nextRow = shot.row + shot.directionRow * step;
+        const nextColumn = shot.column + shot.directionColumn * step;
+        hitAlongSegment(shot, enemies, nextRow, nextColumn, shot.pierce - shot.hitEnemies.size);
+        shot.row = nextRow;
+        shot.column = nextColumn;
+        shot.distance += step;
+        shot.done = shot.hitEnemies.size >= shot.pierce || shot.range - shot.distance < 1e-9;
     }
 
     function advanceBoomerang(shot, enemies, delta) {
@@ -45,20 +90,7 @@
                 : shot.range * (1 - (1 - progress) ** 2);
             const nextRow = shot.originRow + shot.directionRow * nextDistance;
             const nextColumn = shot.originColumn + shot.directionColumn * nextDistance;
-            const row = nextRow - shot.row;
-            const column = nextColumn - shot.column;
-            const lengthSquared = row * row + column * column;
-            enemies.forEach(enemy => {
-                if (enemy.hp <= 0 || shot.hitEnemies.has(enemy.id)) return;
-                const fraction = lengthSquared
-                    ? Math.max(0, Math.min(1, ((enemy.row - shot.row) * row + (enemy.column - shot.column) * column) / lengthSquared))
-                    : 0;
-                const separation = Math.hypot(enemy.row - shot.row - fraction * row, enemy.column - shot.column - fraction * column);
-                if (separation <= enemy.size / 2 + 1 / 3) {
-                    impact(shot, enemy, enemies);
-                    shot.hitEnemies.add(enemy.id);
-                }
-            });
+            hitAlongSegment(shot, enemies, nextRow, nextColumn);
             shot.row = nextRow;
             shot.column = nextColumn;
             shot.distance = nextDistance;
@@ -73,12 +105,13 @@
         }
     }
 
-    function chooseTarget(tower, enemies, mode) {
-        const range = settings[tower.id].range;
+    function chooseTarget(tower, enemies, mode, range = settings[tower.id].range) {
         const candidates = enemies.map(enemy => ({
             enemy,
             distance: Math.hypot(enemy.row - tower.row, enemy.column - tower.column)
-        })).filter(item => item.distance <= range && item.enemy.hp > 0);
+        })).filter(item => item.distance <= range && item.enemy.hp > 0
+            && (tower.id !== 'toast' || (item.enemy.column !== tower.column
+                && Math.abs(item.enemy.row - tower.row) <= item.enemy.size / 2 + 2 / 3)));
         const compare = {
             first: (a, b) => b.enemy.progress - a.enemy.progress,
             last: (a, b) => a.enemy.progress - b.enemy.progress,
@@ -99,5 +132,5 @@
         victims.forEach(enemy => { enemy.hp = Math.max(0, enemy.hp - projectile.damage); });
     }
 
-    return { settings, hpBySprite, modes, boomerangFrame, createBoomerang, advanceBoomerang, chooseTarget, impact };
+    return { settings, hpBySprite, modes, boomerangFrame, createBoomerang, advanceBoomerang, createPiercingShot, advancePiercingShot, chooseTarget, impact };
 });

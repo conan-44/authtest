@@ -230,6 +230,12 @@ const history_file = "./history/achievements.skvwhist";
                 unlockedIds.push("main:idea-person");
             } else if (gameName === "main" && eventName === "gacha-collection") {
                 unlockedIds.push(...window.GachaRules.achievementIds(details.collection));
+            } else if (gameName === "tower-defence" && eventName === "achievement") {
+                if (typeof details.id !== "string" || !details.id.startsWith("tower-defence:")
+                    || !state.achievementsMap.has(details.id)) {
+                    throw new Error("Invalid Tower Defence achievement.");
+                }
+                unlockedIds.push(details.id);
             } else if (gameName === "mastermind" && eventName === "solved") {
                 gameProgress.mastermind.solves += 1;
                 mastermindSessionSolves += 1;

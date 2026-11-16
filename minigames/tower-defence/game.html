@@ -5,14 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>tower defence</title>
     <link rel="stylesheet" href="../chess/style.css?v=game-theme-v1">
-    <link rel="stylesheet" href="./style.css?v=tower-combat-v4">
+    <link rel="stylesheet" href="./style.css?v=tower-progression-v1">
     <script src="./level.js?v=path-editor-v1" defer></script>
-    <script src="./waves.js?v=enemy-waves-v1" defer></script>
-    <script src="./combat.js?v=tower-combat-v4" defer></script>
-    <script src="./script.js?v=tower-combat-v4" defer></script>
+    <script src="./waves.js?v=tower-upgrades-v2" defer></script>
+    <script src="./combat.js?v=tower-progression-v1" defer></script>
+    <script src="./upgrades.js?v=tower-upgrades-v2" defer></script>
+    <script src="./modes.js?v=tower-modes-v1" defer></script>
+    <script src="./progression.js?v=tower-progression-v1" defer></script>
+    <script src="./script.js?v=tower-progression-v1" defer></script>
 </head>
 <body>
     <main class="chess-app">
+        <div id="game-mode" class="mode-control" role="group" aria-label="Choose a mode" aria-describedby="mode-description"></div>
         <header class="topbar">
             <div>
                 <p class="eyebrow">TOWER DEFENCE</p>
@@ -21,30 +25,23 @@
             <button type="button" id="clear-board" class="primary-button">Clear board</button>
         </header>
         <section class="game-layout tower-layout" aria-label="Tower placement">
-            <div class="board-column">
-                <div class="turn-card tower-toolbar">
-                    <div id="tower-tools" class="tower-tools" role="group" aria-label="Choose a tower or remove tool"></div>
-                </div>
-                <div class="board-frame">
-                    <div id="board" class="chess-board tower-board" aria-label="Tower placement grid"></div>
-                    <div class="reticle-layer" aria-hidden="true"><span id="tower-reticle" hidden></span></div>
-                    <div id="enemy-layer" class="enemy-layer" aria-hidden="true"></div>
-                    <div id="projectile-layer" class="enemy-layer" aria-hidden="true"></div>
-                </div>
-                <div class="board-footer">
-                    <span id="status" role="status">Loading towers...</span>
-                    <span id="tower-count">0 towers</span>
-                </div>
-            </div>
-            <aside class="game-sidebar">
+            <aside class="tower-left">
                 <section class="sidebar-card opening-card wave-panel" aria-labelledby="wave-heading">
-                    <h2 id="wave-heading">Enemy waves</h2>
+                    <h2 id="wave-heading">Endless waves</h2>
                     <p id="wave-status" role="status">Loading waves...</p>
+                    <p id="rating-status" role="status">Loading Elo...</p>
+                    <p id="mode-description" class="mode-description"></p>
+                    <label class="seed-label" for="wave-seed">Wave seed</label>
+                    <input id="wave-seed" type="text" maxlength="64" autocomplete="off" spellcheck="false">
                     <div class="editor-actions">
                         <button id="start-waves" type="button" class="primary-button" disabled>Start waves</button>
                         <button id="reset-waves" type="button" class="quiet-button" disabled>Reset waves</button>
                     </div>
-                    <p class="opening-book-status">Select a placed tower to change its targeting.</p>
+                    <p class="opening-book-status">Defeat enemies for Bits and perfect waves for Butter. Removal has no refund.</p>
+                </section>
+                <section id="upgrade-panel" class="sidebar-card opening-card upgrade-panel" aria-label="Tower upgrades" hidden>
+                    <h2>Upgrades</h2>
+                    <div id="tower-upgrades" class="tower-upgrades"></div>
                 </section>
                 <section id="level-editor" class="sidebar-card opening-card level-editor" hidden>
                     <h2>Level editor</h2>
@@ -59,13 +56,34 @@
                     <textarea id="level-code" readonly rows="3" aria-label="Exported level string"></textarea>
                     <p id="editor-status" role="status"></p>
                 </section>
+            </aside>
+            <div class="board-column">
+                <div class="turn-card tower-toolbar">
+                    <div id="tower-tools" class="tower-tools" role="group" aria-label="Choose a tower or remove tool"></div>
+                    <div class="currency-bar" aria-label="Tower defence currencies">
+                        <span><span class="currency-icon currency-bit" aria-hidden="true"></span> <span id="bits">0</span> Bits</span>
+                        <span><span id="butter-icon" class="currency-icon currency-butter" aria-hidden="true"></span> <span id="butter">0</span> Butter</span>
+                    </div>
+                </div>
+                <div class="board-frame">
+                    <div id="board" class="chess-board tower-board" aria-label="Tower placement grid"></div>
+                    <div class="reticle-layer" aria-hidden="true"><canvas id="tower-reticle" hidden></canvas></div>
+                    <div id="enemy-layer" class="enemy-layer" aria-hidden="true"></div>
+                    <div id="projectile-layer" class="enemy-layer" aria-hidden="true"></div>
+                </div>
+                <div class="board-footer">
+                    <span id="status" role="status">Loading towers...</span>
+                    <span id="tower-count">0 towers</span>
+                </div>
+            </div>
+            <aside class="game-sidebar">
                 <section class="sidebar-card opening-card tower-details" aria-labelledby="tower-name">
                     <h2 id="tower-name">Loading towers...</h2>
                     <p id="tower-description" class="opening-name"></p>
                     <dl id="tower-attributes"></dl>
                     <p id="tower-note" class="opening-book-status"></p>
                     <div id="tower-targeting" hidden>
-                        <label for="target-mode">Target priority</label>
+                        <label id="target-mode-label" for="target-mode">Target priority</label>
                         <select id="target-mode">
                             <option value="first">First on path</option>
                             <option value="last">Last on path</option>
@@ -74,8 +92,10 @@
                             <option value="closest">Closest</option>
                             <option value="furthest">Furthest</option>
                         </select>
-                        <button id="remove-placed-tower" type="button" class="quiet-button">Remove tower</button>
-                        <button id="replace-placed-tower" type="button" class="quiet-button">Replace with selected tool</button>
+                        <div class="tower-actions">
+                            <button id="remove-placed-tower" type="button" class="quiet-button">Remove</button>
+                            <button id="replace-placed-tower" type="button" class="quiet-button" aria-label="Replace with selected tool" title="Replace with selected tool">Replace</button>
+                        </div>
                     </div>
                 </section>
             </aside>
