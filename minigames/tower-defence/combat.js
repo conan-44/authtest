@@ -6,11 +6,11 @@
     const settings = {
         cookie: { range: 7, cooldown: 0.4, projectile: 'chip', speed: 7 },
         muffin: { range: 0, cooldown: 1.5, projectile: 'crumb', speed: 0 },
-        toast: { range: 1.3, cooldown: 1.2, projectile: 'toast', speed: 5 },
+        toast: { range: 2, cooldown: 1.2, projectile: 'toast', speed: 5 },
         banana_boomer: { range: 1.6, cooldown: 1.5, projectile: 'explosion', splash: 1.6 },
-        banana_boomerang: { range: 3, cooldown: 1.1, projectile: 'boomerang', speed: 5 }
+        banana_boomerang: { range: 2, cooldown: 4, projectile: 'boomerang', speed: 5 }
     };
-    const hpBySprite = [20, 35, 55, 12, 90];
+    const hpBySprite = [42, 38, 64, 24, 167];
     const modes = ['first', 'last', 'highest', 'lowest', 'closest', 'furthest'];
 
     function boomerangFrame(age) {

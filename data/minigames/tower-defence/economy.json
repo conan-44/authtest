@@ -1,8 +1,8 @@
 {
-  "startingBits": 30,
-  "startingButter": 3,
-  "bitsPerEnemy": 2,
-  "butterPerWave": 5,
+  "startingBits": 15,
+  "startingButter": 0,
+  "bitsPerEnemy": 1,
+  "butterPerWave": 1,
   "butterPerWaveGrowth": 1,
   "muffinInterval": 5,
   "breakthroughCost": 300,
