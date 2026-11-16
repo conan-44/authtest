@@ -4,10 +4,10 @@
     else root.TowerDefenceCombat = api;
 })(globalThis, () => {
     const settings = {
-        cookie: { range: 3, cooldown: 0.8, projectile: 'chip', speed: 7 },
+        cookie: { range: 7, cooldown: 0.4, projectile: 'chip', speed: 7 },
         muffin: { range: 0, cooldown: 1.5, projectile: 'crumb', speed: 0 },
         toast: { range: 1.3, cooldown: 1.2, projectile: 'toast', speed: 5 },
-        banana_boomer: { range: 1.6, cooldown: 1.5, projectile: 'explosion', splash: 0.9 },
+        banana_boomer: { range: 1.6, cooldown: 1.5, projectile: 'explosion', splash: 1.6 },
         banana_boomerang: { range: 3, cooldown: 1.1, projectile: 'boomerang', speed: 5 }
     };
     const hpBySprite = [20, 35, 55, 12, 90];
