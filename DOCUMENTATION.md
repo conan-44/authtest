@@ -165,7 +165,8 @@ temporary unless the exported string is placed in the default level JSON.
 spawn interval, size and speed. `waves.js` generates endless waves independently
 from the displayed seed and wave number, unlocking more templates and gradually
 increasing health, numbers, size and speed. Group counts, sizes and speeds are
-bounded to keep the game manageable. Enter a seed before starting to reproduce a
+bounded to keep the game manageable. A single-enemy template may use a zero
+interval; groups of multiple enemies require a positive interval. Enter a seed before starting to reproduce a
 sequence; it stays locked across wave resets so rewards cannot be collected
 again by changing it. Reload to start a new match with another seed. The sprite
 sheet has two animation rows. Reset waves before editing or loading a new path.

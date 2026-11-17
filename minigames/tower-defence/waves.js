@@ -13,7 +13,8 @@
                 groups: wave.groups.map(group => {
                     if (!group || !Number.isInteger(group.sprite) || group.sprite < 0 || group.sprite > 4
                         || !Number.isInteger(group.count) || group.count < 1 || group.count > 200
-                        || !Number.isFinite(group.interval) || group.interval <= 0 || group.interval > 60
+                        || !Number.isFinite(group.interval) || group.interval < 0 || group.interval > 60
+                        || (group.interval === 0 && group.count !== 1)
                         || !Number.isFinite(group.size) || group.size <= 0 || group.size > 2
                         || !Number.isFinite(group.speed) || group.speed <= 0 || group.speed > 20) {
                         throw new Error(`Invalid enemy group in wave ${index + 1}.`);
