@@ -1,6 +1,6 @@
 {
-  "startingBits": 15,
-  "startingButter": 0,
+  "startingBits": 32,
+  "startingButter": 4,
   "bitsPerEnemy": 1,
   "butterPerWave": 1,
   "butterPerWaveGrowth": 1,
