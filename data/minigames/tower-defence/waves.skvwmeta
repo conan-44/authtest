@@ -28,7 +28,7 @@
   },
   {
     "groups": [
-      { "sprite": 4, "count": 1, "interval": 0, "size": 2, "speed": 1 },
+      { "sprite": 4, "count": 1, "interval": 0, "size": 2, "speed": 1 }
     ]
   },
   {
