@@ -5,6 +5,7 @@
   "butterPerWave": 1,
   "butterPerWaveGrowth": 1,
   "muffinInterval": 5,
+  "placementCooldownSeconds": 3,
   "breakthroughCost": 300,
   "postBreakthroughCost": 35,
   "postBreakthroughCostGrowth": 10,

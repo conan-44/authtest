@@ -36,7 +36,7 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
         return { column: 24, row: 3 };
     }
 
-    function achievementSpritePosition(achievement, sprite) {
+ function achievementSpritePosition(achievement, sprite) {
         const key = achievement.key.toLowerCase();
         if (achievement.namespace === "main") return mainAchievementSprite(achievement);
         if (achievement.namespace === "number-pillars") {
@@ -59,7 +59,8 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
         }
         let hash = 0;
         for (const character of key) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
-        return { column: hash % sprite.columns, row: sprite.height / sprite.tileHeight > 1 ? hash % 2 : 0 };
+        const totalRows = Math.floor(sprite.height / sprite.tileHeight);
+        return { column: hash % sprite.columns, row: totalRows > 1 ? hash % totalRows : 0 };
     }
 
     function addAchievementSprite(element, achievement, size) {
@@ -74,15 +75,24 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
         );
         const sprite = ACHIEVEMENT_SPRITES[position.sheet || defaultSheet] || ACHIEVEMENT_SPRITES.main;
         const { column, row } = position;
-        const scale = Math.min(3.5, size / Math.max(sprite.tileWidth, sprite.tileHeight));
+
+        const tileWidth = sprite.tileWidth;
+        const tileHeight = sprite.tileHeight;
+        const targetSize = 8;
+        const scale = Math.min(3.5, size / targetSize);
+
         const image = document.createElement("span");
         image.className = "achievement-sprite-image";
         image.setAttribute("aria-hidden", "true");
-        image.style.width = `${sprite.tileWidth * scale}px`;
-        image.style.height = `${sprite.tileHeight * scale}px`;
+        image.style.width = `${targetSize * scale}px`;
+        image.style.height = `${targetSize * scale}px`;
+        image.style.display = "inline-block";
+        image.style.overflow = "hidden";
         image.style.backgroundImage = `url("${sprite.url}")`;
+        image.style.backgroundRepeat = "no-repeat";
         image.style.backgroundSize = `${sprite.width * scale}px ${sprite.height * scale}px`;
-        image.style.backgroundPosition = `${-column * sprite.tileWidth * scale}px ${-row * sprite.tileHeight * scale}px`;
+        image.style.backgroundPosition = `${-column * tileWidth * scale}px ${-row * tileHeight * scale}px`;
+
         element.replaceChildren(image);
     }
 

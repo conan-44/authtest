@@ -5,22 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>tower defence</title>
     <link rel="stylesheet" href="../chess/style.css?v=game-theme-v1">
-    <link rel="stylesheet" href="./style.css?v=run-reset-v1">
+    <link rel="stylesheet" href="./style.css?v=placement-cooldown-v1">
     <script src="./level.js?v=path-editor-v1" defer></script>
     <script src="./waves.js?v=run-reset-v1" defer></script>
     <script src="./combat.js?v=fountain-v1" defer></script>
-    <script src="./upgrades.js?v=tower-upgrades-v2" defer></script>
+    <script src="./upgrades.js?v=placement-cooldown-v1" defer></script>
     <script src="./modes.js?v=tower-modes-v1" defer></script>
     <script src="./progression.js?v=fountain-v1" defer></script>
-    <script src="./script.js?v=run-reset-v1" defer></script>
+    <script src="./script.js?v=placement-cooldown-v1" defer></script>
 </head>
 <body>
     <main class="chess-app">
-        <div id="game-mode" class="mode-control" role="group" aria-label="Choose a mode" aria-describedby="mode-description"></div>
-        <div class="health-bar" role="status" aria-atomic="true">
-            <span id="health-icon" class="health-icon" data-state="heart" aria-hidden="true"></span>
-            <span id="player-health">HP: 99 / 99</span>
-            <progress id="health-fill" value="99" max="99" aria-label="Player health"></progress>
+        <div class="game-hud">
+            <div id="game-mode" class="mode-control" role="group" aria-label="Choose a mode" aria-describedby="mode-description"></div>
+            <div class="health-bar" role="status" aria-atomic="true">
+                <span id="health-icon" class="health-icon" data-state="heart" aria-hidden="true"></span>
+                <span id="player-health">HP: 99 / 99</span>
+                <progress id="health-fill" value="99" max="99" aria-label="Player health"></progress>
+            </div>
         </div>
         <header class="topbar">
             <div>

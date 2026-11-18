@@ -11,9 +11,13 @@
 
 # paragons
 2200: Paragon I
-2700: Paragon II
+2600: Paragon II
 3200: Paragon III
+3600: Paragon IV
+4000: Paragon V
 ## paragon names
 1: Nebula
 2: Celeste
 3: Void
+4: Aether
+5: Horizon

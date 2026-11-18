@@ -312,6 +312,12 @@ button:hover .btn-icon { animation: playSprite 0.5s steps(4); }
 
 .icons_medal-paragon-3 { background-position: -56px 0; }
 
+.icons_medal-paragon-3 { background-position: -56px 0; }
+
+.icons_medal-paragon-4 { background-position: -64px 0; }
+
+.icons_medal-paragon-5 { background-position: -72px 0; }
+
 .icons_medal {
     display: inline-block;
     image-rendering: pixelated;

@@ -132,7 +132,9 @@ increases with the wave number. Players start with 99 HP; each escaped enemy
 costs HP equal to its size multiplied by 10, rounded up. At zero HP the run
 ends. A wave reset restores HP and starting currencies, removes towers and
 upgrades, and resets the mode and seed; the selected custom path is retained.
-Towers display their attack cooldowns, which continue across wave transitions.
+After a tower is placed or used as a replacement, that tower type has a
+three-second placement cooldown, shown on its selection icon. Other types can
+still be placed; a wave reset clears the cooldowns.
 Waves 20–25 ramp up enemy health, numbers and speed, with the increased
 difficulty retained afterwards. Muffins produce Bits during active waves and
 may improve perfect-wave Butter rewards without attacking.

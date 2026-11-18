@@ -63,6 +63,8 @@
     let health = MAX_HEALTH;
     const enemyElements = new Map();
     const placedTowers = new Map();
+    const placementCooldowns = new Map();
+    let placementCooldownTimer = null;
     let inspectedTower = null;
     let hoveredCell = null;
     let focusedCell = null;
@@ -256,7 +258,7 @@
 
     function makePlacedTower(type, row, column) {
         return { id: towers[type].id, type, row, column, mode: 'first', nextShot: waveTime,
-            cooldownDuration: 0, nextIncome: waveTime + economy.muffinInterval / gameMode.towerSpeed, incomeRemainder: 0, levels: {},
+            nextIncome: waveTime + economy.muffinInterval / gameMode.towerSpeed, incomeRemainder: 0, levels: {},
             choices: upgradeRules.choices(economy.towerUpgrades[towers[type].id]) };
     }
 
@@ -286,10 +288,8 @@
         const rangeOrBlock = tower.id === 'muffin'
             ? ['Block', `${Number(block.toFixed(2))}s`]
             : ['Range', Number(reach.toFixed(2))];
-        const cooldown = stats.cooldown * (placedTower ? upgradeValue(placedTower, tower.id === 'muffin' ? 'productionRate' : 'rate', 1) : 1);
         const details = [['Category', tower.category], ['Damage', tower.id === 'muffin' ? 'None' : Number(damage.toFixed(2))],
-            rangeOrBlock, ['Cost', `${stats.cost} Bits`]];
-        if (tower.id !== 'fountain') details.push(['Cooldown', `${Number(cooldown.toFixed(2))}s`]);
+            rangeOrBlock, ['Cost', `${stats.cost} Bits`], ['Placement cooldown', `${economy.placementCooldownSeconds}s`]];
         details.forEach(([label, value]) => {
             const term = document.createElement('dt');
             const detail = document.createElement('dd');
@@ -297,6 +297,40 @@
             detail.textContent = String(value);
             attributes.append(term, detail);
         });
+    }
+
+    function renderPlacementCooldowns() {
+        if (placementCooldownTimer !== null) clearTimeout(placementCooldownTimer);
+        placementCooldownTimer = null;
+        const now = performance.now();
+        towers.forEach((tower, index) => {
+            const button = tools.querySelector(`[data-tool="${index}"]`);
+            const remaining = Math.max(0, (placementCooldowns.get(index) || 0) - now);
+            if (remaining > 0) {
+                const seconds = Math.ceil(remaining / 1000);
+                button.dataset.cooldown = `${seconds}s`;
+                button.title = `${tower.name} · placement ready in ${seconds}s`;
+                button.setAttribute('aria-label', button.title);
+            } else {
+                placementCooldowns.delete(index);
+                delete button.dataset.cooldown;
+                button.title = tower.name;
+                button.setAttribute('aria-label', tower.name);
+            }
+        });
+        if (placementCooldowns.size) placementCooldownTimer = setTimeout(renderPlacementCooldowns, 100);
+    }
+
+    function placementReady(type) {
+        const remaining = (placementCooldowns.get(type) || 0) - performance.now();
+        if (remaining <= 0) return true;
+        status.textContent = `${towers[type].name} placement ready in ${Math.ceil(remaining / 1000)}s.`;
+        return false;
+    }
+
+    function startPlacementCooldown(type) {
+        placementCooldowns.set(type, performance.now() + economy.placementCooldownSeconds * 1000);
+        renderPlacementCooldowns();
     }
 
     function selectTool(id) {
@@ -321,16 +355,7 @@
         cell.replaceChildren();
         cell.dataset.tower = towerId;
         cell.dataset.path = pathName;
-        if (tower) {
-            cell.append(sprite(tower, `placed-sprite${tower.id === 'fountain' ? ' fountain-sprite' : ''}`));
-            if (tower.id !== 'fountain') {
-                const cooldown = document.createElement('span');
-                cooldown.className = 'tower-cooldown';
-                cooldown.hidden = true;
-                cooldown.setAttribute('aria-hidden', 'true');
-                cell.append(cooldown);
-            }
-        }
+        if (tower) cell.append(sprite(tower, `placed-sprite${tower.id === 'fountain' ? ' fountain-sprite' : ''}`));
         if (selected !== 'remove' && (!pathName || towers[selected].id === 'muffin') && !draft && !tower) cell.append(sprite(towers[selected], 'preview-sprite'));
         if (pathName === 'start' || pathName === 'end') {
             const marker = document.createElement('span');
@@ -472,6 +497,8 @@
         effects = [];
         projectileLayer.replaceChildren();
         placedTowers.clear();
+        placementCooldowns.clear();
+        renderPlacementCooldowns();
         placed = 0;
         inspectedTower = null;
         targeting.hidden = true;
@@ -550,16 +577,6 @@
         projectiles = [];
         effects = [];
         projectileLayer.replaceChildren();
-    }
-
-    function renderCooldowns() {
-        placedTowers.forEach((tower, index) => {
-            const bar = cells[index].element.querySelector('.tower-cooldown');
-            if (!bar) return;
-            const remaining = Math.max(0, tower.nextShot - waveTime);
-            bar.hidden = !waveRunning || !remaining || !tower.cooldownDuration;
-            if (!bar.hidden) bar.style.setProperty('--ready', `${Math.max(0, 1 - remaining / tower.cooldownDuration) * 100}%`);
-        });
     }
 
     function renderCombat() {
@@ -683,13 +700,12 @@
                     }, tower, fountains));
                 }
             }
-            tower.cooldownDuration = stats.cooldown * upgradeValue(tower, tower.id === 'muffin' ? 'productionRate' : 'rate', 1);
-            tower.nextShot = waveTime + tower.cooldownDuration;
+            tower.nextShot = waveTime + stats.cooldown * upgradeValue(tower, tower.id === 'muffin' ? 'productionRate' : 'rate', 1);
         });
         renderCombat();
     }
 
-    function startWave(elapsed = 0) {
+    function startWave() {
         const wave = waveRules.generate(waves, waveSeed, waveIndex);
         waveButterAward = 0;
         waveEnemies = waveRules.schedule({
@@ -703,8 +719,8 @@
             enemy.hp = enemy.maxHp;
         });
         placedTowers.forEach(tower => {
-            tower.nextShot = Math.max(0, tower.nextShot - elapsed);
-            tower.nextIncome = Math.max(0, tower.nextIncome - elapsed);
+            tower.nextShot = 0;
+            tower.nextIncome = economy.muffinInterval / gameMode.towerSpeed;
             delete tower.blockUntil;
         });
     }
@@ -750,11 +766,10 @@
         if (pauseUntil !== null) {
             if (waveTime >= pauseUntil) {
                 waveIndex++;
-                const elapsed = waveTime;
                 waveTime = 0;
                 pauseUntil = null;
                 healthIcon.dataset.state = 'heart';
-                startWave(elapsed);
+                startWave();
                 clearCombatVisuals();
             }
         } else {
@@ -775,7 +790,6 @@
                     healthIcon.dataset.state = 'skull';
                     clearEnemies();
                     clearCombatVisuals();
-                    renderCooldowns();
                     waveStatus.textContent = `Defeat on wave ${waveIndex + 1}. Reset waves to try again.`;
                     rateWave(waveIndex + 1, false);
                     return;
@@ -843,7 +857,6 @@
                 waveStatus.textContent = `Wave ${waveIndex + 1} complete · ${outcome}. Next wave incoming.`;
             }
         }
-        renderCooldowns();
         waveFrame = requestAnimationFrame(tickWave);
     }
 
@@ -949,6 +962,7 @@
                         status.textContent = `Not enough Bits. ${cost} required.`;
                         return;
                     }
+                    if (nextTower !== '' && !placementReady(selected)) return;
                     if (!hadTower && nextTower !== '') placed++;
                     if (hadTower && nextTower === '') placed--;
                     if (nextTower === '') {
@@ -962,6 +976,7 @@
                         lockMode();
                         bits -= cost;
                         placedTowers.set(index, makePlacedTower(selected, row, column));
+                        startPlacementCooldown(selected);
                         recordAchievements(matchProgress.build(towers[selected].id));
                         updateCurrency();
                     }
@@ -1029,9 +1044,11 @@
                 status.textContent = `Not enough Bits. ${cost} required.`;
                 return;
             }
+            if (!placementReady(selected)) return;
             lockMode();
             bits -= cost;
             placedTowers.set(index, makePlacedTower(selected, cell.row, cell.column));
+            startPlacementCooldown(selected);
             recordAchievements(matchProgress.build(towers[selected].id));
             updateCurrency();
             updateCell(cell.element, cell.row, cell.column, String(selected));

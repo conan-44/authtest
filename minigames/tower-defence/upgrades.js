@@ -11,6 +11,7 @@
             'breakthroughCost', 'postBreakthroughCost', 'postBreakthroughCostGrowth'].every(key => integer(data[key]))
             || data.butterPerWave <= 0 || data.breakthroughCost <= data.postBreakthroughCost
             || !Number.isFinite(data.muffinInterval) || data.muffinInterval <= 0
+            || !Number.isFinite(data.placementCooldownSeconds) || data.placementCooldownSeconds <= 0
             || !data.upgrades || !data.towerUpgrades) throw new Error('Invalid tower economy.');
         towers.forEach(tower => {
             const paths = data.towerUpgrades[tower.id];
