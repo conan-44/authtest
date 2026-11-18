@@ -43,17 +43,18 @@
         const pool = templates.slice(0, Math.min(templates.length, 1 + Math.floor(waveIndex / 3))).flatMap(wave => wave.groups);
         const groups = [];
         const groupCount = Math.min(3, 1 + Math.floor(waveIndex / 5));
+        const difficulty = Math.min(6, Math.max(0, waveIndex - 18));
         for (let i = 0; i < groupCount; i++) {
             const base = pool[Math.floor(random() * pool.length)];
             groups.push({
                 sprite: base.sprite,
-                count: Math.min(200, Math.max(1, Math.round(base.count * (1 + waveIndex * 0.07) * (0.9 + random() * 0.2)))),
+                count: Math.min(200, Math.max(1, Math.round(base.count * (1 + waveIndex * 0.07) * (1 + difficulty * 0.05) * (0.9 + random() * 0.2)))),
                 interval: Math.max(0.08, base.interval / (1 + waveIndex * 0.015)),
                 size: Math.min(2, base.size * (1 + waveIndex * 0.015)),
-                speed: Math.min(20, base.speed * (1 + waveIndex * 0.008))
+                speed: Math.min(20, base.speed * (1 + waveIndex * 0.008) * (1 + difficulty * 0.03))
             });
         }
-        return { groups, healthMultiplier: 1 + waveIndex * 0.12 };
+        return { groups, healthMultiplier: (1 + waveIndex * 0.12) * (1 + difficulty * 0.3) };
     }
 
     function schedule(wave) {
@@ -72,7 +73,7 @@
         let remaining = 0;
         const visible = [];
         enemies.forEach(enemy => {
-            if (enemy.hp !== undefined && enemy.hp <= 0) return;
+            if (enemy.escaped || (enemy.hp !== undefined && enemy.hp <= 0)) return;
             const distance = (time - enemy.spawn - (enemy.delay || 0)) * enemy.speed;
             if (distance < 0) {
                 remaining++;
@@ -93,15 +94,34 @@
         return { visible, remaining };
     }
 
+    function collectEscapes(enemies, path, time) {
+        let damage = 0;
+        enemies.forEach(enemy => {
+            if (enemy.escaped || enemy.hp <= 0) return;
+            const distance = (time - enemy.spawn - (enemy.delay || 0)) * enemy.speed;
+            if (distance >= path.length - 1) {
+                enemy.escaped = true;
+                damage += Math.ceil(enemy.size * 10);
+            }
+        });
+        return damage;
+    }
+
     function blockEnemies(enemies, path, blockers, previousTime, time, duration) {
         const ordered = enemies.map(enemy => {
             const cursor = Math.max(previousTime, enemy.spawn);
             const progress = (cursor - enemy.spawn - (enemy.delay || 0)) * enemy.speed;
             let firstContact = Infinity;
-            if (enemy.hp > 0 && cursor <= time) blockers.forEach(blocker => {
+            if (!enemy.escaped && enemy.hp > 0 && cursor <= time) blockers.forEach(blocker => {
                 const entry = Math.max(0, blocker.pathIndex - 0.5);
                 if (progress >= blocker.pathIndex + 0.5) return;
-                const crossing = cursor + Math.max(0, entry - progress) / enemy.speed;
+                const distance = Math.max(0, entry - progress);
+                const slowTime = Math.max(0, (enemy.slowUntil || 0) - cursor);
+                const factor = slowTime ? enemy.slowFactor : 1;
+                const slowDistance = slowTime * enemy.speed * factor;
+                const crossing = cursor + (distance <= slowDistance
+                    ? distance / (enemy.speed * factor)
+                    : slowTime + (distance - slowDistance) / enemy.speed);
                 if (crossing <= time && (blocker.tower.blockUntil === undefined || crossing < blocker.tower.blockUntil)) {
                     firstContact = Math.min(firstContact, crossing);
                 }
@@ -109,7 +129,7 @@
             return { enemy, firstContact };
         }).sort((a, b) => a.firstContact - b.firstContact || a.enemy.id - b.enemy.id);
         ordered.forEach(({ enemy }) => {
-            if (enemy.hp <= 0 || enemy.spawn > time) return;
+            if (enemy.escaped || enemy.hp <= 0 || enemy.spawn > time) return;
             let cursor = Math.max(previousTime, enemy.spawn);
             enemy.delay ||= 0;
             while (cursor < time) {
@@ -123,18 +143,26 @@
                     }
                     enemy.blockedBy = null;
                 }
+                const slowed = enemy.slowUntil > cursor;
+                const end = slowed ? Math.min(time, enemy.slowUntil) : time;
+                const factor = slowed ? enemy.slowFactor : 1;
                 const progress = (cursor - enemy.spawn - enemy.delay) * enemy.speed;
-                const endProgress = progress + (time - cursor) * enemy.speed;
+                const endProgress = progress + (end - cursor) * enemy.speed * factor;
                 let next = null;
                 blockers.forEach(blocker => {
                     const entry = Math.max(0, blocker.pathIndex - 0.5);
                     const exit = blocker.pathIndex + 0.5;
                     if (progress >= exit || endProgress < entry) return;
-                    const crossing = cursor + Math.max(0, entry - progress) / enemy.speed;
+                    const crossing = cursor + Math.max(0, entry - progress) / (enemy.speed * factor);
                     if (blocker.tower.blockUntil !== undefined && crossing >= blocker.tower.blockUntil) return;
                     if (!next || crossing < next.crossing) next = { blocker, crossing };
                 });
-                if (!next) break;
+                if (!next) {
+                    enemy.delay += (end - cursor) * (1 - factor);
+                    cursor = end;
+                    continue;
+                }
+                enemy.delay += (next.crossing - cursor) * (1 - factor);
                 cursor = next.crossing;
                 if (next.blocker.tower.blockUntil === undefined) next.blocker.tower.blockUntil = cursor + (next.blocker.duration ?? duration);
                 enemy.blockedBy = next.blocker.tower;
@@ -143,5 +171,5 @@
         return blockers.filter(blocker => blocker.tower.blockUntil !== undefined && blocker.tower.blockUntil <= time);
     }
 
-    return { validate, generate, schedule, atTime, blockEnemies };
+    return { validate, generate, schedule, atTime, collectEscapes, blockEnemies };
 });

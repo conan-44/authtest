@@ -3,6 +3,23 @@ body { padding: 8px; }
 .topbar { margin-bottom: 8px; }
 .topbar h1 { font-size: 1.5rem; }
 .topbar .eyebrow { display: none; }
+.health-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    font: 1rem "lowsmall", sans-serif;
+}
+.health-icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background: url("../../assets/minigames/streetfighter/icons.png") 0 0 / 192px 144px no-repeat;
+    image-rendering: pixelated;
+}
+.health-icon[data-state="skull"] { background-position: -24px 0; }
+.health-icon[data-state="trophy"] { background-position: -48px 0; }
+#health-fill { width: 90px; height: 8px; accent-color: #e44343; }
 .tower-layout {
     grid-template-columns: minmax(190px, 250px) minmax(0, 1fr) minmax(180px, 240px);
     gap: 8px;
@@ -134,23 +151,24 @@ body { padding: 8px; }
     width: 5.555556%;
     aspect-ratio: 1;
     transform: translate(-50%, -50%);
-    background-image: url("../../assets/minigames/tower-defence/projectiles.png");
-    background-size: 600% 600%;
+    background-image: url("../../assets/minigames/tower-defence/projectiles.png?v=fountain-drips-v1");
+    background-size: 700% 600%;
     background-repeat: no-repeat;
     image-rendering: pixelated;
 }
 
 .combat-chip { background-position: 0 0; transform: scale(0.25); }
-.combat-crumb { background-position: 20% 0; width: 3%; }
-.combat-dust { background-position: 20% 0; width: 3%; }
-.combat-toast { width: 11.111112%; background-position: 40% 0; }
+.combat-sprite.is-chocolate { background-image: url("../../assets/minigames/tower-defence/projectiles%20choc.png?v=fountain-drips-v1"); }
+.combat-crumb { background-position: 16.666667% 0; width: 3%; }
+.combat-dust { background-position: 16.666667% 0; width: 3%; }
+.combat-toast { width: 11.111112%; background-position: 33.333333% 0; }
 .combat-boomerang {
     aspect-ratio: 9 / 10;
-    background-size: 533.333333% 480%;
-    background-position: 100% 0;
+    background-size: 622.222222% 480%;
+    background-position: 82.978723% 0;
     clip-path: inset(0 0 10% 0);
 }
-.combat-explosion { width: 13.333333%; background-size: 300% 300%; background-position: 75% 0; }
+.combat-explosion { width: 13.333333%; background-size: 350% 300%; background-position: 60% 0; }
 .combat-bit {
     display: flex;
     align-items: center;
@@ -301,7 +319,7 @@ body { padding: 8px; }
     width: 32px;
     height: 48px;
     background-image: url("../../assets/minigames/tower-defence/towers.png");
-    background-size: 500% 100%;
+    background-size: 600% 100%;
     background-repeat: no-repeat;
     image-rendering: pixelated;
     pointer-events: none;
@@ -324,6 +342,46 @@ body { padding: 8px; }
 }
 
 .square .placed-sprite { filter: drop-shadow(0 2px 0 rgb(0 0 0 / 25%)); }
+.tower-cooldown {
+    position: absolute;
+    z-index: 3;
+    left: 10%;
+    bottom: 1px;
+    width: 80%;
+    height: 3px;
+    background: rgb(0 0 0 / 55%);
+    pointer-events: none;
+}
+.tower-cooldown::after {
+    display: block;
+    width: var(--ready, 100%);
+    height: 100%;
+    background: #fff;
+    content: "";
+}
+.tower-cooldown[hidden] { display: none; }
+
+.square .fountain-sprite::after {
+    position: absolute;
+    left: 37.5%;
+    top: 50%;
+    width: 25%;
+    aspect-ratio: 1;
+    background: url("../../assets/minigames/tower-defence/projectiles.png?v=fountain-drips-v1") 100% 0 / 700% 600% no-repeat;
+    image-rendering: pixelated;
+    animation: fountain-drip 2.5s steps(6, end) infinite;
+    content: "";
+}
+
+@keyframes fountain-drip {
+    0%, 15% { opacity: 0; transform: translateY(0); }
+    20% { opacity: 1; }
+    85%, 100% { opacity: 0; transform: translateY(200%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .square .fountain-sprite::after { animation: none; display: none; }
+}
 
 .square .preview-sprite {
     z-index: 3;

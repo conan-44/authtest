@@ -31,8 +31,8 @@
     const revealInterval = 20;
     let userId = null;
     let authGeneration = 0;
-    let authReceived = false;
-    let expectedUserId;
+    let authEventVersion = 0;
+    let initializingUser = null;
     let collection = null;
     let selectedPack = 'classic';
     let revealTimers = [];
@@ -424,6 +424,15 @@
         }
     }
 
+    function initializeUser(id) {
+        if (id === userId && (collection || initializingUser?.id === id)) return;
+        const request = { id };
+        initializingUser = request;
+        setUser(id).finally(() => {
+            if (initializingUser === request) initializingUser = null;
+        });
+    }
+
     button.addEventListener('click', async () => {
         if (!userId || !collection || !economy || busy) return;
         if (!drawCount.reportValidity()) return;
@@ -609,30 +618,18 @@
     });
     window.addEventListener('gacha-tab-opened', () => {
         if (collection) refreshEconomy();
-        else if (userId) setUser(userId);
+        else if (userId) initializeUser(userId);
     });
     window.addEventListener('gacha-economy-refresh', refreshEconomy);
     window.addEventListener('focus', refreshEconomy);
     setInterval(refreshEconomy, 60000);
     updatePackRates();
 
-    window.addEventListener('app-auth-state-changed', event => {
-        authReceived = true;
-        const id = event.detail?.userId || null;
-        if (expectedUserId !== undefined && id !== expectedUserId) return;
-        if (id !== userId || !collection) setUser(id);
-    });
-    window.addEventListener('home-dashboard-auth-changed', event => {
-        authReceived = true;
-        const id = event.detail?.userId || null;
-        expectedUserId = id;
-        if (id !== userId) setUser(null);
-    });
-    _supabase.auth.getSession().then(({ data, error }) => {
-        if (error) throw error;
-        if (!authReceived) setUser(data.session?.user?.id);
-    }).catch(error => {
-        console.error('Could not check sign-in for shard draws.', error);
-        status.textContent = 'Could not check your sign-in for shard draws.';
+    _supabase.auth.onAuthStateChange((_event, session) => {
+        const id = session?.user?.id || null;
+        const version = ++authEventVersion;
+        setTimeout(() => {
+            if (version === authEventVersion) initializeUser(id);
+        }, 0);
     });
 })();

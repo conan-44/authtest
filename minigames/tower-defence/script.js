@@ -6,10 +6,11 @@
     const upgradeRules = window.TowerDefenceUpgrades;
     const modeRules = window.TowerDefenceModes;
     const progression = window.TowerDefenceProgression;
-    const matchProgress = progression.create();
+    let matchProgress = progression.create();
     const DATA_ROOT = '../../data/minigames/tower-defence/';
     const HIT_FLASH_DURATION = 0.1;
     const DEFEAT_FADE_DURATION = 0.3;
+    const MAX_HEALTH = 99;
     const board = document.getElementById('board');
     const tools = document.getElementById('tower-tools');
     const status = document.getElementById('status');
@@ -33,6 +34,9 @@
     const butterDisplay = document.getElementById('butter');
     const butterIcon = document.getElementById('butter-icon');
     const waveStatus = document.getElementById('wave-status');
+    const healthDisplay = document.getElementById('player-health');
+    const healthIcon = document.getElementById('health-icon');
+    const healthFill = document.getElementById('health-fill');
     const modeSelect = document.getElementById('game-mode');
     const modeDescription = document.getElementById('mode-description');
     const ratingStatus = document.getElementById('rating-status');
@@ -56,6 +60,7 @@
     let waveSeed = null;
     let pauseUntil = null;
     let waveButterAward = 0;
+    let health = MAX_HEALTH;
     const enemyElements = new Map();
     const placedTowers = new Map();
     let inspectedTower = null;
@@ -136,7 +141,7 @@
         const index = await readJson('index.json');
         if (!Array.isArray(index) || !index.length || index.some(item =>
             !item || typeof item.id !== 'string' || !/^[a-z0-9_]+$/.test(item.id)
-            || !Number.isInteger(item.sprite) || item.sprite < 0 || item.sprite > 4)
+            || !Number.isInteger(item.sprite) || item.sprite < 0 || item.sprite > 5)
             || new Set(index.map(item => item.id)).size !== index.length) {
             throw new Error('Invalid tower index.');
         }
@@ -145,7 +150,9 @@
             if (!combat.settings[item.id] || !data || ['name', 'description', 'note', 'category'].some(key =>
                 typeof data[key] !== 'string' || !data[key].trim())
                 || ['damage', 'cost'].some(key => typeof data[key] !== 'number' || !Number.isFinite(data[key]) || data[key] < 0)
-                || (item.id === 'muffin' && (!Number.isFinite(data.blockSeconds) || data.blockSeconds <= 0))) {
+                || (item.id === 'muffin' && (!Number.isFinite(data.blockSeconds) || data.blockSeconds <= 0))
+                || (item.id === 'fountain' && (!Number.isFinite(data.slowFactor) || data.slowFactor <= 0 || data.slowFactor >= 1
+                    || !Number.isFinite(data.slowSeconds) || data.slowSeconds <= 0))) {
                 throw new Error(`Invalid tower data: ${item.id}.json`);
             }
             return { ...data, id: item.id, sprite: item.sprite };
@@ -162,7 +169,7 @@
     }
 
     function showMode() {
-        modeDescription.textContent = `${gameMode.description} ${modeLocked ? 'Reload to change.' : 'Locks on build/start.'}`;
+        modeDescription.textContent = `${gameMode.description} ${modeLocked ? 'Reset waves to change.' : 'Locks on build/start.'}`;
         modeSelect.querySelectorAll('button').forEach(button => {
             button.disabled = modeLocked;
             button.setAttribute('aria-pressed', String(button.dataset.mode === gameMode.id));
@@ -173,6 +180,7 @@
 
     function lockMode() {
         modeLocked = true;
+        resetWaves.disabled = false;
         showMode();
     }
 
@@ -212,6 +220,8 @@
                 yield: `${number(next.value)} Bits per production`,
                 productionRate: `${number((1 - next.value) * 100)}% shorter interval`,
                 block: `${number(next.value)}× block duration`,
+                slowPower: `${number(Math.min(0.75, next.value) * 100)}% slower`,
+                slowDuration: `${number(next.value)}× slow duration`,
                 waveBonus: `${number(next.value * 100)}% bonus Butter`
             })[id];
             detail.textContent = `${upgrade.description} Next: ${valueText}.`;
@@ -246,14 +256,14 @@
 
     function makePlacedTower(type, row, column) {
         return { id: towers[type].id, type, row, column, mode: 'first', nextShot: waveTime,
-            nextIncome: waveTime + economy.muffinInterval / gameMode.towerSpeed, incomeRemainder: 0, levels: {},
+            cooldownDuration: 0, nextIncome: waveTime + economy.muffinInterval / gameMode.towerSpeed, incomeRemainder: 0, levels: {},
             choices: upgradeRules.choices(economy.towerUpgrades[towers[type].id]) };
     }
 
     function sprite(tower, className = '') {
         const element = document.createElement('span');
         element.className = `tower-sprite ${className}`;
-        element.style.backgroundPosition = `${tower.sprite * 25}% 0`;
+        element.style.backgroundPosition = `${tower.sprite * 20}% 0`;
         element.setAttribute('aria-hidden', 'true');
         return element;
     }
@@ -276,8 +286,11 @@
         const rangeOrBlock = tower.id === 'muffin'
             ? ['Block', `${Number(block.toFixed(2))}s`]
             : ['Range', Number(reach.toFixed(2))];
-        [['Category', tower.category], ['Damage', tower.id === 'muffin' ? 'None' : Number(damage.toFixed(2))],
-            rangeOrBlock, ['Cost', `${stats.cost} Bits`]].forEach(([label, value]) => {
+        const cooldown = stats.cooldown * (placedTower ? upgradeValue(placedTower, tower.id === 'muffin' ? 'productionRate' : 'rate', 1) : 1);
+        const details = [['Category', tower.category], ['Damage', tower.id === 'muffin' ? 'None' : Number(damage.toFixed(2))],
+            rangeOrBlock, ['Cost', `${stats.cost} Bits`]];
+        if (tower.id !== 'fountain') details.push(['Cooldown', `${Number(cooldown.toFixed(2))}s`]);
+        details.forEach(([label, value]) => {
             const term = document.createElement('dt');
             const detail = document.createElement('dd');
             term.textContent = label;
@@ -308,7 +321,16 @@
         cell.replaceChildren();
         cell.dataset.tower = towerId;
         cell.dataset.path = pathName;
-        if (tower) cell.append(sprite(tower, 'placed-sprite'));
+        if (tower) {
+            cell.append(sprite(tower, `placed-sprite${tower.id === 'fountain' ? ' fountain-sprite' : ''}`));
+            if (tower.id !== 'fountain') {
+                const cooldown = document.createElement('span');
+                cooldown.className = 'tower-cooldown';
+                cooldown.hidden = true;
+                cooldown.setAttribute('aria-hidden', 'true');
+                cell.append(cooldown);
+            }
+        }
         if (selected !== 'remove' && (!pathName || towers[selected].id === 'muffin') && !draft && !tower) cell.append(sprite(towers[selected], 'preview-sprite'));
         if (pathName === 'start' || pathName === 'end') {
             const marker = document.createElement('span');
@@ -439,12 +461,37 @@
         lastFrameTime = null;
         pauseUntil = null;
         waveButterAward = 0;
+        health = MAX_HEALTH;
+        healthDisplay.textContent = `HP: ${health} / ${MAX_HEALTH}`;
+        healthFill.value = health;
+        healthIcon.getAnimations().forEach(animation => animation.cancel());
+        healthIcon.dataset.state = 'heart';
         waveEnemies = [];
         clearEnemies();
         projectiles = [];
         effects = [];
         projectileLayer.replaceChildren();
-        placedTowers.forEach(tower => { tower.nextShot = 0; tower.nextIncome = economy.muffinInterval / gameMode.towerSpeed; delete tower.blockUntil; });
+        placedTowers.clear();
+        placed = 0;
+        inspectedTower = null;
+        targeting.hidden = true;
+        upgradePanel.hidden = true;
+        bits = economy.startingBits;
+        butter = economy.startingButter;
+        rewardedEnemies.clear();
+        rewardedWaves.clear();
+        matchProgress = progression.create();
+        gameMode = gameModes.find(mode => mode.id === 'bob');
+        modeLocked = false;
+        waveSeed = null;
+        seedInput.readOnly = false;
+        seedInput.value = String(Math.floor(Math.random() * 4294967296));
+        showMode();
+        selectTool(0);
+        cells.forEach(({ element, row, column }) => updateCell(element, row, column, ''));
+        updateCount();
+        updateCurrency();
+        renderReticle();
         startWaves.disabled = false;
         resetWaves.disabled = true;
         waveStatus.textContent = 'Endless waves ready.';
@@ -492,8 +539,8 @@
         targeting.hidden = false;
         upgradePanel.hidden = false;
         targetMode.value = tower.mode;
-        targetMode.hidden = tower.id === 'muffin';
-        targetModeLabel.hidden = tower.id === 'muffin';
+        targetMode.hidden = tower.id === 'muffin' || tower.id === 'fountain';
+        targetModeLabel.hidden = targetMode.hidden;
         renderUpgrades();
         renderReticle();
         status.textContent = `Selected ${towers[tower.type].name} at row ${tower.row + 1}, column ${tower.column + 1}.`;
@@ -505,11 +552,22 @@
         projectileLayer.replaceChildren();
     }
 
+    function renderCooldowns() {
+        placedTowers.forEach((tower, index) => {
+            const bar = cells[index].element.querySelector('.tower-cooldown');
+            if (!bar) return;
+            const remaining = Math.max(0, tower.nextShot - waveTime);
+            bar.hidden = !waveRunning || !remaining || !tower.cooldownDuration;
+            if (!bar.hidden) bar.style.setProperty('--ready', `${Math.max(0, 1 - remaining / tower.cooldownDuration) * 100}%`);
+        });
+    }
+
     function renderCombat() {
         projectileLayer.replaceChildren();
         [...projectiles, ...effects].forEach(item => {
             const element = document.createElement('span');
             element.className = `combat-sprite combat-${item.kind}`;
+            if (item.chocolate) element.classList.add('is-chocolate');
             element.style.left = `${(item.column + 0.5) * 100 / GRID_SIZE}%`;
             element.style.top = `${(item.row + 0.5) * 100 / GRID_SIZE}%`;
             if (item.kind === 'boomerang') {
@@ -542,6 +600,7 @@
         effects = effects.filter(effect => effect.age < effect.duration);
         projectiles.forEach(shot => {
             shot.age += delta;
+            shot.hitTime = waveTime;
             if (shot.kind === 'boomerang') {
                 combat.advanceBoomerang(shot, enemies, delta);
                 return;
@@ -565,9 +624,21 @@
             shot.column += (target.column - shot.column) / distance * shot.speed * delta;
         });
         projectiles = projectiles.filter(shot => !shot.done);
+        const fountains = [...placedTowers.values()].filter(tower => tower.id === 'fountain').map(tower => {
+            const data = towers[tower.type];
+            const stats = towerStats(tower.type);
+            return {
+                row: tower.row, column: tower.column,
+                range: stats.range * upgradeValue(tower, 'range', 1),
+                damage: stats.damage * upgradeValue(tower, 'damage', 1),
+                slowFactor: 1 - Math.min(0.75, upgradeValue(tower, 'slowPower', 1 - data.slowFactor)),
+                slowSeconds: data.slowSeconds * upgradeValue(tower, 'slowDuration', 1)
+            };
+        });
         placedTowers.forEach(tower => {
             const config = combat.settings[tower.id];
             const stats = towerStats(tower.type);
+            if (tower.id === 'fountain') return;
             if (tower.id === 'muffin' && waveTime >= tower.nextIncome) {
                 const earned = tower.incomeRemainder + upgradeValue(tower, 'yield', 1);
                 const whole = Math.floor(earned + 1e-9);
@@ -578,10 +649,10 @@
             }
             if (waveTime < tower.nextShot) return;
             if (tower.id === 'muffin') {
-                for (let i = 0; i < 3; i++) effects.push({
+                for (let i = 0; i < 3; i++) effects.push(combat.coatProjectile({
                     kind: 'crumb', row: tower.row - i * 0.12, column: tower.column + (i - 1) * 0.22,
-                    age: 0, duration: 0.65
-                });
+                    age: 0, duration: 0.65, damage: 0
+                }, tower, fountains));
             } else {
                 const reach = upgradeValue(tower, 'range', 1);
                 const speed = upgradeValue(tower, 'speed', 1);
@@ -589,31 +660,36 @@
                 if (!target) return;
                 const damage = stats.damage * upgradeValue(tower, 'damage', 1);
                 if (config.projectile === 'explosion') {
-                    combat.impact({ damage, splash: stats.splash * upgradeValue(tower, 'blast', 1) }, target, enemies);
-                    effects.push({ kind: 'explosion', row: target.row, column: target.column, age: 0, duration: 0.36 });
+                    const blast = combat.coatProjectile({
+                        damage, splash: stats.splash * upgradeValue(tower, 'blast', 1), hitTime: waveTime
+                    }, tower, fountains);
+                    combat.impact(blast, target, enemies);
+                    effects.push({ kind: 'explosion', row: target.row, column: target.column,
+                        age: 0, duration: 0.36, chocolate: blast.chocolate });
                 } else if (config.projectile === 'boomerang') {
                     const shot = combat.createBoomerang(tower, target, damage, stats.range * reach);
                     shot.speed = stats.projectileSpeed * speed;
-                    projectiles.push(shot);
+                    projectiles.push(combat.coatProjectile(shot, tower, fountains));
                 } else if (tower.levels.pierce || tower.id === 'toast') {
                     const average = upgradeValue(tower, 'pierce', 1);
                     const pierce = Math.floor(average) + (Math.random() < average % 1 ? 1 : 0);
-                    projectiles.push(combat.createPiercingShot(tower, target,
-                        { ...config, range: stats.range * reach, speed: stats.projectileSpeed * speed }, damage, pierce));
+                    projectiles.push(combat.coatProjectile(combat.createPiercingShot(tower, target,
+                        { ...config, range: stats.range * reach, speed: stats.projectileSpeed * speed }, damage, pierce), tower, fountains));
                 } else {
-                    projectiles.push({
+                    projectiles.push(combat.coatProjectile({
                         kind: config.projectile, row: tower.row, column: tower.column,
                         target: target.id, speed: stats.projectileSpeed * speed, damage,
                         splash: config.splash, age: 0
-                    });
+                    }, tower, fountains));
                 }
             }
-            tower.nextShot = waveTime + stats.cooldown * upgradeValue(tower, tower.id === 'muffin' ? 'productionRate' : 'rate', 1);
+            tower.cooldownDuration = stats.cooldown * upgradeValue(tower, tower.id === 'muffin' ? 'productionRate' : 'rate', 1);
+            tower.nextShot = waveTime + tower.cooldownDuration;
         });
         renderCombat();
     }
 
-    function startWave() {
+    function startWave(elapsed = 0) {
         const wave = waveRules.generate(waves, waveSeed, waveIndex);
         waveButterAward = 0;
         waveEnemies = waveRules.schedule({
@@ -627,8 +703,8 @@
             enemy.hp = enemy.maxHp;
         });
         placedTowers.forEach(tower => {
-            tower.nextShot = 0;
-            tower.nextIncome = economy.muffinInterval / gameMode.towerSpeed;
+            tower.nextShot = Math.max(0, tower.nextShot - elapsed);
+            tower.nextIncome = Math.max(0, tower.nextIncome - elapsed);
             delete tower.blockUntil;
         });
     }
@@ -674,13 +750,37 @@
         if (pauseUntil !== null) {
             if (waveTime >= pauseUntil) {
                 waveIndex++;
+                const elapsed = waveTime;
                 waveTime = 0;
                 pauseUntil = null;
-                startWave();
+                healthIcon.dataset.state = 'heart';
+                startWave(elapsed);
                 clearCombatVisuals();
             }
         } else {
             advanceBlockers(previousTime);
+            const damage = waveRules.collectEscapes(waveEnemies, path, waveTime);
+            if (damage) {
+                health = Math.max(0, health - damage);
+                healthDisplay.textContent = `HP: ${health} / ${MAX_HEALTH}`;
+                healthFill.value = health;
+                healthIcon.getAnimations().forEach(animation => animation.cancel());
+                if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    healthIcon.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.7)' }, { transform: 'scale(1)' }],
+                        { duration: 450, easing: 'ease-out' });
+                }
+                if (!health) {
+                    waveRunning = false;
+                    waveFrame = null;
+                    healthIcon.dataset.state = 'skull';
+                    clearEnemies();
+                    clearCombatVisuals();
+                    renderCooldowns();
+                    waveStatus.textContent = `Defeat on wave ${waveIndex + 1}. Reset waves to try again.`;
+                    rateWave(waveIndex + 1, false);
+                    return;
+                }
+            }
             const result = waveRules.atTime(waveEnemies, path, waveTime);
             const byId = new Map(waveEnemies.map(enemy => [enemy.id, enemy]));
             const visible = result.visible.map(enemy => {
@@ -714,6 +814,7 @@
             renderEnemies([...visible.filter(enemy => enemy.hp > 0), ...fading]);
             const remaining = waveRules.atTime(waveEnemies, path, waveTime).remaining;
             if (!remaining) {
+                if (!waveEnemies.some(enemy => enemy.hp > 0)) healthIcon.dataset.state = 'trophy';
                 const bonus = [...placedTowers.values()].reduce((sum, tower) => sum + upgradeValue(tower, 'waveBonus', 0), 0);
                 const reward = upgradeRules.waveReward(waveEnemies, waveIndex, rewardedWaves, economy, bonus);
                 if (reward > 0) {
@@ -742,6 +843,7 @@
                 waveStatus.textContent = `Wave ${waveIndex + 1} complete · ${outcome}. Next wave incoming.`;
             }
         }
+        renderCooldowns();
         waveFrame = requestAnimationFrame(tickWave);
     }
 
@@ -762,6 +864,7 @@
             button.addEventListener('click', () => {
                 if (modeLocked) return;
                 gameMode = mode;
+                resetWaves.disabled = false;
                 showMode();
                 showDetails(selected === 'remove' ? null : towers[selected]);
                 renderReticle();
@@ -1015,7 +1118,6 @@
             }
         };
         showDetails(towers[selected]);
-        seedInput.value = String(Math.floor(Math.random() * 4294967296));
         updateCurrency();
         showRating().catch(error => {
             console.error('Could not load Tower Defence Elo.', error);

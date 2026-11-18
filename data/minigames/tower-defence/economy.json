@@ -74,6 +74,20 @@
       "values": [1.15, 1.3, 1.45, 1.6, 1.75, 1.9, 2.05, 2.2, 2.35, 2.5],
       "postStep": 0.005
     },
+    "slowPower": {
+      "name": "Chocolate coating",
+      "description": "slow enemies more.",
+      "costs": [2, 4, 7, 11, 16, 22, 29, 37, 46, 56],
+      "values": [0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7],
+      "postStep": 0.001
+    },
+    "slowDuration": {
+      "name": "Sticky chocolate",
+      "description": "slow enemies for longer.",
+      "costs": [2, 4, 7, 11, 16, 22, 29, 37, 46, 56],
+      "values": [1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3],
+      "postStep": 0.01
+    },
     "waveBonus": {
       "name": "Butter bonus",
       "description": "earn more Butter on perfect waves.",
@@ -87,6 +101,7 @@
     "muffin": ["yield", "productionRate", "block", "waveBonus"],
     "toast": ["damage", "rate", "pierce", "range", "speed"],
     "banana_boomer": ["damage", "rate", "range", "blast"],
-    "banana_boomerang": ["damage", "rate", "range", "speed"]
+    "banana_boomerang": ["damage", "rate", "range", "speed"],
+    "fountain": ["damage", "range", "slowPower", "slowDuration"]
   }
 }

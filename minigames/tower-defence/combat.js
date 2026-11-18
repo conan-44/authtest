@@ -8,7 +8,8 @@
         muffin: { range: 0, cooldown: 1.5, projectile: 'crumb', speed: 0 },
         toast: { range: 2, cooldown: 1.2, projectile: 'toast', speed: 5 },
         banana_boomer: { range: 1.6, cooldown: 1.5, projectile: 'explosion', splash: 1.6 },
-        banana_boomerang: { range: 2, cooldown: 4, projectile: 'boomerang', speed: 5 }
+        banana_boomerang: { range: 2, cooldown: 4, projectile: 'boomerang', speed: 5 },
+        fountain: { range: 1, cooldown: 2, projectile: 'drips', speed: 0 }
     };
     const hpBySprite = [42, 38, 64, 24, 167];
     const modes = ['first', 'last', 'highest', 'lowest', 'closest', 'furthest'];
@@ -125,12 +126,30 @@
         return candidates[0]?.enemy || null;
     }
 
+    function coatProjectile(projectile, tower, fountains) {
+        const fountain = fountains.filter(item => Math.hypot(item.row - tower.row, item.column - tower.column) <= item.range)
+            .sort((a, b) => b.damage - a.damage || a.row - b.row || a.column - b.column)[0];
+        if (!fountain) return projectile;
+        projectile.chocolate = true;
+        projectile.damage += fountain.damage;
+        projectile.slowFactor = fountain.slowFactor;
+        projectile.slowSeconds = fountain.slowSeconds;
+        return projectile;
+    }
+
     function impact(projectile, target, enemies) {
         const victims = projectile.splash
             ? enemies.filter(enemy => enemy.hp > 0 && Math.hypot(enemy.row - target.row, enemy.column - target.column) <= projectile.splash)
             : [target];
-        victims.forEach(enemy => { enemy.hp = Math.max(0, enemy.hp - projectile.damage); });
+        victims.forEach(enemy => {
+            enemy.hp = Math.max(0, enemy.hp - projectile.damage);
+            if (projectile.chocolate && enemy.hp > 0) {
+                if (!(enemy.slowUntil > projectile.hitTime)) enemy.slowFactor = 1;
+                enemy.slowFactor = Math.min(enemy.slowFactor, projectile.slowFactor);
+                enemy.slowUntil = Math.max(enemy.slowUntil || 0, projectile.hitTime + projectile.slowSeconds);
+            }
+        });
     }
 
-    return { settings, hpBySprite, modes, boomerangFrame, createBoomerang, advanceBoomerang, createPiercingShot, advancePiercingShot, chooseTarget, impact };
+    return { settings, hpBySprite, modes, boomerangFrame, createBoomerang, advanceBoomerang, createPiercingShot, advancePiercingShot, chooseTarget, coatProjectile, impact };
 });

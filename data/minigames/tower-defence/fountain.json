@@ -1,0 +1,10 @@
+{
+    "name": "fountain",
+    "description": "covers nearby projectiles with chocolate",
+    "note": "chocolate this chocolate that",
+    "category": "support",
+    "damage": 3,
+    "cost": 14,
+    "slowFactor": 0.8,
+    "slowSeconds": 2
+}

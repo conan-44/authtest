@@ -2,7 +2,7 @@
     "name": "muffin",
     "description": "collect extra Bits and block enemies",
     "note": "his name is cupcake. he doesn't bite.",
-    "category": "defensive",
+    "category": "support",
     "damage": 2,
     "cost": 8,
     "blockSeconds": 3

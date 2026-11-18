@@ -28,9 +28,10 @@
                 built.add(id);
                 const types = {
                     cookie: 'build-cookie', muffin: 'build-muffin', toast: 'build-toast',
-                    banana_boomer: 'build-boom', banana_boomerang: 'build-boomerang'
+                    banana_boomer: 'build-boom', banana_boomerang: 'build-boomerang',
+                    fountain: 'build-fountain'
                 };
-                return emit(['first-tower', types[id], ...(built.size === 5 ? ['all-towers'] : [])].filter(Boolean));
+                return emit(['first-tower', types[id], ...(built.size === 6 ? ['all-towers'] : [])].filter(Boolean));
             },
             upgrade(level) {
                 upgrades++;

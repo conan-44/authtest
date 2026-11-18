@@ -116,7 +116,7 @@ blog, and suggestion database objects.
 
 ## Game and animation invariants
 
-Tower Defence is a local placement sandbox: choose one of the five 8-by-12
+Tower Defence is a local placement sandbox: choose one of the six 8-by-12
 sprites in `assets/minigames/tower-defence/towers.png` and place, replace, or
 remove towers on the 12-by-12 grid. The board resets when the game is closed;
 there is no saved progress.
@@ -125,19 +125,32 @@ each ID has a matching JSON file with its name, description, note, category,
 damage, and Bit cost. `economy.json` configures starting currencies, rewards,
 Muffin production, and the upgrade pool for each tower. Placement
 and replacement spend Bits; removal and clearing do not refund purchases.
-Each defeated enemy awards Bits once per wave slot, even across wave resets.
+Each defeated enemy awards Bits once per wave slot in a run.
 Butter is awarded once per wave when every enemy is defeated; an escaped enemy
 forfeits that wave's reward, but a reset allows another attempt. The base reward
-increases with the wave number. A wave reset preserves currencies, towers, and
-upgrades; closing the game resets the match. Muffins produce Bits during active
-waves and may improve perfect-wave Butter rewards without attacking.
+increases with the wave number. Players start with 99 HP; each escaped enemy
+costs HP equal to its size multiplied by 10, rounded up. At zero HP the run
+ends. A wave reset restores HP and starting currencies, removes towers and
+upgrades, and resets the mode and seed; the selected custom path is retained.
+Towers display their attack cooldowns, which continue across wave transitions.
+Waves 20–25 ramp up enemy health, numbers and speed, with the increased
+difficulty retained afterwards. Muffins produce Bits during active waves and
+may improve perfect-wave Butter rewards without attacking.
+Fountains coat projectiles fired by allied towers within their range. Coated
+chips, toast, boomerangs and explosions use the chocolate sprite sheet, add the
+fountain's damage and slow surviving enemies by 20% for two seconds. Muffin
+crumbs are also chocolate-coated visually but remain harmless. Multiple fountains
+do not stack: the one with the highest damage supplies the coating. Fountains
+also drip chocolate. Fountain upgrades improve coating damage,
+range, slow strength (capped at 75%) and duration. Slows refresh on a hit and
+do not multiply; the strongest slow is retained until the refreshed effect ends.
 Before building or starting waves, select one of the modes in `modes.json`.
 Bob uses normal balance; Banana makes both banana towers 30% cheaper (rounded
 up to whole Bits) and reduces their damage by 25%; Beryl increases tower fire,
 production, projectile and enemy movement/spawn speeds by 25%; Bot increases
 damage by 50% but reduces attack range, explosion radius and muffin block time
 by 25%. Each mode uses its matching enemy sprite sheet. The selection locks on
-the first build or wave start and survives wave resets; reload to change it.
+the first build or wave start; reset waves to change it.
 The four icon buttons at the top use the shared bot sprite sheet.
 Toast fires only horizontally along its row, with larger piercing projectiles.
 Signed-in players start at 1000 Tower Defence Elo. Each unique wave in a match
@@ -145,8 +158,8 @@ is rated once: defeating every enemy is a win, an escape is a loss, and the
 opponent rating is 1000 plus 25 per wave after the first (Elo K=24).
 Wave resets cannot rate the same wave twice; custom paths are unranked.
 Elo and achievements use the site's existing account services. The rating
-database requires `supabase/tower_defence_ratings.sql`. Match counters reset
-on reload, while unlocked achievements and account Elo persist.
+database requires `supabase/tower_defence_ratings.sql`. Match achievement
+counters reset with the waves, while unlocked achievements and account Elo persist.
 The default level string is in `data/minigames/tower-defence/level.json`. Its
 `TD1:` format lists zero-based `row,column` pairs separated by semicolons; the
 first and last tiles are the start and end. Paths must be connected, cannot
