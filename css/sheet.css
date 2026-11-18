@@ -74,7 +74,7 @@ button:hover .btn-icon { animation: playSprite 0.5s steps(4); }
     right: 0;
     width: 16px;
     height: 16px;
-    background: url('../assets/icons.png?v=activity-indicators-v1') -608px -48px / 624px 64px no-repeat;
+    background: url('../assets/icons.png?v=activity-indicators-v1') -608px 48px / 640px 64px no-repeat;
     image-rendering: pixelated;
     pointer-events: none;
     content: "";
