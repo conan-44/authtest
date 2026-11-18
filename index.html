@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="./css/base.css?v=activity-indicators-v1">
     <link rel="stylesheet" href="./css/blog.css?v=suggestion-categories-v1">
     <link rel="stylesheet" href="./css/settings.css?v=no-page-scroll-v1">
-    <link rel="stylesheet" href="./css/chat.css?v=css-split-v1">
+    <link rel="stylesheet" href="./css/chat.css?v=image-preview-actions-v1">
     <link rel="stylesheet" href="./css/emojis.css?v=emoji-picker-v1">
     <link rel="stylesheet" href="./chat/smiley/smiley.css?v=smiley-styles-v4">
     <link rel="stylesheet" href="./css/profiles.css?v=game-ratings-v1">
@@ -131,8 +131,17 @@
                             <span id="chatReplyText"></span>
                             <button type="button" id="cancelChatReplyBtn" aria-label="Cancel reply">Cancel</button>
                         </div>
+                        <div id="chatImagePreview" class="chat-image-preview" hidden>
+                            <img id="chatImagePreviewImage" alt="">
+                            <div class="chat-image-preview-actions">
+                                <button type="button" id="chatImagePreviewEdit" aria-label="Change image" title="Change image"><span class="btn-icon icon-edit" aria-hidden="true"></span></button>
+                                <button type="button" id="chatImagePreviewDelete" aria-label="Remove image" title="Remove image"><span class="btn-icon icon-trash" aria-hidden="true"></span></button>
+                            </div>
+                        </div>
                         <div class="chat-input-row">
                             <input type="text" id="chatInput" placeholder="Type a message..." />
+                            <input id="chatImageInput" type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+                            <button type="button" id="chatImageUploadBtn" aria-label="Choose image" title="Choose image"><span class="btn-icon icon-image" aria-hidden="true"></span><span>Choose image</span></button>
                             <button id="sendChatBtn"><span class="btn-icon icon-send"></span>Send</button>
                         </div>
                     </div>
@@ -613,13 +622,14 @@
     <script src="./js/tips.js?v=tip-placeholder-v1"></script>
     <!-- api config stuff -->
     <script src="./api-config/giphy-config.js"></script>
+    <script src="./api-config/imgbb-config.js"></script>
     <script src="./api-config/cloak-config.js?v=main-achievements"></script>
     <!-- chat stuff -->
     <script src="./chat/emojis.js?v=emoji-picker-v2"></script>
-    <script src="./chat/chat.js?v=dashboard-v1"></script>
+    <script src="./chat/chat.js?v=image-preview-v1"></script>
     <script src="./chat/channels.js?v=dashboard-v1"></script>
     <script src="./chat/actions.js?v=chat-emojis-v1"></script>
-    <script src="./chat/giphy.js?v=emoji-picker-v1"></script>
+    <script src="./chat/giphy.js?v=image-preview-v1"></script>
     <script src="./chat/profiles.js?v=tower-progression-v1"></script>
     <script src="./js/dashboard.js?v=tower-progression-v1"></script>
     <script type="module" src="./chat/smiley/smiley.js?v=dashboard-v1"></script>

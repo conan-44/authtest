@@ -1,5 +1,6 @@
 
 const GIF_MESSAGE_PREFIX = "gif:v1:";
+const IMAGE_MESSAGE_PREFIX = "image:v1:";
 const SHARED_GAME_MESSAGE_PREFIX = "game:v1:";
 const GAME_INVITE_MESSAGE_PREFIX = "game-invite:v1:";
 const GIF_HIDE_SETTING = "hide gifs";
@@ -9,6 +10,14 @@ const gifSearchButton = document.getElementById("gifSearchButton");
 const gifSearchResults = document.getElementById("gifSearchResults");
 const gifSearchPagination = document.getElementById("gifSearchPagination");
 const gifSearchStatus = document.getElementById("gifSearchStatus");
+const chatImageUploadBtn = document.getElementById("chatImageUploadBtn");
+const chatImageInput = document.getElementById("chatImageInput");
+const chatImagePreview = document.getElementById("chatImagePreview");
+const chatImagePreviewImage = document.getElementById("chatImagePreviewImage");
+const chatImagePreviewEdit = document.getElementById("chatImagePreviewEdit");
+const chatImagePreviewDelete = document.getElementById("chatImagePreviewDelete");
+let pendingChatImage = null;
+let pendingChatImageUrl = null;
 const gifSearchResultById = new Map();
 const GIF_SEARCH_PAGE_SIZE = 12;
 let gifSearchRequestId = 0;
@@ -43,7 +52,37 @@ function parseGifMessage(content) {
     ) {
       return null;
     }
+
     return gif;
+  } catch (error) {
+    return null;
+  }
+}
+
+function parseChatImageMessage(content) {
+  content = parseReplyMessage(content).content;
+  if (!content.startsWith(IMAGE_MESSAGE_PREFIX)) return null;
+  try {
+    const image = JSON.parse(content.slice(IMAGE_MESSAGE_PREFIX.length));
+    if (
+      image?.provider !== "imgbb" ||
+      typeof image.url !== "string" ||
+      typeof image.deleteUrl !== "string"
+    ) return null;
+    const url = new URL(image.url);
+    const deleteUrl = new URL(image.deleteUrl);
+    if (
+      url.protocol !== "https:" ||
+      !/^(i\.)?ibb\.co$/i.test(url.hostname) ||
+      deleteUrl.protocol !== "https:" ||
+      !/^ibb\.co$/i.test(deleteUrl.hostname)
+    ) return null;
+    return {
+      provider: "imgbb",
+      url: url.href,
+      deleteUrl: deleteUrl.href,
+      alt: typeof image.alt === "string" && image.alt ? image.alt : "Uploaded image"
+    };
   } catch (error) {
     return null;
   }
@@ -126,6 +165,7 @@ function isGiphyPageUrl(value) {
 function renderChatMessageBody(bodyDiv, rawContent, username = "Player") {
   const content = parseReplyMessage(rawContent).content;
   const gif = parseGifMessage(content);
+  const uploadedImage = parseChatImageMessage(content);
   const sharedGame = parseSharedGameMessage(content);
   const gameInvite = parseGameInviteMessage(content);
   bodyDiv.replaceChildren();
@@ -199,6 +239,22 @@ function renderChatMessageBody(bodyDiv, rawContent, username = "Player") {
     return;
   }
 
+  if (uploadedImage) {
+    const link = document.createElement("a");
+    link.className = "chat-image-link";
+    link.href = uploadedImage.url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    const image = document.createElement("img");
+    image.className = "chat-image";
+    image.src = uploadedImage.url;
+    image.alt = uploadedImage.alt;
+    image.loading = "lazy";
+    link.appendChild(image);
+    bodyDiv.appendChild(link);
+    return;
+  }
+
   if (gif) {
     const hideGifs = window.getAppSetting ? window.getAppSetting("chat", GIF_HIDE_SETTING, false) : false;
     if (hideGifs) {
@@ -235,6 +291,7 @@ function renderChatMessageBody(bodyDiv, rawContent, username = "Player") {
 function getChatMessagePreview(content) {
   if (typeof content !== "string") return getMessagePreview(content);
   if (parseGifMessage(content)) return "sent a GIF";
+  if (parseChatImageMessage(content)) return "sent an image";
   const message = parseReplyMessage(content).content;
   const invite = parseGameInviteMessage(message);
   if (invite) return `invited you to ${invite.game === "chess" ? "Chess" : "Dou Dizhu"}`;
@@ -398,6 +455,79 @@ async function loadGiphyPage(page) {
   }
 }
 
+async function uploadChatImage(file, statusElement) {
+  if (!file) return false;
+  const apiKey = window.IMGBB_API_KEY;
+  if (!apiKey || apiKey === "YOUR_IMGBB_API_KEY") {
+    statusElement.textContent = "Image uploads are unavailable. Add the ImgBB API key.";
+    return false;
+  }
+  if (!/^image\/(png|jpeg|gif|webp)$/i.test(file.type)) {
+    statusElement.textContent = "Choose a PNG, JPEG, GIF or WebP image.";
+    return false;
+  }
+  if (!Number.isSafeInteger(file.size) || file.size < 1 || file.size > 32 * 1024 * 1024) {
+    statusElement.textContent = "Choose an image smaller than 32 MB.";
+    return false;
+  }
+  const { data: { user }, error: authError } = await _supabase.auth.getUser();
+  if (authError) {
+    console.error("Could not check chat sign-in status.", authError);
+    statusElement.textContent = "Could not verify your sign-in.";
+    return false;
+  }
+  if (!user) {
+    statusElement.textContent = "Sign in to send images.";
+    return false;
+  }
+  const previousDisabled = chatImageUploadBtn.disabled;
+  chatImageUploadBtn.disabled = true;
+  statusElement.textContent = "Uploading image...";
+  try {
+    const form = new FormData();
+    form.append("image", file);
+    const response = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(apiKey)}`, {
+      method: "POST",
+      body: form
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) throw new Error(result.error?.message || `ImgBB upload failed (${response.status}).`);
+    const uploaded = result.data;
+    if (!uploaded?.url || !uploaded?.delete_url) throw new Error("ImgBB did not return a usable image.");
+    const url = new URL(uploaded.url);
+    const deleteUrl = new URL(uploaded.delete_url);
+    if (url.protocol !== "https:" || !/^(i\.)?ibb\.co$/i.test(url.hostname)
+      || deleteUrl.protocol !== "https:" || !/^ibb\.co$/i.test(deleteUrl.hostname)) {
+      throw new Error("ImgBB returned an invalid image link.");
+    }
+    const channelId = activeChatChannelId;
+    const content = encodeReplyContent(`${IMAGE_MESSAGE_PREFIX}${JSON.stringify({
+      provider: "imgbb", url: url.href, deleteUrl: deleteUrl.href, alt: file.name
+    })}`);
+    const message = { user_id: user.id, content };
+    if (channelId) message.channel_id = channelId;
+    const { error } = await _supabase.from("messages").insert([message]);
+    if (error) throw error;
+    statusElement.textContent = "Image sent.";
+    clearPendingChatImage();
+    clearReplyTarget();
+    playSendIconAnimation();
+    const recorder = window.achievements?.recordGameEvent;
+    if (typeof recorder === "function") {
+      recorder("main", "message-sent").catch(error => console.error("Could not record chat image achievement.", error));
+      recorder("main", "image-sent").catch(error => console.error("Could not record image achievement.", error));
+    }
+    return true;
+  } catch (error) {
+    console.error("Could not upload chat image.", error);
+    statusElement.textContent = `Could not upload image: ${error.message || "Unknown error"}`;
+    return false;
+  } finally {
+    chatImageUploadBtn.disabled = previousDisabled;
+    chatImageInput.value = "";
+  }
+}
+
 async function sendGiphyGif(gif) {
   const channelId = activeChatChannelId;
   const { data: { user }, error: authError } = await _supabase.auth.getUser();
@@ -450,6 +580,38 @@ gifSearchResults.addEventListener("click", event => {
   if (gif) sendGiphyGif(gif);
 });
 
+function clearPendingChatImage() {
+  pendingChatImage = null;
+  if (pendingChatImageUrl) URL.revokeObjectURL(pendingChatImageUrl);
+  pendingChatImageUrl = null;
+  chatImagePreview.hidden = true;
+  chatImagePreviewImage.removeAttribute("src");
+  chatImageInput.value = "";
+}
+
+async function sendPendingChatImage() {
+  if (!pendingChatImage) return null;
+  return await uploadChatImage(pendingChatImage, gifSearchStatus);
+}
+
+chatImageUploadBtn.addEventListener("click", () => chatImageInput.click());
+chatImagePreviewEdit.addEventListener("click", () => chatImageInput.click());
+chatImagePreviewDelete.addEventListener("click", () => clearPendingChatImage());
+chatImageInput.addEventListener("change", () => {
+  const file = chatImageInput.files?.[0];
+  if (!file) return;
+  if (pendingChatImageUrl) URL.revokeObjectURL(pendingChatImageUrl);
+  pendingChatImage = file;
+  pendingChatImageUrl = URL.createObjectURL(file);
+  chatImagePreviewImage.src = pendingChatImageUrl;
+  chatImagePreview.hidden = false;
+});
+
+window.sendPendingChatImage = sendPendingChatImage;
+window.clearPendingChatImage = clearPendingChatImage;
+
 if (!window.GIPHY_API_KEY || window.GIPHY_API_KEY === "YOUR_GIPHY_API_KEY") {
   setGifSearchStatus("Add your GIPHY API key in js/giphy-config.js to enable search.");
 }
+
+window.parseChatImageMessage = parseChatImageMessage;

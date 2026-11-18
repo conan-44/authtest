@@ -446,6 +446,10 @@ function recordChatAchievement(eventName) {
 }
 
 async function sendMessage() {
+  if (typeof window.sendPendingChatImage === "function") {
+    const imageResult = await window.sendPendingChatImage();
+    if (imageResult !== null) return;
+  }
   const input = document.getElementById('chatInput');
   if (window.ChatEmoji) {
     await window.ChatEmoji.ready;

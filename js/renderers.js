@@ -14,7 +14,7 @@ window.AchievementLib.createRenderers = function createRenderers(state, elements
     let treeMode = false;
 
     const ACHIEVEMENT_SPRITES = {
-        icons: { url: "./assets/icons.png", width: 312, height: 32, tileWidth: 8, tileHeight: 8, columns: 36 },
+        icons: { url: "./assets/icons.png", width: 320, height: 32, tileWidth: 8, tileHeight: 8, columns: 36 },
         main: { url: "./assets/minigames/games.png", width: 56, height: 8, tileWidth: 8, tileHeight: 8, columns: 6 },
         mastermind: { url: "./assets/minigames/bots.png", width: 32, height: 8, tileWidth: 8, tileHeight: 8, columns: 4 },
         "number-pillars": { url: "./assets/minigames/games.png", width: 56, height: 8, tileWidth: 8, tileHeight: 8, columns: 6 },

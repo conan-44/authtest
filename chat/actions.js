@@ -22,6 +22,7 @@ function encodeReplyContent(content) {
 function getMessagePreview(content) {
   const message = parseReplyMessage(content);
   if (parseGifMessage(message.content)) return "GIF";
+  if (parseChatImageMessage(message.content)) return "Image";
   const invite = parseGameInviteMessage(message.content);
   if (invite) return `invited you to ${invite.game === "chess" ? "Chess" : "Dou Dizhu"}`;
   const sharedGame = parseSharedGameMessage(message.content);
@@ -76,11 +77,13 @@ function startEditingMessage(messageEl) {
   const originalContent = body.getAttribute("data-raw") || "";
   const parsedReply = parseReplyMessage(originalContent);
   const isGif = Boolean(parseGifMessage(parsedReply.content));
+  const isImage = Boolean(parseChatImageMessage(parsedReply.content));
   const editor = document.createElement("textarea");
   editor.className = "chat-message-editor";
-  editor.value = isGif ? "" : parsedReply.content;
+  editor.value = isGif || isImage ? "" : parsedReply.content;
   editor.dataset.replyId = parsedReply.replyId || "";
-  editor.placeholder = isGif ? "Replace this GIF with a text message..." : "Edit your message...";
+  editor.placeholder = isGif ? "Replace this GIF with a text message..."
+    : isImage ? "Replace this image with a text message..." : "Edit your message...";
   editor.maxLength = 1000;
   editor.setAttribute("aria-label", "Edit chat message");
 
