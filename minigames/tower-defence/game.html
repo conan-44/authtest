@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>tower defence</title>
     <link rel="stylesheet" href="../chess/style.css?v=game-theme-v1">
-    <link rel="stylesheet" href="./style.css?v=placement-cooldown-v1">
+    <link rel="stylesheet" href="./style.css?v=polished-wave-progress-v1">
     <script src="./level.js?v=path-editor-v1" defer></script>
     <script src="./waves.js?v=run-reset-v1" defer></script>
     <script src="./combat.js?v=fountain-v1" defer></script>
     <script src="./upgrades.js?v=placement-cooldown-v1" defer></script>
     <script src="./modes.js?v=tower-modes-v1" defer></script>
     <script src="./progression.js?v=fountain-v1" defer></script>
-    <script src="./script.js?v=placement-cooldown-v1" defer></script>
+    <script src="./script.js?v=polished-wave-progress-v1" defer></script>
 </head>
 <body>
     <main class="chess-app">
@@ -31,12 +31,27 @@
             </div>
             <button type="button" id="clear-board" class="primary-button">Clear board</button>
         </header>
+        <div id="defeat-overlay" class="defeat-overlay" hidden>
+            <div class="defeat-card">
+                <span class="defeat-skull" aria-hidden="true"></span>
+                <h2>Run defeated</h2>
+                <p id="defeat-summary">The enemies broke through.</p>
+                <button type="button" id="defeat-retry" class="primary-button">Try again</button>
+            </div>
+        </div>
         <section class="game-layout tower-layout" aria-label="Tower placement">
             <aside class="tower-left">
                 <section class="sidebar-card opening-card wave-panel" aria-labelledby="wave-heading">
                     <h2 id="wave-heading">Endless waves</h2>
                     <p id="wave-status" role="status">Loading waves...</p>
+                    <progress id="wave-progress" value="0" max="1" aria-label="Wave progress">0%</progress>
                     <p id="rating-status" role="status">Loading Elo...</p>
+                    <div class="wave-speed-control" role="group" aria-label="Wave speed">
+                        <button type="button" data-wave-speed="1" aria-pressed="true">1×</button>
+                        <button type="button" data-wave-speed="2" aria-pressed="false">2×</button>
+                        <button type="button" data-wave-speed="4" aria-pressed="false">4×</button>
+                        <button type="button" id="pause-waves" aria-pressed="false">Pause</button>
+                    </div>
                     <p id="mode-description" class="mode-description"></p>
                     <label class="seed-label" for="wave-seed">Wave seed</label>
                     <input id="wave-seed" type="text" maxlength="64" autocomplete="off" spellcheck="false">

@@ -3,6 +3,32 @@ body { padding: 8px; }
 .topbar { margin-bottom: 8px; }
 .topbar h1 { font-size: 1.5rem; }
 .topbar .eyebrow { display: none; }
+.defeat-overlay {
+    position: fixed;
+    z-index: 30;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgb(0 0 0 / 55%);
+}
+.defeat-overlay[hidden] { display: none; }
+.defeat-card {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    min-width: min(300px, calc(100vw - 32px));
+    padding: 20px;
+    border: 4px solid var(--border);
+    background: var(--surface);
+    text-align: center;
+}
+.defeat-card h2, .defeat-card p { margin: 0; }
+.defeat-skull {
+    width: 32px;
+    height: 32px;
+    background: url("../../assets/minigames/streetfighter/icons.png") -32px 0 / 256px 192px no-repeat;
+    image-rendering: pixelated;
+}
 .game-hud {
     display: flex;
     flex-wrap: wrap;
@@ -257,7 +283,24 @@ body { padding: 8px; }
 
 .wave-panel { padding: 8px; gap: 4px; }
 .wave-panel p { margin: 0; }
+.wave-panel #wave-progress {
+    width: 100%;
+    height: 8px;
+    accent-color: var(--accent);
+}
 .wave-panel .opening-book-status { font: .75rem/1.15 "lowsmall", sans-serif; }
+.wave-speed-control {
+    display: flex;
+    gap: 4px;
+}
+.wave-speed-control button {
+    min-width: 38px;
+    padding: 4px 6px;
+}
+.wave-speed-control button[aria-pressed="true"] {
+    background: var(--accent);
+    color: #fff;
+}
 .mode-control { display: flex; justify-content: center; gap: 4px; }
 .mode-button {
     display: grid; place-items: center; width: 32px; height: 32px;

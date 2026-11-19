@@ -34,9 +34,12 @@
     const butterDisplay = document.getElementById('butter');
     const butterIcon = document.getElementById('butter-icon');
     const waveStatus = document.getElementById('wave-status');
+    const waveProgress = document.getElementById('wave-progress');
     const healthDisplay = document.getElementById('player-health');
     const healthIcon = document.getElementById('health-icon');
     const healthFill = document.getElementById('health-fill');
+    const defeatOverlay = document.getElementById('defeat-overlay');
+    const defeatSummary = document.getElementById('defeat-summary');
     const modeSelect = document.getElementById('game-mode');
     const modeDescription = document.getElementById('mode-description');
     const ratingStatus = document.getElementById('rating-status');
@@ -59,6 +62,8 @@
     let waveEnemies = [];
     let waveSeed = null;
     let pauseUntil = null;
+    let waveSpeed = 1;
+    let wavePaused = false;
     let waveButterAward = 0;
     let health = MAX_HEALTH;
     const enemyElements = new Map();
@@ -485,13 +490,24 @@
         waveTime = 0;
         lastFrameTime = null;
         pauseUntil = null;
+        waveSpeed = 1;
+        wavePaused = false;
+        document.querySelectorAll('[data-wave-speed]').forEach(button => {
+            button.setAttribute('aria-pressed', String(button.dataset.waveSpeed === '1'));
+        });
+        const pauseButton = document.getElementById('pause-waves');
+        pauseButton?.setAttribute('aria-pressed', 'false');
+        if (pauseButton) pauseButton.textContent = 'Pause';
         waveButterAward = 0;
         health = MAX_HEALTH;
         healthDisplay.textContent = `HP: ${health} / ${MAX_HEALTH}`;
         healthFill.value = health;
         healthIcon.getAnimations().forEach(animation => animation.cancel());
         healthIcon.dataset.state = 'heart';
+        defeatOverlay.hidden = true;
         waveEnemies = [];
+        waveProgress.value = 0;
+        waveProgress.max = 1;
         clearEnemies();
         projectiles = [];
         effects = [];
@@ -718,6 +734,8 @@
             enemy.maxHp = combat.hpBySprite[enemy.sprite] * wave.healthMultiplier;
             enemy.hp = enemy.maxHp;
         });
+        waveProgress.value = 0;
+        waveProgress.max = Math.max(1, waveEnemies.length);
         placedTowers.forEach(tower => {
             tower.nextShot = 0;
             tower.nextIncome = economy.muffinInterval / gameMode.towerSpeed;
@@ -759,7 +777,12 @@
 
     function tickWave(timestamp) {
         if (!waveRunning) return;
-        const delta = lastFrameTime === null ? 0 : Math.min((timestamp - lastFrameTime) / 1000, 0.1);
+        if (wavePaused) {
+            lastFrameTime = timestamp;
+            waveFrame = requestAnimationFrame(tickWave);
+            return;
+        }
+        const delta = lastFrameTime === null ? 0 : Math.min((timestamp - lastFrameTime) / 1000, 0.1) * waveSpeed;
         const previousTime = waveTime;
         waveTime += delta;
         lastFrameTime = timestamp;
@@ -791,6 +814,8 @@
                     clearEnemies();
                     clearCombatVisuals();
                     waveStatus.textContent = `Defeat on wave ${waveIndex + 1}. Reset waves to try again.`;
+                    defeatSummary.textContent = `The enemies broke through on wave ${waveIndex + 1}.`;
+                    defeatOverlay.hidden = false;
                     rateWave(waveIndex + 1, false);
                     return;
                 }
@@ -827,6 +852,8 @@
                 && waveTime - enemy.defeatedAt < DEFEAT_FADE_DURATION);
             renderEnemies([...visible.filter(enemy => enemy.hp > 0), ...fading]);
             const remaining = waveRules.atTime(waveEnemies, path, waveTime).remaining;
+            const completed = waveEnemies.length - remaining;
+            waveProgress.value = Math.min(waveEnemies.length, completed);
             if (!remaining) {
                 if (!waveEnemies.some(enemy => enemy.hp > 0)) healthIcon.dataset.state = 'trophy';
                 const bonus = [...placedTowers.values()].reduce((sum, tower) => sum + upgradeValue(tower, 'waveBonus', 0), 0);
@@ -1125,6 +1152,26 @@
             waveFrame = requestAnimationFrame(tickWave);
         });
         resetWaves.addEventListener('click', resetWaveState);
+        document.getElementById('defeat-retry').addEventListener('click', () => {
+            resetWaveState();
+            defeatOverlay.hidden = true;
+        });
+        document.querySelectorAll('[data-wave-speed]').forEach(button => {
+            button.addEventListener('click', () => {
+                waveSpeed = Number(button.dataset.waveSpeed);
+                document.querySelectorAll('[data-wave-speed]').forEach(item => {
+                    item.setAttribute('aria-pressed', String(item === button));
+                });
+            });
+        });
+        document.getElementById('pause-waves').addEventListener('click', event => {
+            wavePaused = !wavePaused;
+            event.currentTarget.setAttribute('aria-pressed', String(wavePaused));
+            event.currentTarget.textContent = wavePaused ? 'Resume' : 'Pause';
+            waveStatus.textContent = wavePaused
+                ? `Wave ${waveIndex + 1} paused`
+                : `Wave ${waveIndex + 1} · ${waveRules.atTime(waveEnemies, path, waveTime).remaining} remaining`;
+        });
         window.towerDefence = {
             enableEditor,
             exportLevel: () => levels.encode(draft || path),
